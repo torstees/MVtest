@@ -1,0 +1,343 @@
+import sys
+
+import numpy
+import scipy
+import scipy.stats
+import math
+import exceptions
+
+from simple_timer import SimpleTimer
+from pygwas.data_parser import DataParser
+from mvresult import MVResult
+from pygwas.exceptions import UnsolvedLocus
+from pygwas.exceptions import NanInResult
+from pygwas.standardizer import get_standardizer
+
+def MeanVarEstEQ(y, x, covariates, tol=1e-8):
+    """
+    Params:
+    y               Outcomes
+    X               [genotypes, cov1, etc]
+    N               # Individuals
+
+    Class Members:
+
+
+    """
+
+    # number of covariates + 1 (geno) + 1 (outcome)
+    pcount = covariates.shape[0] + 2
+    N = y.shape[0]
+    beta_count = pcount * 2
+    X = numpy.ones((N, pcount))
+    X[:, 1] = x
+
+    aprime = [1, 0]
+    idx = 2
+    for cov in covariates:
+        aprime.append(-numpy.mean(cov)/numpy.std(cov))
+        X[:, idx] = cov
+        idx += 1
+    aprime = numpy.matrix(aprime)
+
+    # http://stackoverflow.com/questions/7267226/range-for-floats
+    def frange(x, y, jump):
+        while x < y:
+            yield x
+            x += jump
+        yield 0
+
+    class PhiReturn(object):
+        def __init__(self, phi, dtheta):
+            self.phi = phi
+            self.dtheta = dtheta
+
+    def dot_diag(x, y):
+        """This is a conveniance function to perform the following
+        in a more efficient manner:
+
+        x.dot(numpy.diag(y))
+
+        y must be a single dimensioned array
+
+        """
+        if len(y.shape) != 1:
+            print >> sys.stderr, "You can't pass an array of shape %s to dot_diag" % (y.shape)
+            sys.exit(1)
+
+        result = numpy.empty(x.shape)
+        for i in range(0, x.shape[0]):
+            result[i] = x[i] * y
+
+        return result
+
+    def diag_dot(x, y):
+        result = numpy.empty(y.shape)
+        for i in range(0, y.shape[0]):
+            result[i] = y[i] * x[i]
+        return result
+
+    def Phi(theta):
+        MM = y - numpy.dot(X, theta[0:pcount])
+        SS = numpy.exp(numpy.dot(-X, theta[pcount:]))
+        DD1 = MM * SS
+        DD2 = 0.5 * MM**2 * SS
+        Phi = numpy.hstack((DD1.dot(X), (DD2-0.5).dot(X)))
+
+        tX = X.transpose()
+
+        t1 = numpy.empty(tX.shape)
+        t2 = numpy.empty(tX.shape)
+        t3 = numpy.empty(tX.shape)
+        for i in range(0,tX.shape[0]):
+            t1[i] = tX[i]*-SS
+            t2[i] = tX[i]*-DD1
+            t3[i] = tX[i]*-DD2
+        t1 = t1.dot(X)
+        t2 = t2.dot(X)
+        t3 = t3.dot(X)
+        # Removed these diags because they were causing massive
+        # bumps in memory and were really slowing everything way down
+        """t12 = numpy.transpose(X).dot(numpy.diag(-SS)).dot(X)
+        t22 = numpy.transpose(X).dot(numpy.diag(-DD1)).dot(X)
+        t32 = numpy.transpose(X).dot(numpy.diag(-DD2)).dot(X)
+        """
+
+
+        dtheta = numpy.hstack((numpy.vstack((t1, t2)), numpy.vstack((t2, t3))))
+        return PhiReturn(Phi, dtheta)
+
+
+
+    class MvSolveReturn(object):
+        def __init__(self, theta, dtheta):
+            self.theta = theta
+            self.dtheta = dtheta
+
+    def MVsolve(theta_new):
+        solution_found = False
+
+        mvsolve_iterations = 0
+
+        while not solution_found:
+            theta_old = theta_new.copy()
+            tmp = Phi(theta_old)
+            #print "ITR", mvsolve_iterations, numpy.mean(theta_new),numpy.sum(numpy.absolute(theta_new - theta_old))
+            theta_new = theta_old - scipy.linalg.solve(tmp.dtheta, tmp.phi)
+            mvsolve_iterations += 1
+
+            if (numpy.sum(numpy.absolute(theta_new - theta_old)) < tol):
+                tmp = Phi(theta_new)
+                solution_found = True
+            else:
+                if mvsolve_iterations > 25000:
+                    #print >> sys.stderr, mvsolve_iterations, "failures"
+                    raise UnsolvedLocus("")
+
+        return MvSolveReturn(theta_new, tmp.dtheta), mvsolve_iterations
+
+    def MVcalcB(theta):
+        MM = y - X.dot(theta[0:pcount])
+        SS = numpy.exp(-X.dot(theta[pcount:]))
+        DD1 = MM * SS
+        DD2 = 0.5 * MM**2 * SS
+        AA = numpy.hstack((diag_dot(DD1, X), diag_dot(DD2-0.5,X)))
+
+        return numpy.transpose(AA).dot(AA)/ N
+
+
+    mod = None
+    itr = 0
+    total_iterations = 0
+    for i in frange(0.00, 1.0, 0.05):
+        theta=numpy.empty((beta_count))
+        theta[:] = i
+
+        try:
+            mod, iterations = MVsolve(theta)
+            total_iterations += iterations
+            if i > 0.05:
+                print >> sys.stderr, "Completed: ", total_iterations, itr
+            break
+        except exceptions.ValueError as e:
+            pass
+        except numpy.linalg.linalg.LinAlgError as e:
+            pass
+        except Exception as inst:
+            #print type(inst)
+            pass
+        itr += 1
+
+    if not mod:
+        raise UnsolvedLocus("")
+
+    try:
+        ainv = scipy.linalg.inv(mod.dtheta) * N
+    except:
+        raise ValueError("Singular Matrix Encountered")
+    B = MVcalcB(mod.theta)
+    V = ainv.dot(B).dot(ainv.transpose())
+
+
+
+    # Focus on the two parameters of interest
+    theta2 = numpy.array([mod.theta[1], mod.theta[pcount+1]])
+    V2 = V[1:beta_count:pcount,1:beta_count:pcount]
+    pvalt = 1 - scipy.stats.chi2.cdf(theta2.dot(scipy.linalg.inv(V2)).dot(theta2) * N, 2)
+
+
+    ## From Chun's updated code:
+    theta= mod.theta
+    se = numpy.sqrt(numpy.diag(V)/N)
+    pval = 2*scipy.stats.norm.cdf(-numpy.absolute(mod.theta/se))
+    return pvalt, theta, pval, se, V/N
+
+
+    """
+    print "PVALUES: "
+    print "Mod.theta: ", mod.theta
+    print "N          ", N
+    print "theta_se   ", theta_se
+    print "pvalue     ", pvalue
+
+    estm = mod.theta[1]
+    sdm = theta_se[1]
+    pvalm = pvalue[1]
+    estv = mod.theta[pcount+1]
+    sdv = theta_se[pcount+1]
+    pvalv = pvalue[pcount+1] """
+
+
+
+def RunMeanVar(pheno, geno, covar=[]):
+    """Setup and execute the mean var calculation.
+
+    It is possible that the optimization will fail to converge. Such
+    cases are stripped of data, but are still reported to alert the
+    user that there were problems with the data.
+
+    """
+    return MeanVarEstEQ(pheno, geno, covar)
+
+def RunAnalysis(dataset, pheno_covar, do_print_iteration_summary=False):
+    """Run the actual analysis on all valid loci for each phenotype
+
+    This acts as a standard iterator, returning a single MVResult for
+    each locus/phenotype combination.
+
+    Missing is evaluated as anything missing in any of the
+    phenotype, covariate(s) or genotype
+
+    """
+    covar_missing = numpy.empty(dataset.ind_count, dtype=bool)
+    covar_missing[:] = False
+
+    total_covar_count = len(pheno_covar.covariate_data)
+    iteration_count = []
+
+    unsolved = []
+
+    pcount = 2+total_covar_count
+
+    std = get_standardizer()
+
+    for snp in dataset:
+        for y in pheno_covar:
+            st = SimpleTimer()
+            (pheno, covariates, nonmissing) = y.get_variables((snp.genotype_data==DataParser.missing_storage))
+
+
+            genotypes  = snp.genotype_data[nonmissing]
+
+            try:
+                pvalt, estimates, pvalues, se, v = RunMeanVar(pheno, genotypes, covariates)
+
+                lmgeno = genotypes
+                for c in covariates:
+                    lmgeno = lmgeno + c
+                lm = scipy.stats.linregress(pheno, lmgeno)[3]
+
+
+                betavars, se, pvalues = y.destandardize(estimates, se, pvalues=pvalues,v=v, nonmissing=nonmissing)
+
+                betas = betavars[0:pcount]
+                betase = se[0:pcount]
+                vars = betavars[pcount:]
+                varse = se[pcount:]
+
+                # Check for invalid output
+                for var in betavars + se + list(pvalues):
+                    if numpy.isnan(var):
+                        raise NanInResult()
+
+                nonmissing_ct = numpy.sum(nonmissing)
+
+                result = MVResult(
+                                snp.chr,
+                                snp.pos,
+                                snp.rsid,
+                                snp.major_allele,
+                                snp.minor_allele,
+                                snp.allele_count2 / float(nonmissing_ct * 2),
+                                non_miss_count=nonmissing_ct,
+                                ph_label=y.get_phenotype_name(),
+                                p_mvtest=pvalt,
+                                beta_values=list(betas)+list(vars),
+                                pvalues=pvalues,
+                                stderrors=list(betase) + list(varse),
+                                maf=snp.maf,
+                                covar_labels=y.get_covariate_names(),
+                                lm=lm,
+                                runtime = st.runtime(),
+                )
+
+                result.blin = estimates[0:pcount]
+                result.bvar = estimates[pcount:]
+                yield result
+            except NanInResult as e:
+                print >> sys.stderr, "\t".join([str(x) for x in [
+                                snp.chr,
+                                snp.pos,
+                                snp.rsid,
+                                y.get_phenotype_name(),
+                                "%d" % (numpy.sum(nonmissing)),
+                                snp.major_allele,
+                                snp.minor_allele,
+                                snp.allele_count2,
+                                "NAN-Found",
+                                "MAF=%0.4f" % (snp.maf)]])
+            except ValueError as e:
+                print >> sys.stderr, "\t".join([str(x) for x in [
+                                snp.chr,
+                                snp.pos,
+                                snp.rsid,
+                                y.get_phenotype_name(),
+                                "%d" % (numpy.sum(nonmissing)),
+                                snp.major_allele,
+                                snp.minor_allele,
+                                snp.allele_count2,
+                                "Unsolvable",
+                                "MAF=%0.4f" % (snp.maf)]])
+            except UnsolvedLocus as e:
+                print >> sys.stderr, "\t".join([str(x) for x in [
+                                snp.chr,
+                                snp.pos,
+                                snp.rsid,
+                                y.get_phenotype_name(),
+                                "%d" % (numpy.sum(nonmissing)),
+                                snp.major_allele,
+                                snp.minor_allele,
+                                snp.allele_count2,
+                                "Unsolved",
+                                "MAF=%0.4f" % (snp.maf)]])
+                unsolved.append(snp)
+    if len(unsolved)>0:
+        print >> sys.stderr, "Total unsolvable loci: ", len(unsolved)
+
+    if do_print_iteration_summary:
+        iteration_count = numpy.array([len(x) for x in iteration_count])
+        print >> sys.stderr, "# Tests run: ", iteration_count.shape[0]
+        print >> sys.stderr, "Mean Itr:    ", numpy.mean(iteration_count), "\tItr Std: ", numpy.std(iteration_count)
+        print >> sys.stderr, "# Itr > 1:   ", numpy.sum(iteration_count > 1)
+        print >> sys.stderr, "MAX Itr:     ", numpy.max(iteration_count), "\t# (MAX):  ", numpy.sum(iteration_count == numpy.max(iteration_count))
+
