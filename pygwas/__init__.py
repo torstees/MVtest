@@ -13,48 +13,45 @@ transposed pedigree data using most of PLINK style enhancements (such as
 tolerating bases and missing/additional columns). In addition to standard
 text pedigrees, there is also support for bed files.
 
-Each parser class will be able to parse the various sister files that are
-necessary for complete data representation.
-
-
-Threshold variables represent values which, when surpassed, will
-trigger an exclusion (either SNP or individual)
-
-Module Data Members:
-missing_representation  Input file representation of missing genotypes
-missing_storage Internal representation of missing genotypes
-min_maf         Minimum threshold for minor allele frequency
-max_maf         Maximum threshold for minor allele frequency
-snp_miss_tol    Minimum threshold for perc. of missing ind
-ind_miss_tol    Minimum threshold for perc. of missing loci
-boundary        User configuration for genomic traversal
-ind_exclusions  List of IDs to be ignored
-has_sex         Std Pedigree col 5 is present
-has_parents     Std pedigree cols 3 and 4 are present
-has_fid         Std pedigree col 1 is present
-has_pheno       Std pedigree col 6 is present
-has_liability   Non std pedigree col 7 is present
-
 """
 
 
 def sys_call(cmd):
-    """Execute cmd and capture stdout and stderr"""
+    """Execute cmd and capture stdout and stderr
+
+    :param cmd: command to be executed
+    :return: (stdout, stderr)
+    """
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
     return p.stdout.readlines(), p.stderr.readlines()
 
 
 def Exit(msg, code=1):
-    """Exit execution with return code and message"""
+    """Exit execution with return code and message
+    :param msg: Message displayed prior to exit
+    :param code: code returned upon exiting
+    """
     print >> sys.stderr, msg
     sys.exit(code)
 
 def ExitIf(msg, do_exit, code=1):
+    """Exit if do_exit is true
+
+    :param msg: Message displayed prior to exit
+    :param do_exit: exit when true
+    :param code: application's return code upon exit
+    """
     if do_exit:
         Exit(msg, code)
 
 def BuildReportLine(key, value):
-    """Prepare key/value for reporting in configuration report"""
+    """Prepare key/value for reporting in configuration report
+
+    :param key: configuration 'keyword'
+    :param value: value reported to be associated with keyword
+
+    :return: formatted line starting with a comment
+    """
 
     return "# " + key.ljust(20) + " : " + str(value)
 

@@ -14,33 +14,11 @@ class PhenoCovar(object):
     easily. Covariates do not change during iteration. Missing is updated
     according to the missing content within the phenotype (and covariates
     as well).
-
-    Static Members:
-    sex_as_covariate    Configuration property indicating whether to
-                        record sex information from the pedigree file.
-    mising_encoding     Configuration property defining the value to be
-                        found in raw phenotye/covariate data to represent
-                        missing.
-
-    Public Members:
-    phenotype_data      Raw phenotype data with every possible phenotype
-                        [[pheno1],[pheno2],etc]
-    covariate_data      All covariate data [[cov1],[cov2],etc]
-    pedigree_data       Pedigree information {FAMID:INDID => index, etc}
-    individual_mask     True indicates an individual is to be excluded
-    covariate_labels    List of covariate names from header, if provided
-                        SEX is implied, if sex_as_covariate is true.
-                        Covariates loaded without header are simply named
-                        Cov-N
-    phenotype_names     List of phenotype names from header, if provided.
-                        If no header is found, the phenotype is simply
-                        named Pheno-N
-    do_standardize_variables    Configuration variable
-
-
     """
 
+    #: Do we use sex as a covariate?
     sex_as_covariate = False
+    #: Internal encoding for missingness
     missing_encoding = -9
 
     # Prime with pedigree data and the --sex == True. This will optionally add/activate the first covariate, SEX
@@ -48,23 +26,29 @@ class PhenoCovar(object):
     # Load covariates from file. This will not replace the sex values pulled from the pedigree file.
 
     def __init__(self):
-        """Setup empty structures, except we'll add some default
-        phenotype/covariate names where it makes sense.
-
-        """
+        #: Raw phenotype data with every possible phenotype [[ph1],[ph2],etc]
         self.phenotype_data = [[]]
+        #: All covariate data [[cov1],[cov2],etc]
         self.covariate_data = []
+        #: Pedigree information {FAMID:INDID => index, etc}
         self.pedigree_data = {}
+        #: True indicates an individual is to be excluded
         self.individual_mask = []
+        #: List of covariate names from header, if provided
+        #: SEX is implied, if sex_as_covariate is true.
+        #: Covariates loaded without header are simply named Cov-N
         self.covariate_labels = []
-
+        #: List of phenotype names from header, if provided.
+        #: If no header is found, the phenotype is simply named Pheno-N
         self.phenotype_names = ["Pheno-1"]
+        #: Allows you to turn off standardization
         self.do_standardize_variables = False
 
         if PhenoCovar.sex_as_covariate:
             self.covariate_labels.append("SEX")
             self.covariate_data.append([])
 
+        #: finalized data ready for analysis
         self.test_variables = None
 
     def __iter__(self):
@@ -78,12 +62,16 @@ class PhenoCovar(object):
         raise StopIteration
 
     def prep_testvars(self):
+        """Make sure that the data is in the right form and standardized as
+        expected.
+        """
         self.phenotype_data = numpy.array(self.phenotype_data)
         self.covariate_data = numpy.array(self.covariate_data)
         self.test_variables = get_standardizer()(self)
         self.test_variables.standardize()
 
     def destandardize_variables(self, tv, blin, bvar, errBeta, nonmissing):
+        """Destandardize betas and other components."""
         return self.test_variables.destandardize(tv, blin, bvar, errBeta, nonmissing)
 
 
@@ -91,8 +79,8 @@ class PhenoCovar(object):
         """Converts variable data into numpy arrays.
 
         This is required after all subjects have been added via the
-        add_subject function.
-
+        add_subject function, since we don't know ahead of time who is
+        participating in the analysis due to various filtering possibilities.
         """
         self.phenotype_data = numpy.array(self.phenotype_data)
         self.covariate_data = numpy.array(self.covariate_data)
@@ -103,7 +91,6 @@ class PhenoCovar(object):
         """Add new subject to study, with optional sex and phenotype
 
         Throws MalformedInputFile if sex is can't be converted to int
-
         """
 
         self.pedigree_data[ind_id] = len(self.phenotype_data[0])
@@ -137,6 +124,7 @@ class PhenoCovar(object):
             line_number = 0
             valid_indices = [int(x) for x in indices]
             valid_names  = []
+
             for name in names:
                 if name.strip() != "":
                     valid_names.append(name)

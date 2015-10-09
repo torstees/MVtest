@@ -213,6 +213,7 @@ class MVTestApplication(object):
         parser.add_argument("--sample-pheno", type=argparse.FileType('r'), help="(Mach) Sample file containing phenotypes")
         parser.add_argument("--mphenos", type=str, default="", help="Column number(s) for phenotype to be analyzed if number of columns > 1")
         parser.add_argument("--pheno-names", type=str, default="", help="Name for phenotype(s) to be analyzed (must be in --pheno file)")
+        parser.add_argument("--all-pheno", actions="store_true", help="Analyze all columns from the phenotype file")
         #parser.add_argument("--all-pheno", action='store_true', help="Analyze each phenotype")
 
         parser.add_argument("--covar", type=argparse.FileType('r'), help="File containing covariates")
@@ -383,6 +384,8 @@ class MVTestApplication(object):
             if args.pheno_names != "":
                 nphenos = args.pheno_names.split(",")
 
+            if len(mphenos) + len(nphenos) == 0 and not args.all_pheno:
+                pygwas.Exit("You must select one or more phenotypes when ")
             sample_file = False
             pheno_filename = args.pheno
             if args.sample_pheno:
@@ -496,7 +499,7 @@ def main(args=sys.argv[1:], print_cfg=False):
         printed_header = False
 
         anl_fn = mv_esteq.RunAnalysis
-        for result in anl_fn(dataset, vars, do_print_iteration_summary=False):
+        for result in anl_fn(dataset, vars):
             if not printed_header:
                 result.print_header(verbose=app.verbose)
                 printed_header = True

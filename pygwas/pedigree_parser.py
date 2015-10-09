@@ -10,61 +10,72 @@ from . import BuildReportLine
 
 
 class Parser(DataParser):
-    """Parse standard pedigree dataset
+    """Parse standard pedigree dataset.
 
     Data should follow standard format for pedigree data, except alleles
     be either numerical (1 and 2) or as bases (A, C, T and G). All loci
     must have 2 alleles to be returned.
 
-    Class Members:
-    mapfile         Filename for the marker information
-    datasource      Filename for the actual pedigree information
-    genotypes       Matrix of genotype data
-    invalid_loci    Loci that are being ignored due to filtration
-    individual_mask Mask used to remove excluded and filtered calls
-                    from the genotype data (each position represents
-                    an individual)
+    Attributes initialized to None are only available after load_genotypes()
+    has been called.
 
-    These are only available after load_genotypes() call
-    locus_count     Number of valid loci
-    markers         List of valid SNPs
-    alleles         List of both alleles for each valid locus
-    rsids           List of all SNP names for valid loci
-    markers_maf     List of MAF at each locus
-
-
-
+    Issues:
+        * Pedigree files are currently loaded in their entirety, but we could \
+          load them in according to chunks like we are doing in mach input.
+        * There are a bunch of legacy lists which should be reduced to a single\
+          list of Locus objects.
 
     """
     def __init__(self, mapfile, datasource):
-        """Very basic initialization. """
 
+        #: Filename for the marker information
         self.mapfile = mapfile
+        #: Filename for the actual pedigree information
         self.datasource = datasource
         self.markers = []
+        #: Matrix of genotype data
         self.genotypes = []
+        #: Loci that are being ignored due to filtration
         self.invalid_loci = []
-        self.individual_mask = 0                         # Track which individuals were dropped due to missingness
+        #: Mask used to remove excluded and filtered calls from the genotype \
+        #: data (each position represents an individual)
+        self.individual_mask = 0
+
+        #: Number of valid loci
+        locus_count = None
+        #: List of valid Locus Objects
+        markers = None
+        #: List of both alleles for each valid locus
+        alleles = None
+        #: List of all SNP names for valid loci
+        rsids = None
+        #: List of MAF at each locus
+        markers_maf = None
 
     def ReportConfiguration(self, file):
+        """ Report configuration for logging purposes.
+
+        :param file: Destination for report details
+        :return: None
+        """
         print >> file, BuildReportLine("PED FILE", self.datasource)
         print >> file, BuildReportLine("MAP FILE", self.mapfile)
 
     def load_mapfile(self, map3=False):
         """Load the marker data
 
-        Builds up the marker list according to the boundary
+        :param map3: When true, ignore the gen. distance column
 
-        map3 indicate whether the file contains 3 or four columns.
+        Builds up the marker list according to the boundary configuration
+
 
         """
-        global boundary
-        cols            = [0, 1, 3]
+        cols = [0, 1, 3]
         if map3:
-            cols        = [0, 1, 2]
-        markers         = numpy.loadtxt(self.mapfile, dtype=str, usecols=cols)
+            cols = [0, 1, 2]
+        markers = numpy.loadtxt(self.mapfile, dtype=str, usecols=cols)
 
-        self.snp_mask  = numpy.ones(markers.shape[0]*2, dtype=numpy.int8).reshape(-1, 2)
+        self.snp_mask = numpy.ones(markers.shape[0]*2, dtype=numpy.int8).reshape(-1, 2)
 
         if DataParser.boundary.NoExclusions():
             self.markers = numpy.zeros((markers.shape[0], 2), dtype=int)
@@ -94,9 +105,14 @@ class Parser(DataParser):
 
 
     def load_genotypes(self, pheno_covar):
-        global has_sex, has_parents,has_pheno,has_fid, has_liability, ind_miss_tol
-        global compressed_pedigree, ind_exclusions
-        global missing_representation, snp_miss_tol, missing_storage
+        """Load all data into memory and propagate valid individuals to \
+        pheno_covar.
+
+        :param pheno_covar: Phenotype/covariate object is updated with subject
+        information
+        :return: None
+        """
+
         first_genotype = 6
         pheno_col      = 5
         if not DataParser.has_sex:
@@ -246,7 +262,15 @@ class Parser(DataParser):
         return self.markers
 
     def populate_iteration(self, iteration):
-        """Pour the current data into the iteration object"""
+        """Parse genotypes from the file and iteration with relevant marker \
+            details.
+
+        :param iteration: ParseLocus object which is returned per iteration
+        :return: True indicates current locus is valid.
+
+        StopIteration is thrown if the marker reaches the end of the file or
+        the valid genomic region for analysis.
+        """
 
         cur_idx = iteration.cur_idx
         if cur_idx < self.locus_count:

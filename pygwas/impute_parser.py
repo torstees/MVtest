@@ -8,8 +8,9 @@ import numpy
 from exceptions import InvalidSelection
 import os
 
-# Fake enum
+
 class Encoding(object):
+    """Simple enumeration for various model encodings"""
     Additive = 0
     Dominant = 1
     Recessive = 2
@@ -19,6 +20,10 @@ encoding = Encoding.Additive
 
 
 def SetEncoding(sval):
+    """Sets the encoding variable according to the text passed
+
+    :param sval: text specification for the desired model
+    """
     global encoding
     s=sval.lower()
     if s == "additive":
@@ -51,16 +56,18 @@ class Parser(DataParser):
     """Parse IMPUTE style output.
 
         """
+    #: the extension associated with the .info files if not using conventions
     info_ext = "info"
+
+    #: The genotype file suffix (of not following convention)
     gen_ext = "gen.gz"
+
+    #: The threshold associated with the .info info column
     info_threshold = 0.4
 
     def __init__(self, fam_details, archive_list, chroms, info_files=[]):
         """Initialize the structure with the family details file and the list of archives to be parsed
 
-        :param fam_details:     File containing the family details for each subject
-        :param archive_list:    list of gzipped files to be considered
-        :return:
         """
         pygwas.ExitIf("Imputed Family file not found, %s" % (fam_details), not os.path.exists(fam_details))
         for file in archive_list:
@@ -75,17 +82,33 @@ class Parser(DataParser):
             pygwas.ExitIf("Info filename can't be same as sample filename, %s == %s" % (file, archive_list[idx]), file==archive_list[idx])
             idx += 1
 
+        #: single file containing the subject details (similar to plink's .fam)
+        self.fam_details = fam_details
 
-        self.fam_details = fam_details      # single file containing the subject details (similar to plink's .fam)
-        self.archives = archive_list        # This is only the list of files to be processed
+        #: This is only the list of files to be processed
+        self.archives = archive_list
+
+        #: array of .info files
         self.info_files = info_files
-        self.current_file = None            # This will be used to record the opened file used for parsing
-        self.current_chrom = None           # This will be used to record the chromosome of the current file
-        self.current_info = None            # This will be used to record the info file associated with quality of SNPs
-        self.chroms = chroms                # List of chroms to match files listed in archives
+
+        #: This will be used to record the opened file used for parsing
+        self.current_file = None
+
+        #: This will be used to record the chromosome of the current file
+        self.current_chrom = None
+
+        #: This will be used to record the info file associated with quality of SNPs
+        self.current_info = None
+
+        #: List of chroms to match files listed in archives
+        self.chroms = chroms
 
 
     def ReportConfiguration(self, file):
+        """
+        :param file: Destination for report details
+        :return: None
+        """
         global encodingpar
         print >> file, pygwas.BuildReportLine("FAM FILE", self.fam_details)
         print >> file, pygwas.BuildReportLine("IMPUTE_ARCHIVES", "%s:%s" % (str(self.chroms[0]), self.archives[0]))
@@ -98,6 +121,11 @@ class Parser(DataParser):
         print >> file, pygwas.BuildReportLine("INFO-THRESH", Parser.info_threshold)
 
     def load_family_details(self, pheno_covar):
+        """Load family data updating the pheno_covar with  family ids found.
+
+        :param pheno_covar: Phenotype/covariate object
+        :return: None
+        """
         file = open(self.fam_details)
         header = file.readline()
         format = file.readline()
@@ -122,8 +150,11 @@ class Parser(DataParser):
         pheno_covar.freeze_subjects()
 
     def load_genotypes(self):
+        """Prepares the files for genotype parsing.
+
+        :return: None
         """
-        """
+
 
         if self.file_index < len(self.archives):
             self.current_file = self.archives[self.file_index]
@@ -143,7 +174,8 @@ class Parser(DataParser):
             raise StopIteration
 
     def get_next_line(self):
-        """If we reach the end of the file, we simply open the next, until we run out of archives to process"""
+        """If we reach the end of the file, we simply open the next, until we \
+        run out of archives to process"""
 
         line = self.freq_file.readline().strip().split()
         if len(line) < 1:
@@ -155,10 +187,19 @@ class Parser(DataParser):
         return line, info, exp_freq
 
     def get_effa_freq(self, genotypes):
+        """Returns the effect allele's frequency"""
         return numpy.mean(numpy.array(genotypes))/2
 
     def populate_iteration(self, iteration):
-        """Pour the current data into the iteration object"""
+        """Parse genotypes from the file and iteration with relevant marker \
+            details.
+
+        :param iteration: ParseLocus object which is returned per iteration
+        :return: True indicates current locus is valid.
+
+        StopIteration is thrown if the marker reaches the end of the file or
+        the valid genomic region for analysis.
+        """
         global encoding
         line, info, exp_freq = self.get_next_line()
 

@@ -21,17 +21,17 @@ class StandardizedVariable(object):
        write up application specific Standardization objects for use with
        the data parsers.
 
-       self.covariates_raw are unstandardized covariates with missingness over entire model
-       self.covariates are standardized covariates
-       self.phenotype_raw is unstandardized phenotype with missingness over entire model
-       self.phenotype is standardized phenotype
-       self.nonmissing is the mask associated with non-missing data (for entire group)
        """
     def __init__(self, pc):
+        #: mask representing missingness (1 indicates missing)
         self.missing = []
+        #: number of covars
         self.covar_count = len(pc.covariate_data)
+        #: number of phenotypes
         self.pheno_count = len(pc.phenotype_data)
+        #: Standardized covariate data
         self.covariates = None
+        #: standardized phenotype data
         self.phenotypes = None
 
         for pheno in pc.phenotype_data:
@@ -39,12 +39,19 @@ class StandardizedVariable(object):
             for idx in range(0, self.covar_count):
                 missing = missing | (pc.covariate_data[idx] == pheno_covar.PhenoCovar.missing_encoding)
             self.missing.append(missing)
-
+        #: index of the current phenotype
         self.idx = 0
+        #: Reference back to the pheno_covar object for access to raw data
         self.datasource = pc
 
 
     def get_variables(self, missing_in_geno=None):
+        """Extract the complete set of data based on missingness over all
+        for the current locus.
+
+        :param missing_in_geno: mask associated with missingness in genotype
+        :return: (phenotypes, covariates, nonmissing used for this set of vars)
+        """
         count = 0
         mismatch = 0
 
@@ -67,22 +74,46 @@ class StandardizedVariable(object):
         return (self.phenotypes[self.idx][nonmissing], covars, nonmissing)
 
     def get_phenotype_name(self):
+        """Returns current phenotype name"""
         return self.datasource.phenotype_names[self.idx]
 
     def get_covariate_name(self, idx):
+        """Return label for a specific covariate
+
+        :param idx: which covariate?
+        :return: string label
+        """
         return self.datasource.covariate_labels[idx]
 
     def get_covariate_names(self):
+        """Return all covariate labels as a list
+
+        :return: list of covariate names
+        """
         return self.datasource.covariate_labels
 
     def standardize(self):
+        """Stub for the appropriate standardizer function
+
+        Each Standardizer object will do it's own thing here.
+        """
         pass
 
     def destandardize(self):
+        """Stub for the appropriate destandardizer function.
+
+        Each object type will do it's own thing here.
+        """
         pass
 
 
 class NoStandardization(StandardizedVariable):
+    """This is mostly a placeholder for standardizers. Each application will
+    probably have a specific approach to standardizing/destandardizing the
+    input/output.
+
+    """
+
     def __init__(self, pc):
         super(NoStandardization, self).__init__(pc)
     def standardize(self):
@@ -106,4 +137,5 @@ class NoStandardization(StandardizedVariable):
 
         return estimates, se, kwargs["pvalues"]
 
+#: This should be set to an appropriate object by the application
 _standardizer = NoStandardization

@@ -11,21 +11,18 @@ from pygwas.data_parser import DataParser
 from mvresult import MVResult
 from pygwas.exceptions import UnsolvedLocus
 from pygwas.exceptions import NanInResult
+import pygwas.pheno_covar
 from pygwas.standardizer import get_standardizer
 
 def MeanVarEstEQ(y, x, covariates, tol=1e-8):
-    """
-    Params:
-    y               Outcomes
-    X               [genotypes, cov1, etc]
-    N               # Individuals
+    """Perform the mean var calculation using estimated equestions
 
-    Class Members:
-
+    :param y: Outcomes
+    :param x: [genotypes, cov1, ..., covN]
+    :param tol: convergence criterion
 
     """
 
-    # number of covariates + 1 (geno) + 1 (outcome)
     pcount = covariates.shape[0] + 2
     N = y.shape[0]
     beta_count = pcount * 2
@@ -53,8 +50,11 @@ def MeanVarEstEQ(y, x, covariates, tol=1e-8):
             self.dtheta = dtheta
 
     def dot_diag(x, y):
-        """This is a conveniance function to perform the following
+        """This is a conveniance function to perform the following \
         in a more efficient manner:
+
+        :param x: arr1
+        :param y: arr2
 
         x.dot(numpy.diag(y))
 
@@ -72,6 +72,8 @@ def MeanVarEstEQ(y, x, covariates, tol=1e-8):
         return result
 
     def diag_dot(x, y):
+        """diagonal multiply
+        """
         result = numpy.empty(y.shape)
         for i in range(0, y.shape[0]):
             result[i] = y[i] * x[i]
@@ -96,13 +98,6 @@ def MeanVarEstEQ(y, x, covariates, tol=1e-8):
         t1 = t1.dot(X)
         t2 = t2.dot(X)
         t3 = t3.dot(X)
-        # Removed these diags because they were causing massive
-        # bumps in memory and were really slowing everything way down
-        """t12 = numpy.transpose(X).dot(numpy.diag(-SS)).dot(X)
-        t22 = numpy.transpose(X).dot(numpy.diag(-DD1)).dot(X)
-        t32 = numpy.transpose(X).dot(numpy.diag(-DD2)).dot(X)
-        """
-
 
         dtheta = numpy.hstack((numpy.vstack((t1, t2)), numpy.vstack((t2, t3))))
         return PhiReturn(Phi, dtheta)
@@ -192,25 +187,12 @@ def MeanVarEstEQ(y, x, covariates, tol=1e-8):
     pval = 2*scipy.stats.norm.cdf(-numpy.absolute(mod.theta/se))
     return pvalt, theta, pval, se, V/N
 
-
-    """
-    print "PVALUES: "
-    print "Mod.theta: ", mod.theta
-    print "N          ", N
-    print "theta_se   ", theta_se
-    print "pvalue     ", pvalue
-
-    estm = mod.theta[1]
-    sdm = theta_se[1]
-    pvalm = pvalue[1]
-    estv = mod.theta[pcount+1]
-    sdv = theta_se[pcount+1]
-    pvalv = pvalue[pcount+1] """
-
-
-
 def RunMeanVar(pheno, geno, covar=[]):
     """Setup and execute the mean var calculation.
+
+    :param pheno: Phenotype data (one phenotype at a time)
+    :param geno: SNP data (might be genotypes, or dosages, etc)
+    :param covar: List of covariate data
 
     It is possible that the optimization will fail to converge. Such
     cases are stripped of data, but are still reported to alert the
@@ -219,8 +201,11 @@ def RunMeanVar(pheno, geno, covar=[]):
     """
     return MeanVarEstEQ(pheno, geno, covar)
 
-def RunAnalysis(dataset, pheno_covar, do_print_iteration_summary=False):
+def RunAnalysis(dataset, pheno_covar):
     """Run the actual analysis on all valid loci for each phenotype
+
+    :param dataset: GWAS parser object
+    :param pheno_covar: holds all of the variables
 
     This acts as a standard iterator, returning a single MVResult for
     each locus/phenotype combination.
@@ -333,11 +318,4 @@ def RunAnalysis(dataset, pheno_covar, do_print_iteration_summary=False):
                 unsolved.append(snp)
     if len(unsolved)>0:
         print >> sys.stderr, "Total unsolvable loci: ", len(unsolved)
-
-    if do_print_iteration_summary:
-        iteration_count = numpy.array([len(x) for x in iteration_count])
-        print >> sys.stderr, "# Tests run: ", iteration_count.shape[0]
-        print >> sys.stderr, "Mean Itr:    ", numpy.mean(iteration_count), "\tItr Std: ", numpy.std(iteration_count)
-        print >> sys.stderr, "# Itr > 1:   ", numpy.sum(iteration_count > 1)
-        print >> sys.stderr, "MAX Itr:     ", numpy.max(iteration_count), "\t# (MAX):  ", numpy.sum(iteration_count == numpy.max(iteration_count))
 

@@ -6,58 +6,53 @@ __version__ = "0.9.1"
 class MVResult(object):
     """Result associated with a single locus/phenotype execution
 
-    Class Members:
-    chr         Chromosome Number
-    pos         BP offset from beginning of chromosome (starts with 1)
-    rsid        SNP name
-    maj_allele  Most common allele representation found at this locus
-    min_allele  Least common allele representation found at this locus
-    non_miss    Number of individuals who weren't missing any of the
-                components (genotype, outcome or variate values)
-    fit         Fitness value returned from search
-    fit0        Fitness returned from null distribution
-    p_mvtest    p-value associated with the evaluation
-    p_variance
-    beta_lin    Betas associated with the mean
-    beta_var    Betas associated with the variance
-    ph_label    Phenotype label associated with this result
-    maf         frequency of min_allele
-    runtime     number seconds required to perform calculation
-
     """
-    verbose = False
 
-    #def __init__(self, chr, pos, rsid, maj, min, non_miss_count, ph_label, fit, fit0, p_mvtest, p_variance, blin, bvar, maf, runtime=-1):
     def __init__(self, chr, pos, rsid, maj, min, eff_alcount, non_miss_count, p_mvtest, ph_label, beta_values , pvalues, stderrors, maf, covar_labels=[], lm=-1,runtime=-1):
+        #: Chromosome
         self.chr = chr
+        #: BP position
         self.pos = pos
+        #: RSID
         self.rsid = rsid
+        #: Major allele (A,C,G,T, etc)
         self.maj_allele = maj
+        #: Minor allele
         self.min_allele = min
+        #: Total count of effect alleles
         self.eff_alcount = eff_alcount
+        #: non missing count
         self.non_miss = non_miss_count
+        #: mvtest's pvalue
         self.p_mvtest = p_mvtest
+        #: list of beta values
         self.betas = beta_values
+        #: list of beta pvalues
         self.beta_pvalues = pvalues
+        #: list of std errors
         self.beta_stderr = stderrors
+        #: current phenotype label
         self.ph_label   = ph_label
+        #: minor allele frequency
         self.maf = maf
+        #: number of seconds analysis took to complete
         self.runtime = runtime
+        #: LM
         self.lmpv = lm
+        #: Covariate labels used for analysis
         self.covar_labels = covar_labels
-        #self.stdy = stdy
-        #self.meanAVA = meanAVA
-        #self.varAVA = varAVA
 
-    @classmethod
-    def set_verbose(cls, val):
-        cls.verbose = val
 
     @property
     def p_variance(self):
         return self.beta_pvalues[3]
 
     def print_header(self, f=sys.stdout, verbose=False):
+        """Prints header to f (will write header based on verbose)
+
+        :param f: stream to print output
+        :param verbose: print all data or only the most important parts?
+        """
         self.var_count = 2 + len(self.covar_labels)
 
         if verbose:
@@ -104,6 +99,11 @@ class MVResult(object):
             return value
 
     def print_result(self, f=sys.stdout, verbose=False):
+        """Print result to f
+
+        :param f: stream to print output
+        :param verbose: print all data or only the most important parts?
+        """
         var_count = len(self.betas)/2
         if verbose:
             results = [str(x) for x in [

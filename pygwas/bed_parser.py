@@ -69,7 +69,8 @@ class Parser(transposed_pedigree_parser.Parser):
         }
 
     def ReportConfiguration(self, file):
-        """
+        """ Report configuration for logging purposes.
+
         :param file: Destination for report details
         :return: None
         """

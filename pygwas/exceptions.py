@@ -11,22 +11,35 @@ class UnsolvedLocus(ReportableException):
 class TooManyAlleles(ReportableException):
     """Indicate locus found with more than 2 alleles"""
     def __init__(self, chr=None, rsid=None, pos=None, alleles=None, index=None, prefix="Too many alleles: "):
+        #: Chromosome
         self.chr = chr
+
+        #: BP Position
         self.pos = pos
+
+        #: RSID
         self.rsid = rsid
+
+        #: Allele 1 and 2
         self.alleles = alleles
+
+        #: Index of the locus within the file
         self.index = index
+
         super(TooManyAlleles, self).__init__("%s %s:%s (%s) %s" % (prefix, self.chr, self.pos, self.rsid, self.alleles))
 
 class NanInResult(ReportableException):
+    """NaN found in result"""
     def __init__(self, msg = ""):
         super(NanInResult, self).__init__(msg)
 
 class NoMatchedPhenoCovars(ReportableException):
+    """No ids matched between pheno or covar and the family data"""
     def __init__(self, msg = ""):
         super(NoMatchedPhenoCovars, self).__init__(msg)
 
 class InvariantVar(ReportableException):
+    """No minor allele found"""
     def __init__(self, msg=""):
         super(InvariantVar, self).__init__(msg)
 

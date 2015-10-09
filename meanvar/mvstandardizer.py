@@ -15,27 +15,10 @@ class Standardizer(pygwas.standardizer.StandardizedVariable):
        write up application specific Standardization objects for use with
        the data parsers.
 
-       self.covariates_raw are unstandardized covariates with missingness over entire model
-       self.covariates are standardized covariates
-       self.phenotype_raw is unstandardized phenotype with missingness over entire model
-       self.phenotype is standardized phenotype
        """
 
     def __init__(self, pc):
-        self.missing = []
-        self.covar_count = len(pc.covariate_data)
-        self.pheno_count = len(pc.phenotype_data)
-        self.covariates = None
-        self.phenotypes = None
-
-        for pheno in pc.phenotype_data:
-            missing = pheno == PhenoCovar.missing_encoding
-            for idx in range(0, self.covar_count):
-                missing = missing | (pc.covariate_data[idx] == PhenoCovar.missing_encoding)
-            self.missing.append(missing)
-
-        self.idx = 0
-        self.datasource = pc
+        super(Standardizer, self).__init__(pc)
 
 
     def standardize(self):
@@ -68,9 +51,7 @@ class Standardizer(pygwas.standardizer.StandardizedVariable):
         self.phenotypes.append((y-my)/sy)
 
     def destandardize(self, estimates, se, **kwargs):
-        """When the pheno/covar data has been standardized, this can be
-        used to rescale the betas back to a meaningful value using the
-        original data.
+        """Revert the betas and variance components back to the original scale.
 
         """
         pvalues = kwargs["pvalues"]
