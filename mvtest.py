@@ -29,6 +29,8 @@ from pygwas import ExitIf
 
 __version__ = meanvar.__version__
 
+ExitIf("mvtest.py requires python 2.7.x  to run", sys.version_info < (2,7))
+
 pygwas.standardizer.set_standardizer(meanvar.mvstandardizer.Standardizer)
 
 """usage: mvtest.py [-h] [-v] [--chr N] [--snps SNPS] [--from-bp START]
@@ -153,6 +155,7 @@ class MVTestApplication(object):
         parser = argparse.ArgumentParser(description="MV Test: " + __version__)
 
         parser.add_argument("-v", action='store_true', help="Print version number")
+        parser.add_argument("--vall", action='store_true', help="Print version number along with each dependency")
 
         parser.add_argument("--chr", type=int, default=-1, metavar="N", help="Select Chromosome")
         parser.add_argument("--snps", type=str, default="", help="Comma-delimited list of SNP(s): rs1,rs2,rs3-rs6")
@@ -237,7 +240,14 @@ class MVTestApplication(object):
         # Report version, if requested, and exit
         if args.v:
             print >> sys.stderr, "%s: %s" % (os.path.basename(__file__), __version__)
-            sys.exit(1)
+            sys.exit(0)
+
+        if args.vall:
+            print >> sys.stderr, "%s: %s" % (os.path.basename(__file__), __version__)
+            print >> sys.stderr, "%s: %s" % (os.path.dirname(pygwas.__file__), pygwas.__version__)
+            print >> sys.stderr, "%s: %s" % (os.path.dirname(scipy.__file__), scipy.__version__)
+            print >> sys.stderr, "%s: %s" % (os.path.dirname(numpy.__file__), numpy.__version__)
+            sys.exit(0)
 
         ###############################################################################################################
         # Here we deal with the various ways we filter SNPs in and out of anlysis
