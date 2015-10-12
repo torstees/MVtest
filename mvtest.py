@@ -213,7 +213,7 @@ class MVTestApplication(object):
         parser.add_argument("--sample-pheno", type=argparse.FileType('r'), help="(Mach) Sample file containing phenotypes")
         parser.add_argument("--mphenos", type=str, default="", help="Column number(s) for phenotype to be analyzed if number of columns > 1")
         parser.add_argument("--pheno-names", type=str, default="", help="Name for phenotype(s) to be analyzed (must be in --pheno file)")
-        parser.add_argument("--all-pheno", actions="store_true", help="Analyze all columns from the phenotype file")
+        parser.add_argument("--all-pheno", action="store_true", help="Analyze all columns from the phenotype file")
         #parser.add_argument("--all-pheno", action='store_true', help="Analyze each phenotype")
 
         parser.add_argument("--covar", type=argparse.FileType('r'), help="File containing covariates")

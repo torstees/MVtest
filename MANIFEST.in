@@ -1,2 +1,4 @@
-include doc/README-MVTEST.html
+include doc/MV-Test.pdf
+include README.md
+include CHANGES
 include ez_setup.py

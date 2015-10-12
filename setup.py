@@ -27,7 +27,7 @@ setuptools.setup(name="mvtest",
     long_description=read('README.md'),
     test_suite='tests',
     package_data={'meanvar/tests/bedfiles':['*'],
-                  'doc':['*.html']},
+                  'doc':['*']},
     classifiers=[
         "Development Status :: 3 - Beta",
         "Topic :: Utilities",
