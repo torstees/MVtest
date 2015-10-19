@@ -23,6 +23,7 @@ I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
 all:
 	make latexpdf
+	mkdir -p ../doc
 	cp _build/latex/MV-Test.pdf ../doc
 	pandoc -f rst -t markdown_github -o ../README.md mvtest.rst installation.rst changes.rst
 	cp ../README.md ../README
