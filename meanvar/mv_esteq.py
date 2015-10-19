@@ -263,7 +263,7 @@ def RunAnalysis(dataset, pheno_covar):
                                 snp.rsid,
                                 snp.major_allele,
                                 snp.minor_allele,
-                                snp.allele_count2 / float(nonmissing_ct * 2),
+                                dataset.get_effa_freq(genotypes),
                                 non_miss_count=nonmissing_ct,
                                 ph_label=y.get_phenotype_name(),
                                 p_mvtest=pvalt,
