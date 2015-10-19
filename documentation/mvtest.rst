@@ -161,6 +161,46 @@ by .info.
   --impute-info-thresh IMPUTE_INFO_THRESH            float        Threshold for filtering imputed SNPs with poor 'info' values
 ===================================================  ===========  =================================
 
+MACH output
+^^^^^^^^^^^
+Users can analyze data imputed with MACH. Because most situations require
+many files, the format is a single file which contains either pairs of
+dosage/info files, or, if the two files share the same filename except for
+extensions, one dosage file per line.
+
+There is one caveat when using MACH output for analysis: MV-Test requires
+Chromosome and Position for consistency in reporting. As such, the IDs inside
+.info files must be of the form: chrom:pos
+
+If RSIDs or solely positions are found, MVTest will exit with an error.
+
+When running mvtest using MACH dosage on a cluster, users can instruct a given
+job to anlyze data from a portion of the files contained within the MACH
+dosage file list by changing the --mach-offset and --mach-count arguments. By
+default, the offset starts with 1 (the first file in the dosage list) and runs
+all it finds. However, if one were to want to split the jobs up to analyze
+three dosage files per job, they might set those values to --mach-offset 1
+--mach-count 3 or --mach-offset 4 --mach-count 3 depending on which job
+is being defined.
+
+In order to minimize memory requirements, MACH dosage files can be loaded
+incrementally such that only N loci are stored in memory at a time. This can
+be controlled using the --mach-chunk-size argument. The larger this number is,
+the faster MVTest will run (fewer times reading from file) but the more
+memory is required.
+
+===================================================  ===========  =================================
+ Flag(s)                                             Type         Description
+===================================================  ===========  =================================
+  --mach MACH                                        filename     File containing list of dosages, one per line. Optionally, lines may contain the info names as well (separated by whitespace) if the two filenames do not share a common base name.
+  --mach-offset OFFSET                               number       Index into the MACH file to begin analyzing
+  --mach-count COUNT                                 number       Number of dosage files to analyze
+  --mach-uncompressed                                             By default, MACH input is expected to be gzip compressed. If data is plain text, add this flag
+  --mach-chunk-size CHUNK_SIZE                       number       Due to the individual orientation of the data, large dosage files are parsed in chunks in order to minimize excessive memory during loading
+  --mach-info-ext EXT                                string       Indicate the extension used by the mach info files
+  --mach-dose-ext EXT                                string       Indicate the extension used by the mach dosage files
+  --mach-min-rsquared MIN                            float        Indicate the minimum threshold for the rsqured value from the .info files required for analysis.
+===================================================  ===========  =================================
 
 .. raw:: latex
 

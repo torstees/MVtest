@@ -2,6 +2,7 @@ import pygwas
 from pygwas.data_parser import DataParser
 from parsed_locus import ParsedLocus
 from . import sys_call
+from . import ExitIf
 import sys
 from exceptions import TooManyAlleles
 from exceptions import TooFewAlleles
@@ -138,9 +139,13 @@ class Parser(DataParser):
             self.line_count = int(data[0].strip().split(" ")[0])
             iddata, serr = sys_call('cat %s | cut -f 1' % (file))
 
+        ids_observed = set()
         for line in iddata:
             indid = line.strip().split()[0]
             indid = ":".join(indid.split("->"))
+
+            ExitIf("Duplicate ID found in dose file: %s" % (indid), indid in ids_observed)
+            ids_observed.add(indid)
 
             if DataParser.valid_indid(indid):
                 mask_components.append(0)
@@ -248,7 +253,7 @@ class Parser(DataParser):
         while lindex < (ub - 2):
             words = file.readline().strip().split()
             if len(words) > 0:
-                loc, al1, al2, freq1, maf, avgcall,rsq = words[0:7]
+                loc, al2, al1, freq1, maf, avgcall,rsq = words[0:7]
                 marker = loc.split(":")[0:2]
                 marker[0]=int(marker[0])
                 self.markers.append(marker)
@@ -298,8 +303,8 @@ class Parser(DataParser):
 
         if DataParser.boundary.TestBoundary(iteration.chr, iteration.pos, iteration.rsid) and self.rsquared[cur_idx] >= Parser.min_rsquared:
             iteration.major_allele, iteration.minor_allele = self.alleles[cur_idx]
-            iteration._maf = self.maf[cur_idx]
             iteration.genotype_data = numpy.ma.masked_array(self.dosages[cur_idx].astype(numpy.float), self.ind_mask).compressed()
+            iteration._maf = numpy.mean(iteration.genotype_data/2)
             iteration.allele_count2 = (iteration.genotype_data.shape[0] * 4.0 - numpy.sum(iteration.genotype_data))
 
             return iteration.maf >= DataParser.min_maf and iteration.maf <= DataParser.max_maf
