@@ -109,12 +109,12 @@ class SnpBoundaryCheck(BoundaryCheck):
         return False
 
     def NoExclusions(self):
-        """Determine that there is no exclusion criterion in play
+        """Determine that there are no exclusion criterion in play
 
         :return: True if there is no real boundary specification of any kind.
 
-        This is used to avoid having to unnecessarily deal with missingmissness
-        at the SNP level, when there isn't any to begin with.
+        Simple method allowing parsers to short circuit the determination of
+        missingness, which can be moderately compute intensive.
         """
         if len(self.start_bounds) + len(self.target_rs) + len(self.ignored_rs) == 0:
             return BoundaryCheck.chrom == -1

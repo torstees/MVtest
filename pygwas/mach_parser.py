@@ -191,8 +191,6 @@ class Parser(DataParser):
 
         return dosages
 
-
-
     def load_genotypes(self):
         """Actually loads the first chunk of genotype data into memory due to \
         the individual oriented format of MACH data.

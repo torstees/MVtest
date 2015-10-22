@@ -129,11 +129,11 @@ class TestBase(unittest.TestCase):
             f = numpy.random.normal(base_freq, scale=0.1)
             f[f>=1.0] = 0.99
             maf = 1.0 - f
-            mafs += maf
             AA = f * f
             Aa = 2 * f * maf
             aa = maf * maf
-            dosages[idx] = Aa + 2*aa
+            dosages[idx] = Aa + 2*AA
+            mafs += dosages[idx] / 2
             print >> gen_file, "\t".join([
                 ind,
                 "DOSE"] +
@@ -322,7 +322,7 @@ class TestImputedBasics(TestBase):
 
         for snp in parser:
             self.assertEqual(self.positions[idx], snp.pos)
-            maf = numpy.mean(self.mafs[idx])
+            maf = numpy.mean(snp.genotype_data/2)
             self.assertAlmostEqual(maf, snp.maf, places=3)
             idx += 1
         self.assertEqual(10, idx)
@@ -337,8 +337,8 @@ class TestImputedBasics(TestBase):
 
         for snp in parser:
             self.assertEqual(self.positions[idx], snp.pos)
-            self.assertEqual(snp.major_allele, self.allele_1[idx])
-            self.assertEqual(snp.minor_allele, self.allele_2[idx])
+            self.assertEqual(snp.major_allele, self.allele_2[idx])
+            self.assertEqual(snp.minor_allele, self.allele_1[idx])
             idx += 1
         self.assertEqual(10, idx)
 
@@ -355,8 +355,8 @@ class TestImputedBasics(TestBase):
 
         for snp in parser:
             self.assertEqual(self.positions[idx], snp.pos)
-            self.assertEqual(snp.major_allele, self.allele_1[idx])
-            self.assertEqual(snp.minor_allele, self.allele_2[idx])
+            self.assertEqual(snp.major_allele, self.allele_2[idx])
+            self.assertEqual(snp.minor_allele, self.allele_1[idx])
             idx += 1
         self.assertEqual(10, idx)
     def testLongerList(self):
@@ -462,8 +462,8 @@ class TestImputedBasics(TestBase):
             while numpy.mean(self.mafs[idx]) < DataParser.min_maf:
                 idx += 1
             self.assertEqual(self.positions[idx], snp.pos)
-            self.assertEqual(snp.major_allele, self.allele_1[idx])
-            self.assertEqual(snp.minor_allele, self.allele_2[idx])
+            self.assertEqual(snp.major_allele, self.allele_2[idx])
+            self.assertEqual(snp.minor_allele, self.allele_1[idx])
             idx += 1
 
 
