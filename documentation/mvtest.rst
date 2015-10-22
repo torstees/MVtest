@@ -17,9 +17,6 @@ or
 
 In general, overlapping functionality should mimic that of PLINK.
 
-Due to automatic conversion of two dashes, "--", into an emdash (single long
-dash) when writing to PDF, you may need to
-
 Command-Line Arguments
 ++++++++++++++++++++++
 Command line arguments used by mvtest often mimick those used by PLINK, except
@@ -31,15 +28,19 @@ must follow the argument with a single space separating the two (no '=' signs.)
 For flags with no specified value, passing the flag indicates that condition
 is to be "activated".
 
+When there is no value listed in the "Type" column, the arguments are *off* by
+default and *on* when the argument is present (i.e. by default, compression
+is turned off except when the flag, --compression, has been provided.)
+
 Getting help
 ------------
 
-====================  =========  ============================================
- Flag(s)              Type       Description
-====================  =========  ============================================
-  -h, --help                     show this help message and exit
-  -v                             Print version number
-====================  =========  ============================================
+====================  ============================================
+ Flag(s)              Description
+====================  ============================================
+  -h, --help          show this help message and exit
+  -v                  Print version number
+====================  ============================================
 
 .. raw:: latex
 
@@ -50,14 +51,13 @@ Input Data
 MVTest attempts to mimic the interface for PLINK where appropriate.
 
 All input files should be whitespace delimited. For text based allelic
-annotations, 1|2 and A|C|G|T annotation is sufficient. All data must
-be expressed as alleles, not as genotypes (except for IMPUTE output,
-which is a specialized format that is very different from the other
-forms).
+annotations, 1|2 and A|C|G|T annotation is sufficient. All data must be
+expressed as alleles, not as genotypes (except for IMPUTE output, which is a
+specialized format that is very different from the other forms).
 
 For Pedigree, Transposed Pedigree and PLINK binary pedigree files, the using
-the prefix arguments is sufficient and recommended if your files follow
-the standard naming conventions.
+the prefix arguments is sufficient and recommended if your files follow the
+standard naming conventions.
 
 Pedigree Data
 ^^^^^^^^^^^^^
@@ -129,7 +129,7 @@ However, mvtest can directly use gzipped data files if they have the extension
 
 IMPUTE output
 ^^^^^^^^^^^^^
-MVTest doesn't call genotypes when performing analysis, and allows users to
+MVTest doesn't call genotypes when performing analysis and allows users to
 define which model to use when analyzing the data. Due to the fact that there
 is no specific location for chromosome within the input files, mvtest requires
 that users provide chromosome, impute input file and the corresponding .info
@@ -160,6 +160,24 @@ by .info.
   --impute-gen-ext IMPUTE_GEN_EXT                    file suffix  Portion of filename that denotes gen file
   --impute-info-thresh IMPUTE_INFO_THRESH            float        Threshold for filtering imputed SNPs with poor 'info' values
 ===================================================  ===========  =================================
+
+IMPUTE File Input
+^^^^^^^^^^^^^^^^^
+When performing an analysis on IMPUTE output, users must provide a single file
+which lists each of the gen files to be analyzed. This plain text file contains
+2 (or optionally 3) columns for each gen file:
+
+
+=========================  ======================  ==================================
+  Col 1 (chromosome)         Col 2 (gen file)        Col 3 (optional .info filename)
+=========================  ======================  ==================================
+  N (chromosome #)           filename                filename
+  ...                        ...                     ...
+=========================  ======================  ==================================
+
+The 3rd column is only required if your .info files and .gen files are not
+the same except for the extension.
+
 
 MACH output
 ^^^^^^^^^^^
@@ -201,6 +219,25 @@ memory is required.
   --mach-dose-ext EXT                                string       Indicate the extension used by the mach dosage files
   --mach-min-rsquared MIN                            float        Indicate the minimum threshold for the rsqured value from the .info files required for analysis.
 ===================================================  ===========  =================================
+
+MACH File Input
+^^^^^^^^^^^^^^^
+When running an analysis on MACH output, users must provide a single file which
+lists of each dosage file and (optionally) the matching .info file. This file
+is a simple text file with either 1 column (the dosage filename) or 2 (dosage
+filename followed by the info filename separated by whitespace).
+
+The 2nd column is only required if the filenames aren't identical except for
+the extension.
+
+==============================  =================================
+  Col 1 (dosage filename)         Col 2 (optional info filename)
+==============================  =================================
+  filename.dose                   filename.info
+  ...                             ...
+==============================  =================================
+
+
 
 .. raw:: latex
 

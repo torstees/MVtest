@@ -16,8 +16,6 @@ or
 
 In general, overlapping functionality should mimic that of PLINK.
 
-Due to automatic conversion of two dashes, "--", into an emdash (single long dash) when writing to PDF, you may need to
-
 Command-Line Arguments
 ----------------------
 
@@ -25,12 +23,14 @@ Command line arguments used by mvtest often mimick those used by PLINK, except w
 
 For the parameters listed below, when a parameter requires a value, the value must follow the argument with a single space separating the two (no '=' signs.) For flags with no specified value, passing the flag indicates that condition is to be "activated".
 
+When there is no value listed in the "Type" column, the arguments are *off* by default and *on* when the argument is present (i.e. by default, compression is turned off except when the flag, --compression, has been provided.)
+
 ### Getting help
 
-| Flag(s)    | Type | Description                     |
-|------------|------|---------------------------------|
-| -h, --help |      | show this help message and exit |
-| -v         |      | Print version number            |
+| Flag(s)    | Description                     |
+|------------|---------------------------------|
+| -h, --help | show this help message and exit |
+| -v         | Print version number            |
 
 \newpage
 ### Input Data
@@ -91,7 +91,7 @@ By default, Pedigree and Transposed Pedigree data is assumed to be uncompressed.
 
 #### IMPUTE output
 
-MVTest doesn't call genotypes when performing analysis, and allows users to define which model to use when analyzing the data. Due to the fact that there is no specific location for chromosome within the input files, mvtest requires that users provide chromosome, impute input file and the corresponding .info file for each imputed output.
+MVTest doesn't call genotypes when performing analysis and allows users to define which model to use when analyzing the data. Due to the fact that there is no specific location for chromosome within the input files, mvtest requires that users provide chromosome, impute input file and the corresponding .info file for each imputed output.
 
 Due to the huge number of expected loci, mvtest allows users to specify an offset and file count for analysis. This is to allow users to run multiple jobs simultaneously on a cluster and work individually on separate impute region files. Users can segment those regions even further using standard mvtest region selection as well.
 
@@ -110,6 +110,17 @@ Default naming convention is for impute data files to end in .gen.gz and the inf
 | --impute-info-ext IMPUTE\_INFO\_EXT             | file prefix | Portion of filename denotes info filename                                     |
 | --impute-gen-ext IMPUTE\_GEN\_EXT               | file suffix | Portion of filename that denotes gen file                                     |
 | --impute-info-thresh IMPUTE\_INFO\_THRESH       | float       | Threshold for filtering imputed SNPs with poor 'info' values                  |
+
+#### IMPUTE File Input
+
+When performing an analysis on IMPUTE output, users must provide a single file which lists each of the gen files to be analyzed. This plain text file contains 2 (or optionally 3) columns for each gen file:
+
+| Col 1 (chromosome) | Col 2 (gen file) | Col 3 (optional .info filename) |
+|--------------------|------------------|---------------------------------|
+| N (chromosome \#)  | filename         | filename                        |
+| ...                | ...              | ...                             |
+
+The 3rd column is only required if your .info files and .gen files are not the same except for the extension.
 
 #### MACH output
 
@@ -133,6 +144,17 @@ In order to minimize memory requirements, MACH dosage files can be loaded increm
 | --mach-info-ext EXT           | string   | Indicate the extension used by the mach info files                                                                                                                                  |
 | --mach-dose-ext EXT           | string   | Indicate the extension used by the mach dosage files                                                                                                                                |
 | --mach-min-rsquared MIN       | float    | Indicate the minimum threshold for the rsqured value from the .info files required for analysis.                                                                                    |
+
+#### MACH File Input
+
+When running an analysis on MACH output, users must provide a single file which lists of each dosage file and (optionally) the matching .info file. This file is a simple text file with either 1 column (the dosage filename) or 2 (dosage filename followed by the info filename separated by whitespace).
+
+The 2nd column is only required if the filenames aren't identical except for the extension.
+
+| Col 1 (dosage filename) | Col 2 (optional info filename) |
+|-------------------------|--------------------------------|
+| filename.dose           | filename.info                  |
+| ...                     | ...                            |
 
 \newpage
 #### Phenotype/Covariate Data
@@ -176,12 +198,12 @@ When specifying a range of positions for analysis, a chromosome must be present.
 Installation
 ============
 
-MVTest requires python 2.7 or later (but 3.0 and later) as well as the following packages:
+MVTest requires python 2.7.x as well as the following libraries:
 
 -   NumPy (version 1.7.2 or later) www.numpy.org
 -   SciPY (version 0.13.2 or later) www.scipy.org
 
-If these aren't already installed, and you don't have root access to the machine, please see the section, Miniconda or virtual-env for easy instructions on different ways of installing tools as a restricted user. MVTest's installer can install these for you, however, it assumes that you have write access to your python library, which will not be the case by default on shared systems.
+MVTest's installation will attempt to install these required components for you, however, it requires that you have write permission to the installation directory. If you are using a shared system and lack the necessary privileges to install libraries and software yourself, you should please see one of the sections, Miniconda or virtual-env for instructions on different options for setting up your own python environement which will exist entirely under your own control.
 
 Download the package at: TODO: URL
 
@@ -189,12 +211,14 @@ To install the software, run the setup script as shown below: $ python setup.py 
 
 If no errors are reported, it should be installed and ready to use.
 
+**Regarding PYTHON 3** I began the process of updating the code to work with both python versions 2 and 3, however, there are some real issues with some library support of version 3 that is discouraging. So, until those have been resolved, I have no plans to invest further time toward support for python 3.
+
 System Requirements
 -------------------
 
 Aside from the library dependencies, MVTest's requirements depend largely on the number of SNPs and individuals being analyzed as well as the data format being used. In general, GWAS sized datasets will require several gigabytes of memory when using the traditional pedigree format, however, even 10s of thousands of subjects can be analyzed with less than 1 gigabyte of RAM when the data is formatted as transposed pedigree or PLINK's default bed format.
 
-Otherwise, it is recommended that the system be run on a unix-like system such as Linux or OS X, but it should work under windows as well (this is not a fully supported platform).
+Otherwise, it is recommended that the system be run on a unix-like system such as Linux or OS X, but it should work under windows as well (we can't offer support for running MVTest under windows).
 
 Running Unit Tests
 ------------------
@@ -208,7 +232,7 @@ If no errors are reported, then mvtest should run correctly on your system.
 Virtual Env
 -----------
 
-Virtual ENV is a powerful too for python programers and users alike, as it allows for users to deploy different versions of python applications without the need for root access to the machine.
+Virtual ENV is a powerful too for python programmers and end users alike as it allows for users to deploy different versions of python applications without the need for root access to the machine.
 
 Because MVTest requires version 2.7, you'll need to ensure that your machine's python version is in compliance. Virtual Env basically uses the the system version of python, but creates a user owned environment wrapper allowing users to install libraries easily without administrative rights to the machine.
 
@@ -217,11 +241,13 @@ For a helpful introduction to VirtualEnv, please have a look at the tutorial: <h
 Miniconda
 ---------
 
-Miniconda is a minimal version of the package manager used by the Anaconda python distribution. It makes it easy to create local installations of python with the latest versions of the common scientific libraries for users who don't have root access to their target machines.
+Miniconda is a minimal version of the package manager used by the Anaconda python distribution. It makes it easy to create local installations of python with the latest versions of the common scientific libraries for users who don't have root access to their target machines. Basically, when you use miniconda, you'll be installing your own version of Python into a directory under your control which allows you to install anything else you need without having to submit a helpdesk ticket for administrative assistance.
+
+Unlike pip, the folks behind the conda distributions provide binary downloads of it's selected library components. As such, only the most popular libraries, such as pip, NumPY and SciPy, are supported by conda itself. However, these do not require compilation and may be easier to get installed than when using pip alone. I have experienced difficulty installing SciPy through pip and setup tools on our cluster here at vanderbilt due to non-standard paths for certain required components, but mini-conda always comes through.
 
 Firstly, download and install the appropriate version of miniconda at the project website. Please be sure to choose the Python 2 version: <http://conda.pydata.org/miniconda.html>
 
-While it is doing the installation, please allow it to update your PATH information. Also, be sure to follow directions such as starting a new shell to allow those changes to take effect.
+While it is doing the installation, please allow it to update your PATH information. If you prefer not to always use this version of python in the future, simple tell it not to update your .bashrc file and note the instructions for loading and unloading your new python environment. Please note that even if you chose to update your .bashrc file, you will need to follow directions for loading the changes into your current shell.
 
 Once those changes have taken effect, install setuptools and scipy: $ conda install pip scipy
 

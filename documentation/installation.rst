@@ -1,17 +1,17 @@
 Installation
 ============
-MVTest requires python 2.7 or later (but 3.0 and later) as well as the
-following packages:
+MVTest requires python 2.7.x as well as the following libraries:
 
 * NumPy (version 1.7.2 or later)   www.numpy.org
 * SciPY (version 0.13.2 or later)  www.scipy.org
 
-If these aren't already installed, and you don't have root access to the
-machine, please see the section, :ref:`Miniconda` or :ref:`virtual-env`
-for easy instructions on different ways of installing tools as a
-restricted user. MVTest's installer can install these for you, however,
-it assumes that you have write access to your python library, which
-will not be the case by default on shared systems.
+MVTest's installation will attempt to install these required components
+for you, however, it requires that you have write permission to the
+installation directory. If you are using a shared system and lack the
+necessary privileges to install libraries and software yourself, you should
+please see one of the sections, :ref:`Miniconda` or :ref:`virtual-env` for
+instructions on different options for setting up your own python environement
+which will exist entirely under your own control.
 
 Download the package at: TODO: URL
 
@@ -19,6 +19,11 @@ To install the software, run the setup script as shown below:
 $ `python setup.py install`
 
 If no errors are reported, it should be installed and ready to use.
+
+**Regarding PYTHON 3** I began the process of updating the code to work with
+both python versions 2 and 3, however, there are some real issues with some
+library support of version 3 that is discouraging. So, until those have been
+resolved, I have no plans to invest further time toward support for python 3.
 
 System Requirements
 +++++++++++++++++++
@@ -30,8 +35,8 @@ thousands of subjects can be analyzed with less than 1 gigabyte of RAM when
 the data is formatted as transposed pedigree or PLINK's default bed format.
 
 Otherwise, it is recommended that the system be run on a unix-like system
-such as Linux or OS X, but it should work under windows as well (this is
-not a fully supported platform).
+such as Linux or OS X, but it should work under windows as well (we can't
+offer support for running MVTest under windows).
 
 Running Unit Tests
 ++++++++++++++++++
@@ -47,7 +52,7 @@ If no errors are reported, then mvtest should run correctly on your system.
 
 Virtual Env
 +++++++++++
-Virtual ENV is a powerful too for python programers and users alike, as it
+Virtual ENV is a powerful too for python programmers and end users alike as it
 allows for users to deploy different versions of python applications without
 the need for root access to the machine.
 
@@ -67,15 +72,29 @@ Miniconda
 Miniconda is a minimal version of the package manager used by the Anaconda
 python distribution. It makes it easy to create local installations of python
 with the latest versions of the common scientific libraries for users who don't
-have root access to their target machines.
+have root access to their target machines. Basically, when you use miniconda,
+you'll be installing your own version of Python into a directory under your
+control which allows you to install anything else you need without having to
+submit a helpdesk ticket for administrative assistance.
+
+Unlike pip, the folks behind the conda distributions provide binary downloads
+of it's selected library components. As such, only the most popular libraries,
+such as pip, NumPY and SciPy, are supported by conda itself. However, these do
+not require compilation and may be easier to get installed than when using
+pip alone. I have experienced difficulty installing SciPy through pip and setup
+tools on our cluster here at vanderbilt due to non-standard paths for certain
+required components, but mini-conda always comes through.
 
 Firstly, download and install the appropriate version of miniconda at the
 project website. Please be sure to choose the Python 2 version:
 http://conda.pydata.org/miniconda.html
 
 While it is doing the installation, please allow it to update your PATH
-information. Also, be sure to follow directions such as starting a new
-shell to allow those changes to take effect.
+information. If you prefer not to always use this version of python in the
+future, simple tell it not to update your .bashrc file and note the
+instructions for loading and unloading your new python environment. Please
+note that even if you chose to update your .bashrc file, you will need to
+follow directions for loading the changes into your current shell.
 
 Once those changes have taken effect, install setuptools and scipy:
 $ `conda install pip scipy`
