@@ -67,11 +67,11 @@ class StandardizedVariable(object):
             max = covars[idx][covars[idx] != pheno_covar.PhenoCovar.missing_encoding].max()
             if min == max:
                 raise InvariantVar("Covar %s doesn't have enough variation to continue" % (self.datasource.covariate_labels[idx]))
-        min = self.phenotypes[self.idx][nonmissing].min()
-        max = self.phenotypes[self.idx][nonmissing].max()
+        min = self.phenotypes[0][nonmissing].min()
+        max = self.phenotypes[0][nonmissing].max()
         if min == max:
             raise InvariantVar("Phenotype %s doesn't have enough variation to continue" % (self.datasource.phenotype_names[self.idx]))
-        return (self.phenotypes[self.idx][nonmissing], covars, nonmissing)
+        return (self.phenotypes[0][nonmissing], covars, nonmissing)
 
     def get_phenotype_name(self):
         """Returns current phenotype name"""
