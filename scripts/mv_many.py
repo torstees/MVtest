@@ -21,6 +21,9 @@ import sys
 import math
 from string import Template
 
+home_dir = os.getenv("HOME", ".")
+
+
 def check_and_append(args, flag, new_args):
     try:
         v = eval("args.%s" % (flag.replace("-", "_")))
@@ -48,15 +51,23 @@ $body
 
 def generate_jobs(args, job_list, argument_string):
     mvtest_path = args.mvpath
-    template = "\n".join(args.template.readlines())
+    template = "".join(args.template.readlines())
     logpath = os.path.abspath(args.logpath)
     respath = os.path.abspath(args.res_path)
     scriptpath = os.path.abspath(args.script_path)
+    pwd = os.path.abspath(os.getcwd())
 
     for jobname in job_list.keys():
         filename = "%s/%s.sh" % (scriptpath, jobname)
-        job_body = mvtest_path + " " + job_list[jobname]
-        contents = Template(template).safe_substitute(logpath=logpath, respath=respath, body=job_body, jobname=jobname)
+        job_body = mvtest_path + " " + argument_string + " " + job_list[jobname]
+        contents = Template(template).safe_substitute(
+                    logpath=logpath,
+                    respath=respath,
+                    body=job_body,
+                    jobname=jobname,
+                    memory=args.mem,
+                    walltime=args.walltime,
+                    pwd=pwd)
 
         file = open(filename, "w")
         print >> file,contents
@@ -66,10 +77,38 @@ def mkdir(dirname):
     except:
         pass
 
+def get_template_file(args):
+    """Pulls file from the argument list or uses the default template (creating it if necessary) """
+    if args.template is None:
+        template_filename  = os.getenv("HOME") + "/.mv-many.template"
+        try:
+            template_filename = open(template_filename, "r")
+        except:
+            with open(template_filename, "w") as file:
+                print >> file, """#SBATCH --job-name=$jobname
+#SBATCH --nodes=1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=$memory
+#SBATCH --time=$walltime
+#SBATCH --error $logpath/$jobname.e
+#SBATCH --output $respath/$jobname.txt
+
+cd $pwd
+
+$body
+    """
+            print >> sys.stderr, """PLEASE NOTE: \n
+A default template file, %s, has been created. You are encouraged to configure it according to work with your cluster
+management software or personalize it with email notifications, etc.\n"""
+            template_filename = open(template_filename, "r")
+
+    return template_filename
+
+
 def split_mach_jobs(args, filename):
     """Parse the IMPUTE file and generate the list of jobs """
     max_snp_count = args.snps_per_job
-    file_count = args.impute_count
 
     job_list = {}
     cur = None
@@ -77,14 +116,25 @@ def split_mach_jobs(args, filename):
     job_string = ""
     job_name = ""
 
-    ExitIf("mv-many doesn't support splitting mach jobs into pieces at this time", args.max_snp_count > 0)
+    mach_count = 1
+    if args.mach_count:
+        mach_count = args.mach_count
 
-    file_count = sys_call("wc -l %s" % (filename))
-    job_count = int(math.ceil(float(file_count) / args.mach_count))
+    ExitIf("mv-many doesn't support splitting mach jobs into pieces at this time", max_snp_count > 1)
 
-    for job_idx in range(job_count):
-        job_string = "--mach-offset %d" % (job_idx)
-        job_list[str(job_idx)] = "--mach-offset %d" % (job_idx)
+    dosage_files = []
+    for line in open(filename):
+        dosage_files.append(line.strip().split("/")[-1].split(".")[0])
+        dosage_files.append(".".join(line.strip().split()[-1].split("/")[-1].split(".")[0:-1]))
+
+    file_count = len(dosage_files)
+    job_count = int(math.ceil(float(file_count) / mach_count))
+
+    for job_num in range(job_count):
+        job_idx = job_num * mach_count + 1
+        job_string = "--mach-count %d --mach-offset %d" % (mach_count, job_idx)
+        job_name = "job%04d-%s" % (job_num+1, dosage_files[job_idx - 1])
+        job_list[job_name] = job_string
 
 
     return job_list
@@ -92,18 +142,29 @@ def split_mach_jobs(args, filename):
 def split_impute_jobs(args, filename):
     """Parse the IMPUTE file and generate the list of jobs """
     max_snp_count = args.snps_per_job
-    file_count = args.impute_count
 
-    ExitIf("mv-many doesn't support splitting IMPUTE jobs into pieces at this time", args.max_snp_count > 0)
+    if args.impute_count:
+        impute_count = args.impute_count
+    else:
+        impute_count = 1
+
+    ExitIf("mv-many doesn't support splitting IMPUTE jobs into pieces at this time", max_snp_count > 1)
 
     job_list = {}
+    gen_files = []
+    for line in open(filename):
+        gen_files.append(".".join(line.strip().split()[-1].split("/")[-1].split(".")[0:-1]))
 
-    file_count = sys_call("wc -l %s" % (filename))
-    job_count = int(math.ceil(float(file_count) / args.mach_count))
 
-    for job_idx in range(job_count):
-        job_string = "--mach-offset %d" % (job_idx)
-        job_list[str(job_idx)] = "--mach-offset %d" % (job_idx)
+    file_count = len(gen_files)
+    job_count = int(math.ceil(float(file_count) / impute_count))
+
+    for job_num in range(job_count):
+        job_idx = job_num * impute_count + 1
+        job_string = "--impute-offset %d --impute-count %d" % (job_idx, impute_count)
+        job_name = "job%04d-%s" % (job_num+1, gen_files[job_idx -1])
+        job_list[job_name] = job_string
+        print job_string
 
     return job_list
 
@@ -231,14 +292,13 @@ def main(print_cfg):
     parser.add_argument("--script-path", type=str, default="scripts", help="Where to write the various scripts to")
     parser.add_argument("--template", type=argparse.FileType('r'), help="File containing cluster related information that will be written as header to the various files")
     parser.add_argument("--snps-per-job", type=float, default=1.0, help="Allow the user to .")
+    parser.add_argument("--mem", type=str, default="2G", help="Memory required during runs")
+    parser.add_argument("--walltime", type=str, default="3:00:00", help="Walltime to use")
 
     # Most of these will just be passed on directly to the various MVTest scripts.
-    parser.add_argument("--exclude", type=str, default="", help="Comma-delimited list of rsids to be excluded")
-
-    # For now, I'm not implementing keep, since we don't have any real meaningful need for analyzing individuals
-    # PLINK does, but we don't do the QC stuff they do.
-    parser.add_argument("--keep", type=str, default="", help="Comma-delimited list of individuals to be analyzed")
-    parser.add_argument("--remove", type=str, default="", help="Comma-delimited list of individuals to be removed from analysis")
+    parser.add_argument("--exclude", type=str, help="Comma-delimited list of rsids to be excluded")
+    parser.add_argument("--keep", type=str, help="Comma-delimited list of individuals to be analyzed")
+    parser.add_argument("--remove", type=str, help="Comma-delimited list of individuals to be removed from analysis")
 
     parser.add_argument("--file", type=str, help="Prefix for .ped and .map files")
     parser.add_argument("--ped", type=argparse.FileType('r'), help="PLINK compatible .ped file")
@@ -263,40 +323,43 @@ def main(print_cfg):
 
     parser.add_argument("--impute", type=argparse.FileType('r'), help="File containing list of impute output for analysis")
     parser.add_argument("--impute-fam", type=argparse.FileType('r'), help="File containing family details for impute data")
+    parser.add_argument("--impute-count", type=int, help="Number of impute files to process on a single node")
     parser.add_argument("--impute-uncompressed", action="store_true", help="Indicate that the impute input is not gzipped, but plain text")
-    parser.add_argument("--impute-encoding", type=str, choices=['additive', 'dominant', 'recessive', 'genotype'], default='additive', help='Genetic model to be used')
-    parser.add_argument("--impute-info-ext", type=str, default='info', help="Portion of filename denotes info filename")
-    parser.add_argument("--impute-gen-ext", type=str, default='gen.gz', help="Portion of filename that denotes gen file")
-    parser.add_argument("--impute-info-thresh", type=float, default=0.4, help="Threshold for filtering imputed SNPs with poor 'info' values")
-    parser.add_argument("--impute-files-per-job", type=integer, default=1, help="How many gen files to run per job")
+    parser.add_argument("--impute-encoding", type=str, choices=['additive', 'dominant', 'recessive', 'genotype'], help='Genetic model to be used')
+    parser.add_argument("--impute-info-ext", type=str, help="Portion of filename denotes info filename")
+    parser.add_argument("--impute-gen-ext", type=str, help="Portion of filename that denotes gen file")
+    parser.add_argument("--impute-info-thresh", type=float, help="Threshold for filtering imputed SNPs with poor 'info' values")
+    parser.add_argument("--impute-files-per-job", type=int, help="How many gen files to run per job")
 
     parser.add_argument("--mach", type=argparse.FileType('r'), help="File containing list of MACH output for analysis")
     parser.add_argument("--mach-uncompressed", action="store_true", help="Indicate that the mach input is not gzipped")
-    parser.add_argument("--mach-info-ext", type=str, default="info.gz", help="Portion of filename denotes info filenames")
-    parser.add_argument("--mach-dose-ext", type=str, default="dose.gz", help="Portion of filename that denotes dose files")
-    parser.add_argument("--mach-min-rsquared", type=float, default=0.3, help="Filter out loci with RSquared < this value")
-    parser.add_argument("--mach-files-per-job", type=integer, default=1, help="How many dosage files to run per job")
+    parser.add_argument("--mach-info-ext", type=str, help="Portion of filename denotes info filenames")
+    parser.add_argument("--mach-dose-ext", type=str, help="Portion of filename that denotes dose files")
+    parser.add_argument("--mach-min-rsquared", type=float, help="Filter out loci with RSquared < this value")
+    parser.add_argument("--mach-files-per-job", type=int, help="How many dosage files to run per job")
+    parser.add_argument("--mach-chunk-size", type=int, help="How many loci to keep in memory at once")
+    parser.add_argument("--mach-count", type=int, help="Number of mach files to process for each job")
 
     parser.add_argument("--pheno", type=argparse.FileType('r'), help="File containing phenotypes")
     parser.add_argument("--sample-pheno", type=argparse.FileType('r'), help="(Mach) Sample file containing phenotypes")
-    parser.add_argument("--mphenos", type=str, default="", help="Column number(s) for phenotype to be analyzed if number of columns > 1")
-    parser.add_argument("--pheno-names", type=str, default="", help="Name for phenotype(s) to be analyzed (must be in --pheno file)")
+    parser.add_argument("--mphenos", type=str, help="Column number(s) for phenotype to be analyzed if number of columns > 1")
+    parser.add_argument("--pheno-names", type=str, help="Name for phenotype(s) to be analyzed (must be in --pheno file)")
     parser.add_argument("--all-pheno", action="store_true", help="Analyze all columns from the phenotype file")
 
     parser.add_argument("--covar", type=argparse.FileType('r'), help="File containing covariates")
     parser.add_argument("--sample-covar", type=argparse.FileType('r'), help="(Mach) Sample file containing covariates")
-    parser.add_argument("--covar-numbers", type=str, default="", help="Comma-separated list of covariate indices")
-    parser.add_argument("--covar-names", type=str, default="", help="Comma-separated list of covariate names")
+    parser.add_argument("--covar-numbers", type=str, help="Comma-separated list of covariate indices")
+    parser.add_argument("--covar-names", type=str, help="Comma-separated list of covariate names")
     parser.add_argument("--sex", action='store_true', help="Use sex from the pedigree file as a covariate")
-    parser.add_argument("--missing-phenotype", type=float, default=-9.0, help="Encoding for missing phenotypes")
+    parser.add_argument("--missing-phenotype", type=float, help="Encoding for missing phenotypes")
 
-    parser.add_argument("--maf", type=float, default=0.0, help="Minimum MAF allowed for analysis")
-    parser.add_argument("--max-maf", type=float, default=1.0, help="MAX MAF allowed for analysis")
-    parser.add_argument("--geno", type=float, default=1.0, help="MAX per-SNP missing for analysis")
-    parser.add_argument("--mind", type=float, default=1.0, help="MAX per-person missing")
+    parser.add_argument("--maf", type=float, help="Minimum MAF allowed for analysis")
+    parser.add_argument("--max-maf", type=float, help="MAX MAF allowed for analysis")
+    parser.add_argument("--geno", type=float, help="MAX per-SNP missing for analysis")
+    parser.add_argument("--mind", type=float, help="MAX per-person missing")
 
     parser.set_defaults(all_pheno=False, sex=False)
-    args = parser.parse_args(args)
+    args = parser.parse_args()
 
     # Report version, if requested, and exit
     if args.v:
@@ -305,19 +368,29 @@ def main(print_cfg):
     mkdir(args.script_path)
     mkdir(args.res_path)
     mkdir(args.logpath)
-    if args.template is None:
-        args.template = open(os.path.dirname(os.path.realpath(__file__)) + "/template.txt")
+
+    if args.mach:
+        args.mach = args.mach.name
+    if args.impute:
+        args.impute = args.impute.name
+    if args.impute_fam:
+        args.impute_fam = args.impute_fam.name
+    if args.covar:
+        args.covar = args.covar.name
+    if args.pheno:
+        args.pheno = args.pheno.name
 
     general_arguments = []
-    for flag in "exclude,keep,remove,file,ped,map,map3,no-sex,no-parents,no-fid,no-pheno,liability," + \
+    for flag in ("exclude,keep,remove,file,ped,map,map3,no-sex,no-parents,no-fid,no-pheno,liability," + \
                         "bfile,bed,bim,fam,tfile,tped,tfam,compressed," + \
                         "impute,impute-fam,impute-uncompresed,impute-encoding,impute-info-ext,impute-gen-ext,impute-info-thresh," +\
-                        "mach,mach-uncompressed,mach-info-ext,mach-dose-ext,mach-min-rsquared," +\
+                        "mach,mach-uncompressed,mach-info-ext,mach-dose-ext,mach-min-rsquared,mach-chunk-size," +\
                         "pheno,sample-pheno,pheno-names,mphenos,all-pheno," + \
-                        "covar,sample-covar,covar-numbers,covar-names,sex,missing-phenotype,maf,max-maf,gen,mind".split(","):
+                        "covar,sample-covar,covar-numbers,covar-names,sex,missing-phenotype,maf,max-maf,gen,mind").split(","):
         check_and_append(args, flag, general_arguments)
 
-
+    print "FDSAFDSA", general_arguments
+    args.template = get_template_file(args)
     job_list = None
     map_file = None
     impute_file_list = None

@@ -14,10 +14,10 @@ Contents:
 
    installation
    mvtest
+   mvmany
    authors
    modules
    changes
-
 
 Indices and tables
 ==================

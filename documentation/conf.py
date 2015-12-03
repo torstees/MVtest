@@ -215,6 +215,16 @@ preamble = r"""
   %\documentclass{article}
   \usepackage{microtype}
   \DisableLigatures[-]{}
+
+% Redefine these colors to your liking in the preamble.
+\definecolor{}{rgb}{1,0.5,0.5}
+\definecolor{TitleColor}{rgb}{0.33, 0.41, 0.47}
+\definecolor{InnerLinkColor}{rgb}{0.208,0.374,0.486}
+\definecolor{OuterLinkColor}{rgb}{0.216,0.439,0.388}
+% Redefine these colors to something if you want to have colored
+% background and border for code examples.
+\definecolor{VerbatimColor}{rgb}{0.95, 0.95, 0.96}
+\definecolor{VerbatimBorderColor}{rgb}{1,1,1}
 """
 
 latex_elements = {
@@ -223,6 +233,11 @@ latex_elements = {
 
 # The font size ('10pt', '11pt' or '12pt').
 #'pointsize': '10pt',
+
+'fontpkg': r"""
+\PassOptionsToPackage{bookmarksnumbered}{hyperref}
+
+""",
 
 # Additional stuff for the LaTeX preamble.
 'preamble': preamble,
