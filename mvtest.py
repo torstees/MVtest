@@ -33,31 +33,38 @@ ExitIf("mvtest.py requires python 2.7.x  to run", sys.version_info < (2,7))
 
 pygwas.standardizer.set_standardizer(meanvar.mvstandardizer.Standardizer)
 
-"""usage: mvtest.py [-h] [-v] [--chr N] [--snps SNPS] [--from-bp START]
+"""usage: mvtest.py [-h] [-v] [--vall] [--chr N] [--snps SNPS] [--from-bp START]
                  [--to-bp END] [--from-kb START] [--to-kb END]
                  [--from-mb START] [--to-mb END] [--exclude EXCLUDE]
-                 [--remove REMOVE] [--file FILE] [--ped PED] [--map MAP]
-                 [--map3] [--no-sex] [--no-parents] [--no-fid] [--no-pheno]
-                 [--liability] [--bfile BFILE] [--bed BED] [--bim BIM]
-                 [--fam FAM] [--tfile TFILE] [--tped TPED] [--tfam TFAM]
-                 [--compressed] [--impute IMPUTE] [--impute-fam IMPUTE_FAM]
-                 [--impute-offset IMPUTE_OFFSET] [--impute-count IMPUTE_COUNT]
-                 [--impute-uncompressed]
+                 [--keep KEEP] [--remove REMOVE] [--file FILE] [--ped PED]
+                 [--map MAP] [--map3] [--no-sex] [--no-parents] [--no-fid]
+                 [--no-pheno] [--liability] [--bfile BFILE] [--bed BED]
+                 [--bim BIM] [--fam FAM] [--tfile TFILE] [--tped TPED]
+                 [--tfam TFAM] [--compressed] [--impute IMPUTE]
+                 [--impute-fam IMPUTE_FAM] [--impute-offset IMPUTE_OFFSET]
+                 [--impute-count IMPUTE_COUNT] [--impute-uncompressed]
                  [--impute-encoding {additive,dominant,recessive,genotype}]
                  [--impute-info-ext IMPUTE_INFO_EXT]
                  [--impute-gen-ext IMPUTE_GEN_EXT]
-                 [--impute-info-thresh IMPUTE_INFO_THRESH] [--pheno PHENO]
-                 [--mphenos MPHENOS] [--pheno-names PHENO_NAMES]
-                 [--covar COVAR] [--covar-numbers COVAR_NUMBERS]
+                 [--impute-info-thresh IMPUTE_INFO_THRESH] [--mach MACH]
+                 [--mach-offset MACH_OFFSET] [--mach-count MACH_COUNT]
+                 [--mach-uncompressed] [--mach-chunk-size MACH_CHUNK_SIZE]
+                 [--mach-info-ext MACH_INFO_EXT]
+                 [--mach-dose-ext MACH_DOSE_EXT]
+                 [--mach-min-rsquared MACH_MIN_RSQUARED] [--pheno PHENO]
+                 [--sample-pheno SAMPLE_PHENO] [--mphenos MPHENOS]
+                 [--pheno-names PHENO_NAMES] [--all-pheno] [--covar COVAR]
+                 [--sample-covar SAMPLE_COVAR] [--covar-numbers COVAR_NUMBERS]
                  [--covar-names COVAR_NAMES] [--sex]
                  [--missing-phenotype MISSING_PHENOTYPE] [--maf MAF]
                  [--max-maf MAX_MAF] [--geno GENO] [--mind MIND] [--verbose]
 
-MV Test: 1.2.0rc5
+MV Test: 1.0.0rc5
 
 optional arguments:
   -h, --help            show this help message and exit
   -v                    Print version number
+  --vall                Print version number along with each dependency
   --chr N               Select Chromosome
   --snps SNPS           Comma-delimited list of SNP(s): rs1,rs2,rs3-rs6
   --from-bp START       SNP range start
@@ -67,6 +74,7 @@ optional arguments:
   --from-mb START       SNP range start
   --to-mb END           SNP range end
   --exclude EXCLUDE     Comma-delimited list of rsids to be excluded
+  --keep KEEP           Comma-delimited list of individuals to be analyzed
   --remove REMOVE       Comma-delimited list of individuals to be removed from
                         analysis
   --file FILE           Prefix for .ped and .map files
@@ -87,7 +95,7 @@ optional arguments:
   --tfam TFAM           Transposed pedigre Family file (.tfam)
   --compressed          Ped/TPed compressed with gzip (named .ped.tgz or
                         .tped.tgz)
-  --impute IMPUTE       File containing list of imput output for analysis
+  --impute IMPUTE       File containing list of impute output for analysis
   --impute-fam IMPUTE_FAM
                         File containing family details for impute data
   --impute-offset IMPUTE_OFFSET
@@ -106,13 +114,33 @@ optional arguments:
   --impute-info-thresh IMPUTE_INFO_THRESH
                         Threshold for filtering imputed SNPs with poor 'info'
                         values
+  --mach MACH           File containing list of MACH output for analysis
+  --mach-offset MACH_OFFSET
+                        Mach file index (1 based) to begin analysis
+  --mach-count MACH_COUNT
+                        Number of mach files to process (for this node)
+  --mach-uncompressed   Indicate that the mach input is not gzipped
+  --mach-chunk-size MACH_CHUNK_SIZE
+                        Max number of loci to load at once (higher increases
+                        memory requirements with some speed benefits)
+  --mach-info-ext MACH_INFO_EXT
+                        Portion of filename denotes info filenames
+  --mach-dose-ext MACH_DOSE_EXT
+                        Portion of filename that denotes dose files
+  --mach-min-rsquared MACH_MIN_RSQUARED
+                        Filter out loci with RSquared < this value
   --pheno PHENO         File containing phenotypes
+  --sample-pheno SAMPLE_PHENO
+                        (Mach) Sample file containing phenotypes
   --mphenos MPHENOS     Column number(s) for phenotype to be analyzed if
                         number of columns > 1
   --pheno-names PHENO_NAMES
                         Name for phenotype(s) to be analyzed (must be in
                         --pheno file)
+  --all-pheno           Analyze all columns from the phenotype file
   --covar COVAR         File containing covariates
+  --sample-covar SAMPLE_COVAR
+                        (Mach) Sample file containing covariates
   --covar-numbers COVAR_NUMBERS
                         Comma-separated list of covariate indices
   --covar-names COVAR_NAMES
@@ -125,6 +153,9 @@ optional arguments:
   --geno GENO           MAX per-SNP missing for analysis
   --mind MIND           MAX per-person missing
   --verbose             Output additional data details
+
+mvtest.py is uses many of the same arguments as plink, but there are a few
+differences, so please consider the list above carefully.
 """
 
 verbose_report = False
@@ -135,7 +166,10 @@ def ParseIndList(ids):
         file = open(ids)
         for line in file:
             words = line.strip().split()
-            ExitIf("%s:%s Individual file lists must contain exactly 2 columns (first two from ped columns)" % (line.strip(), len(words)), len(words) != 2 )
+            ExitIf("%s:%s Individual file lists must contain exactly 2 columns "\
+                + "(first two from ped columns)" % (line.strip(), len(words)),
+                   len(words) != 2 )
+
             id_list.append(":".join(words[0:2]))
     else:
         id_list = ids.split(",")
@@ -152,7 +186,10 @@ class MVTestApplication(object):
 
     def LoadCmdLine(self, args=sys.argv[1:]):
         """Parse user arguments using argparse and set up components"""
-        parser = argparse.ArgumentParser(description="MV Test: " + __version__)
+        parser = argparse.ArgumentParser(description="MV Test: " + __version__, epilog="""
+mvtest.py is uses many of the same arguments as plink, but there are a few
+differences, so please consider the list above carefully.
+        """)
 
         parser.add_argument("-v", action='store_true', help="Print version number")
         parser.add_argument("--vall", action='store_true', help="Print version number along with each dependency")
@@ -382,7 +419,8 @@ class MVTestApplication(object):
             dataset.load_genotypes()
 
         else:
-            print >> sys.stderr, "No data has been specified. Users must specify either pedigree or transposed pedigree to continue"
+            parser.print_usage(sys.stderr)
+            print >> sys.stderr, "\nNo data has been specified. Users must specify either pedigree or transposed pedigree to continue"
             sys.exit(1)
 
         if args.pheno or args.sample_pheno:
