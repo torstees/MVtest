@@ -1,4 +1,4 @@
-What is MVTest?
+What is MVtest?
 ===============
 
 *TODO: Write some background information about the application and it's scientific basis.*
@@ -6,7 +6,7 @@ What is MVTest?
 Documentation
 -------------
 
-Documentation for mvtest is still under construction. However, the application provides reasonable inline help using standard unix help arguments:
+Documentation for MVtest is still under construction. However, the application provides reasonable inline help using standard unix help arguments:
 
 \> mvtest.py -h
 
@@ -19,7 +19,7 @@ In general, overlapping functionality should mimic that of PLINK.
 Command-Line Arguments
 ----------------------
 
-Command line arguments used by mvtest often mimick those used by PLINK, except where there is no matching functionality (or the functionality differs significantly.)
+Command line arguments used by MVtest often mimick those used by PLINK, except where there is no matching functionality (or the functionality differs significantly.)
 
 For the parameters listed below, when a parameter requires a value, the value must follow the argument with a single space separating the two (no '=' signs.) For flags with no specified value, passing the flag indicates that condition is to be "activated".
 
@@ -35,7 +35,7 @@ When there is no value listed in the "Type" column, the arguments are *off* by d
 \newpage
 ### Input Data
 
-MVTest attempts to mimic the interface for PLINK where appropriate.
+MVtest attempts to mimic the interface for PLINK where appropriate.
 
 All input files should be whitespace delimited. For text based allelic annotations, 1|2 and A|C|G|T annotation is sufficient. All data must be expressed as alleles, not as genotypes (except for IMPUTE output, which is a specialized format that is very different from the other forms).
 
@@ -43,7 +43,7 @@ For Pedigree, Transposed Pedigree and PLINK binary pedigree files, the using the
 
 #### Pedigree Data
 
-Pedigree data is fully supported, however it is not recommended. When loading pedigree data, mvtest must load the entire dataset into memory prior to analysis, which can result in a substantial amount of memory overhead that is unnecessary.
+Pedigree data is fully supported, however it is not recommended. When loading pedigree data, MVtest must load the entire dataset into memory prior to analysis, which can result in a substantial amount of memory overhead that is unnecessary.
 
 Flags like --no-pheno and --no-sex can be used in any combination creating MAP files with highly flexible header structures.
 
@@ -61,7 +61,7 @@ Flags like --no-pheno and --no-sex can be used in any combination creating MAP f
 
 #### PLINK Binary Pedigree
 
-This format represents the most efficient storage for large GWAS datasets, and can be used directly by mvtest. In addition to a minimal overhead, plink style bed files will also run very quickly, due to the efficient disk layout.
+This format represents the most efficient storage for large GWAS datasets, and can be used directly by MVtest. In addition to a minimal overhead, plink style bed files will also run very quickly, due to the efficient disk layout.
 
 | **Flag(s)**  | **Type**    | **Description**                      |
 |--------------|-------------|--------------------------------------|
@@ -72,17 +72,17 @@ This format represents the most efficient storage for large GWAS datasets, and c
 
 #### Transposed Pedigree Data
 
-Transposed Pedigree data is similar to standard pedigree except that the data is arranged such that the data is organized as SNPs as rows, instead of individuals. This allows mvtest to run it's analysis without loading the entire dataset into memory.
+Transposed Pedigree data is similar to standard pedigree except that the data is arranged such that the data is organized as SNPs as rows, instead of individuals. This allows MVtest to run it's analysis without loading the entire dataset into memory.
 
 | **Flag(s)**  | **Type**    | **Description**                         |
 |--------------|-------------|-----------------------------------------|
 | --tfile FILE | file prefix | Prefix for .tped and .tfam files        |
 | --tped BED   | filename    | Transposed Pedigree file (.tped)        |
-| --tfim MAP   | filename    | Transposed pedigree Family file (.tfam) |
+| --tfam MAP   | filename    | Transposed pedigree Family file (.tfam) |
 
 #### Pedigree/Transposed Pedigree Common Flags
 
-By default, Pedigree and Transposed Pedigree data is assumed to be uncompressed. However, mvtest can directly use gzipped data files if they have the extension .tgz with the addition of the --compressed argument.
+By default, Pedigree and Transposed Pedigree data is assumed to be uncompressed. However, MVtest can directly use gzipped data files if they have the extension .tgz with the addition of the --compressed argument.
 
 | **Flag(s)**  | **Type** | **Description**                         |
 |--------------|----------|-----------------------------------------|
@@ -91,9 +91,9 @@ By default, Pedigree and Transposed Pedigree data is assumed to be uncompressed.
 
 #### IMPUTE output
 
-MVTest doesn't call genotypes when performing analysis and allows users to define which model to use when analyzing the data. Due to the fact that there is no specific location for chromosome within the input files, mvtest requires that users provide chromosome, impute input file and the corresponding .info file for each imputed output.
+MVtest doesn't call genotypes when performing analysis and allows users to define which model to use when analyzing the data. Due to the fact that there is no specific location for chromosome within the input files, MVtest requires that users provide chromosome, impute input file and the corresponding .info file for each imputed output.
 
-Due to the huge number of expected loci, mvtest allows users to specify an offset and file count for analysis. This is to allow users to run multiple jobs simultaneously on a cluster and work individually on separate impute region files. Users can segment those regions even further using standard mvtest region selection as well.
+Due to the huge number of expected loci, MVtest allows users to specify an offset and file count for analysis. This is to allow users to run multiple jobs simultaneously on a cluster and work individually on separate impute region files. Users can segment those regions even further using standard MVtest region selection as well.
 
 By default, all imputed data is assumed to be compressed using gzip.
 
@@ -111,6 +111,7 @@ Default naming convention is for impute data files to end in .gen.gz and the inf
 | --impute-gen-ext IMPUTE\_GEN\_EXT               | file suffix | Portion of filename that denotes gen file                                     |
 | --impute-info-thresh IMPUTE\_INFO\_THRESH       | float       | Threshold for filtering imputed SNPs with poor 'info' values                  |
 
+\newpage
 #### IMPUTE File Input
 
 When performing an analysis on IMPUTE output, users must provide a single file which lists each of the gen files to be analyzed. This plain text file contains 2 (or optionally 3) columns for each gen file:
@@ -128,11 +129,11 @@ Users can analyze data imputed with MACH. Because most situations require many f
 
 There is one caveat when using MACH output for analysis: MV-Test requires Chromosome and Position for consistency in reporting. As such, the IDs inside .info files must be of the form: chrom:pos
 
-If RSIDs or solely positions are found, MVTest will exit with an error.
+If RSIDs or solely positions are found, MVtest will exit with an error.
 
-When running mvtest using MACH dosage on a cluster, users can instruct a given job to anlyze data from a portion of the files contained within the MACH dosage file list by changing the --mach-offset and --mach-count arguments. By default, the offset starts with 1 (the first file in the dosage list) and runs all it finds. However, if one were to want to split the jobs up to analyze three dosage files per job, they might set those values to --mach-offset 1 --mach-count 3 or --mach-offset 4 --mach-count 3 depending on which job is being defined.
+When running MVtest using MACH dosage on a cluster, users can instruct a given job to anlyze data from a portion of the files contained within the MACH dosage file list by changing the --mach-offset and --mach-count arguments. By default, the offset starts with 1 (the first file in the dosage list) and runs all it finds. However, if one were to want to split the jobs up to analyze three dosage files per job, they might set those values to --mach-offset 1 --mach-count 3 or --mach-offset 4 --mach-count 3 depending on which job is being defined.
 
-In order to minimize memory requirements, MACH dosage files can be loaded incrementally such that only N loci are stored in memory at a time. This can be controlled using the --mach-chunk-size argument. The larger this number is, the faster MVTest will run (fewer times reading from file) but the more memory is required.
+In order to minimize memory requirements, MACH dosage files can be loaded incrementally such that only N loci are stored in memory at a time. This can be controlled using the --mach-chunk-size argument. The larger this number is, the faster MVtest will run (fewer times reading from file) but the more memory is required.
 
 | **Flag(s)**                   | **Type** | **Description**                                                                                                                                                                     |
 |-------------------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -156,7 +157,6 @@ The 2nd column is only required if the filenames aren't identical except for the
 | filename.dose               | filename.info                      |
 | ...                         | ...                                |
 
-\newpage
 #### Phenotype/Covariate Data
 
 Phenotypes and Covariate data can be found inside either the standard pedigree headers or within special PLINK style covariate files. Users can specify phenotypes and covariates using either header names (if a header exists in the file) or by 1 based column indices.
@@ -173,6 +173,7 @@ Phenotypes and Covariate data can be found inside either the standard pedigree h
 | --missing-phenotype MISSING\_PHENOTYPE | character | Encoding for missing phenotypes as can be found in the data.                                                                               |
 | --all-pheno                            |           | When present, mv-test will run each phenotypes found inside the phenotype file.                                                            |
 
+\newpage
 ### Restricting regions for analysis
 
 When specifying a range of positions for analysis, a chromosome must be present. If a chromosome is specified but is not accompanied by a range, the entire chromosome will be used. Only one range can be specified per run.
@@ -198,12 +199,12 @@ When specifying a range of positions for analysis, a chromosome must be present.
 Installation
 ============
 
-MVTest requires python 2.7.x as well as the following libraries:
+MVtest requires python 2.7.x as well as the following libraries:
 
 -   NumPy (version 1.7.2 or later) www.numpy.org
 -   SciPY (version 0.13.2 or later) www.scipy.org
 
-MVTest's installation will attempt to install these required components for you, however, it requires that you have write permission to the installation directory. If you are using a shared system and lack the necessary privileges to install libraries and software yourself, you should please see one of the sections, Miniconda or virtual-env for instructions on different options for setting up your own python environement which will exist entirely under your own control.
+MVTest's installation will attempt to install these required components for you, however, it requires that you have write permission to the installation directory. If you are using a shared system and lack the necessary privileges to install libraries and software yourself, you should please see one of the sections, Miniconda or virtual-env below for instructions on different options for setting up your own python environement which will exist entirely under your own control.
 
 Download the package at: TODO: URL
 
@@ -255,5 +256,11 @@ Installing SciPy will also force the installation of NumPy, which is also requir
 
 Once that has been completed successfully, you should be ready to follow the standard instructions for installing mvtest. :tocdepth: 2
 
+Development Notes
+=================
+
+MVtest authors
+--------------
+
 Change Log
-==========
+----------
