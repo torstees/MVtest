@@ -149,25 +149,22 @@ class TestCmdlineTPed(test_analyze_tped.TestBase):
 
         app = mvtest.MVTestApplication()
         dataset,vars = app.LoadCmdLine(cmds.split(" "))
-        #maf = [0.302525, 0.29925, 0.3075, 0.28775, 0.295, 0.31, 0.2975, 0.3025, 0.30625]
         maf = [0.30225, 0.3075, 0.31, 0.3025, 0.30625]
         i=0
         for snp in dataset:
             self.assertAlmostEqual(maf[i], snp.maf)
             i += 1
-            #print snp.chr, snp.pos, snp.maf, snp.major_allele, snp.minor_allele, 2 * numpy.sum(snp.genotype_data==0) + numpy.sum(snp.genotype_data==1), 2 * numpy.sum(snp.genotype_data==2) + numpy.sum(snp.genotype_data==1)
     def testTPedCmdLineMaxMAF(self):
         cmds = "--tfile %s --max-maf=0.3" % (self.tfam_filename.split(".")[0])
 
         app = mvtest.MVTestApplication()
         dataset,vars = app.LoadCmdLine(cmds.split(" "))
-        #maf = [0.302525, 0.29925, 0.3075, 0.28775, 0.295, 0.31, 0.2975, 0.3025, 0.30625]
         maf = [0.29925, 0.28775, 0.295, 0.2975]
         i=0
         for snp in dataset:
             self.assertAlmostEqual(maf[i], snp.maf)
             i += 1
-            #print snp.chr, snp.pos, snp.maf, snp.major_allele, snp.minor_allele, 2 * numpy.sum(snp.genotype_data==0) + numpy.sum(snp.genotype_data==1), 2 * numpy.sum(snp.genotype_data==2) + numpy.sum(snp.genotype_data==1)
+
 
 class TestCmdlinePed(test_analyze_ped.TestBase):
     def testPedCmdLineFilenames(self):
@@ -185,25 +182,21 @@ class TestCmdlinePed(test_analyze_ped.TestBase):
 
         app = mvtest.MVTestApplication()
         dataset,vars = app.LoadCmdLine(cmds.split(" "))
-        #maf = [0.302525, 0.29925, 0.3075, 0.28775, 0.295, 0.31, 0.2975, 0.3025, 0.30625]
         maf = [0.30225, 0.3075, 0.31, 0.3025, 0.30625]
         i=0
         for snp in dataset:
             self.assertAlmostEqual(maf[i], snp.maf, places=4)
             i += 1
-            #print snp.chr, snp.pos, snp.maf, snp.major_allele, snp.minor_allele, 2 * numpy.sum(snp.genotype_data==0) + numpy.sum(snp.genotype_data==1), 2 * numpy.sum(snp.genotype_data==2) + numpy.sum(snp.genotype_data==1)
     def testPedCmdLineMaxMAF(self):
         cmds = "--file %s --max-maf=0.3" % (self.ped_filename.split(".")[0])
 
         app = mvtest.MVTestApplication()
         dataset,vars = app.LoadCmdLine(cmds.split(" "))
-        #maf = [0.302525, 0.29925, 0.3075, 0.28775, 0.295, 0.31, 0.2975, 0.3025, 0.30625]
         maf = [0.29925, 0.28775, 0.295, 0.2975]
         i=0
         for snp in dataset:
             self.assertAlmostEqual(maf[i], snp.maf)
             i += 1
-            #print snp.chr, snp.pos, snp.maf, snp.major_allele, snp.minor_allele, 2 * numpy.sum(snp.genotype_data==0) + numpy.sum(snp.genotype_data==1), 2 * numpy.sum(snp.genotype_data==2) + numpy.sum(snp.genotype_data==1)
 
 
 class TestCmdLineSimplePed(test_pedigree_parser.TestBase):

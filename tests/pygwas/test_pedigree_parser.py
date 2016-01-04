@@ -547,7 +547,6 @@ class TestPedFiles(TestBase):
                 non_missing = numpy.ones(len(snp.genotype_data), dtype=bool)
                 non_missing[6] = False
                 (pheno, covariates, nm_indata) = y.get_variables(numpy.invert(non_missing))
-
                 for i in range(0, 11):
                     self.assertEqual(sex[i], covariates[0][i])
                     self.assertAlmostEqual(dual_pheno[idx][i], pheno[i])
