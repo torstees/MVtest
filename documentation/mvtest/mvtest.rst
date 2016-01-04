@@ -35,13 +35,13 @@ is turned off except when the flag, --compression, has been provided.)
 Getting help
 ------------
 
-.. tabularcolumns:: |p{6cm}|p{9cm}|
-====================  ============================================
- **Flag(s)**           **Description**
-====================  ============================================
-  -h, --help          show this help message and exit
-  -v                  Print version number
-====================  ============================================
+.. option:: -h, --help
+
+    Show this help message and exit.
+
+.. option:: -v
+
+    Print version number
 
 .. raw:: latex
 
@@ -57,7 +57,7 @@ expressed as alleles, not as genotypes (except for IMPUTE output, which is a
 specialized format that is very different from the other forms).
 
 For Pedigree, Transposed Pedigree and PLINK binary pedigree files, the using
-the prefix arguments is sufficient and recommended if your files follow the
+the PREFIX arguments is sufficient and recommended if your files follow the
 standard naming conventions.
 
 Pedigree Data
@@ -70,22 +70,46 @@ unnecessary.
 Flags like --no-pheno and --no-sex can be used in any combination creating
 MAP files with highly flexible header structures.
 
-.. tabularcolumns:: |p{3cm}|p{3cm}|p{9cm}|
+.. option:: --file <prefix>
 
-====================  ===============  ============================================
- **Flag(s)**           **Type**         **Description**
-====================  ===============  ============================================
-  --file FILE         file prefix       Prefix for .ped and .map files
-  --ped PED           filename          PLINK compatible .ped file
-  --map MAP           filename          PLINK compatible .map file
-  --map3                                MAP file has only 3 columns
-  --no-sex                              Pedigree file doesn't have column 5 (sex)
-  --no-parents                          Pedigree file doesn't have columns 3 and 4 (parents)
-  --no-fid                              Pedigree file doesn't have column 1 (family ID)
-  --no-pheno                            Pedigree file doesn't have column 6 (phenotype
-  --liability                           Pedigree file has column 7 (liability)
-====================  ===============  ============================================
+    (filename prefix)
+    Prefix for .ped and .map files
 
+.. option:: --ped <filename>
+
+    PLINK compatible .ped file
+
+.. option:: --map <filename>
+
+    PLink compatible .map file
+
+.. option:: --map3
+
+    Map file has only 3 columns
+
+.. option:: --no-sex
+
+    Pedigree file doesn't have column 5 (sex)
+
+.. option:: --no-parents
+
+    Pedigree file doesn't have columns 3 and 4 (parents)
+
+.. option:: --no-fid
+
+    Pedgiree file doesn't have column 1 (family ID)
+
+.. option:: --no-pheno
+
+    Pedigree file doesn't have column 6 (phenotype)
+
+.. option:: --liability
+
+    Pedigree file has column 7 (liability)
+
+.. raw:: latex
+
+    \newpage
 
 PLINK Binary Pedigree
 ^^^^^^^^^^^^^^^^^^^^^
@@ -93,16 +117,24 @@ This format represents the most efficient storage for large GWAS datasets,
 and can be used directly by MVtest. In addition to a minimal overhead, plink
 style bed files will also run very quickly, due to the efficient disk layout.
 
-.. tabularcolumns:: |p{3cm}|p{3cm}|p{9cm}|
+.. option:: --bfile <prefix>
 
-====================  ===============  ============================================
-**Flag(s)**           **Type**          **Description**
-====================  ===============  ============================================
-  --bfile FILE        file prefix       Prefix for .bed, .bim and .fam files
-  --bed BED           filename          Binary Ped file (.bed)
-  --bim MAP           filename          Binary ped marker file (.bim)
-  --fam FAM           filename          Binary ped family file (.fam)
-====================  ===============  ============================================
+    (filename prefix)
+    <prefix> for .bed, .bim and .fam files
+
+.. option:: --bed <filename>
+
+    Binary Ped file(.bed)
+
+.. option:: --bim <filename>
+
+    Binary Ped marker file (.bim)
+
+.. option:: --fam <filename>
+
+    Binary Ped family file (.fam)
+
+
 
 Transposed Pedigree Data
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -111,14 +143,17 @@ is arranged such that the data is organized as SNPs as rows, instead of
 individuals. This allows MVtest to run it's analysis without loading the
 entire dataset into memory.
 
-.. tabularcolumns:: |p{3cm}|p{3cm}|p{9cm}|
-====================  ===============  ============================================
-**Flag(s)**           **Type**          **Description**
-====================  ===============  ============================================
-  --tfile FILE        file prefix       Prefix for .tped and .tfam files
-  --tped BED          filename          Transposed Pedigree file (.tped)
-  --tfam MAP          filename          Transposed pedigree Family file (.tfam)
-====================  ===============  ============================================
+.. option:: --tfile <prefix>
+
+    Prefix for .tped and .tfam files
+
+.. option:: --tped <filename>
+
+    Transposed Pedigre file (.tped)
+
+.. option:: --tfam <filename>
+
+    Transposed Pedigree Family file (.tfam)
 
 Pedigree/Transposed Pedigree Common Flags
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -126,13 +161,14 @@ By default, Pedigree and Transposed Pedigree data is assumed to be uncompressed.
 However, MVtest can directly use gzipped data files if they have the extension
 .tgz with the addition of the --compressed argument.
 
-.. tabularcolumns:: |p{3cm}|p{3cm}|p{9cm}|
-====================  ===============  ============================================
-**Flag(s)**           **Type**          **Description**
-====================  ===============  ============================================
-  --compressed        Ped/TPed          compressed with gzip (named .ped.tgz or \
-                                        .tped.tgz)
-====================  ===============  ============================================
+.. option:: --compressed
+
+    Indicate that ped/tped files have been compressed with gzip and are named
+    with extensions such as .ped.tgz and .tped.tgz
+
+.. raw:: latex
+
+    \newpage
 
 IMPUTE output
 ^^^^^^^^^^^^^
@@ -154,41 +190,65 @@ Default naming convention is for impute data files to end in .gen.gz and
 the info files to have the same name except for the end being replaced
 by .info.
 
-.. tabularcolumns:: |p{3cm}|p{3cm}|p{9cm}|
-===================================================  ===============  =================================
-**Flag(s)**                                          **Type**          **Description**
-===================================================  ===============  =================================
-  --impute IMPUTE                                    filename          File containing list of impute output for analysis
-  --impute-fam IMPUTE_FAM                            filename          File containing family details for impute data
-  --impute-offset IMPUTE_OFFSET                      int               Impute file index (1 based) to begin analysis
-  --impute-count IMPUTE_COUNT                        int               Number of impute files to process (for this node). Defaults to all remaining.
-  --impute-uncompressed                                                Indicate that the impute input is not gzipped, but plain text
-  --impute-encoding {additive,dominant,recessive}    selection         Genetic model to be used when analyzing imputed data.
-  --impute-info-ext IMPUTE_INFO_EXT                  file prefix       Portion of filename denotes info filename
-  --impute-gen-ext IMPUTE_GEN_EXT                    file suffix       Portion of filename that denotes gen file
-  --impute-info-thresh IMPUTE_INFO_THRESH            float             Threshold for filtering imputed SNPs with poor 'info' values
-===================================================  ===============  =================================
+.. option:: --impute <filename>
 
-.. raw:: latex
+    File containing list of impute output for analysis
 
-    \newpage
+.. option:: --impute-fam <filename>
+
+    File containing family details for impute data
+
+.. option:: --impute-offset <integer>
+
+    Impute file index (1 based) to begin analysis
+
+.. option:: --impute-count <integer>
+
+    Number of impute files to process (for this node). Defaults to all remaining.
+
+.. option:: --impute-uncompressed
+
+    Indicate that the impute input is not gzipped, but plain text
+
+.. option:: --impute-encoding
+
+    (additive,dominant or recessive)
+
+    Genetic model to be used when analyzing imputed data.
+
+.. option:: --impute-info-ext <extension>
+
+    Portion of filename denotes info filename
+
+.. option:: --impute-gen-ext <extension>
+
+    Portion of filename that denotes gen file
+
+.. option:: --impute-info-thresh <float>
+
+    Threshold for filtering imputed SNPs with poor 'info' values
+
 IMPUTE File Input
 ^^^^^^^^^^^^^^^^^
 When performing an analysis on IMPUTE output, users must provide a single file
 which lists each of the gen files to be analyzed. This plain text file contains
 2 (or optionally 3) columns for each gen file:
 
+
 .. tabularcolumns:: |p{5cm}|p{5cm}|p{5cm}|
-=========================  ======================  ===================================
-**Col 1 (chromosome)**     **Col 2 (gen file)**    **Col 3 (optional .info filename)**
-=========================  ======================  ===================================
-  N (chromosome #)           filename                filename
-  ...                        ...                     ...
-=========================  ======================  ===================================
+================  ==============  ===============================
+ **Chromosome**    **Gen File**    **.info <filename> (optional)**
+================  ==============  ===============================
+  N                <filename>         <filename>
+  ...              ...              ...
+================  ==============  ===============================
 
 The 3rd column is only required if your .info files and .gen files are not
-the same except for the extension.
+the same except for the <extension>.
 
+.. raw:: latex
+
+    \newpage
 
 MACH output
 ^^^^^^^^^^^
@@ -218,19 +278,42 @@ be controlled using the --mach-chunk-size argument. The larger this number is,
 the faster MVtest will run (fewer times reading from file) but the more
 memory is required.
 
-.. tabularcolumns:: |p{3cm}|p{3cm}|p{9cm}|
-===================================================  ===============  =================================
-**Flag(s)**                                          **Type**          **Description**
-===================================================  ===============  =================================
-  --mach MACH                                        filename          File containing list of dosages, one per line. Optionally, lines may contain the info names as well (separated by whitespace) if the two filenames do not share a common base name.
-  --mach-offset OFFSET                               number            Index into the MACH file to begin analyzing
-  --mach-count COUNT                                 number            Number of dosage files to analyze
-  --mach-uncompressed                                                  By default, MACH input is expected to be gzip compressed. If data is plain text, add this flag
-  --mach-chunk-size CHUNK_SIZE                       number            Due to the individual orientation of the data, large dosage files are parsed in chunks in order to minimize excessive memory during loading
-  --mach-info-ext EXT                                string            Indicate the extension used by the mach info files
-  --mach-dose-ext EXT                                string            Indicate the extension used by the mach dosage files
-  --mach-min-rsquared MIN                            float             Indicate the minimum threshold for the rsqured value from the .info files required for analysis.
-===================================================  ===============  =================================
+.. option:: --mach <filename>
+
+    File containing list of dosages, one per line. Optionally, lines may
+    contain the info names as well (separated by whitespace) if the two
+    <filename>s do not share a common base name.
+
+.. option:: --mach-offset <integer>
+
+    Index into the MACH file to begin analyzing
+
+.. option:: --mach-count <integer>
+
+    Number of dosage files to analyze
+
+.. option:: --mach-uncompressed
+
+    By default, MACH input is expected to be gzip compressed. If data is plain
+    text, add this flag
+
+.. option:: --mach-chunk-size <integer>
+
+    Due to the individual orientation of the data, large dosage files are parsed
+    in chunks in order to minimize excessive memory during loading
+
+.. option:: --mach-info-ext <extension>
+
+    Indicate the <extension> used by the mach info files
+
+.. option:: --mach-dose-ext <extension>
+
+    Indicate the <extension> used by the mach dosage files
+
+.. option:: --mach-min-rsquared <float>
+
+    Indicate the minimum threshold for the rsqured value from the .info files
+    required for analysis.
 
 MACH File Input
 ^^^^^^^^^^^^^^^
@@ -244,33 +327,58 @@ the extension.
 
 .. tabularcolumns:: |p{6cm}|p{9cm}|
 ==============================  ==================================
-**Col 1 (dosage filename)**     **Col 2 (optional info filename)**
+**Col 1 (dosage <filename>)**     **Col 2 (optional info <filename>)**
 ==============================  ==================================
-  filename.dose                   filename.info
+  <filename>.dose                   <filename>.info
   ...                             ...
 ==============================  ==================================
 
-
 Phenotype/Covariate Data
 ^^^^^^^^^^^^^^^^^^^^^^^^
-Phenotypes and Covariate data can be found inside either the standard pedigree headers or within special PLINK style
-covariate files. Users can specify phenotypes and covariates using either header names (if a header exists in the file)
-or by 1 based column indices.
+Phenotypes and Covariate data can be found inside either the standard pedigree
+headers or within special PLINK style covariate files. Users can specify
+phenotypes and covariates using either header names (if a header exists in
+the file) or by 1 based column indices.
 
-.. tabularcolumns:: |p{3cm}|p{3cm}|p{9cm}|
-========================================  ===============  =================================
-**Flag(s)**                               **Type**          **Description**
-========================================  ===============  =================================
-  --pheno PHENO                           filename          File containing phenotypes. Unless --all-pheno is present, user must provide either index(s) or label(s) of the phenotypes to be analyzed.
-  --mphenos MPHENOS                       numbers           Column number(s) for phenotype to be analyzed if number of columns > 1. Comma separated list if more than one is to be used.
-  --pheno-names PHENO_NAMES               string            Name for phenotype(s) to be analyzed (must be in --pheno file). Comma separated list if more than one is to be used.
-  --covar COVAR                           filename          File containing covariates
-  --covar-numbers COVAR_NUMBERS           numbers           Comma-separated list of covariate indices
-  --covar-names COVAR_NAMES                                 Comma-separated list of covariate names
-  --sex                                                     Use sex from the pedigree file as a covariate
-  --missing-phenotype MISSING_PHENOTYPE   character         Encoding for missing phenotypes as can be found in the data.
-  --all-pheno                                               When present, mv-test will run each phenotypes found inside the phenotype file.
-========================================  ===============  =================================
+.. option:: --pheno <filename>
+
+    File containing phenotypes. Unless --all-pheno is present, user must
+    provide either index(s) or label(s) of the phenotypes to be analyzed.
+
+.. option:: --mphenos LIST
+
+    Column number(s) for phenotype to be analyzed if number of columns > 1.
+    Comma separated list if more than one is to be used.
+
+.. option:: --pheno-names LIST
+
+    Name for phenotype(s) to be analyzed (must be in --pheno file). Comma
+    separated list if more than one is to be used.
+
+.. option:: --covar <filename>
+
+    File containing covariates
+
+.. option:: --covar-numbers LIST
+
+    Comma-separated list of covariate indices
+
+.. option:: --covar-names LIST
+
+    Comma-separated list of covariate names
+
+.. option:: --sex
+
+    Use sex from the pedigree file as a covariate
+
+.. option:: --missing-phenotype CHAR
+
+    Encoding for missing phenotypes as can be found in the data.
+
+.. option:: --all-pheno
+
+    When present, mv-test will run each phenotypes found inside the phenotype
+    file.
 
 .. raw:: latex
 
@@ -282,23 +390,64 @@ When specifying a range of positions for analysis, a chromosome must be present.
 If a chromosome is specified but is not accompanied by a range, the entire
 chromosome will be used. Only one range can be specified per run.
 
-.. tabularcolumns:: |p{3cm}|p{3cm}|p{9cm}|
-========================  ===============  =================================
-**Flag(s)**               **Type**          **Description**
-========================  ===============  =================================
-  --snps SNPS             string            Comma-delimited list of SNP(s): rs1,rs2,rs3-rs6
-  --chr N                 int               Select Chromosome. If not selected, all chromosomes are to be analyzed.
-  --from-bp START         int               SNP range start
-  --to-bp END             int               SNP range end
-  --from-kb START         int               SNP range start
-  --to-kb END             int               SNP range end
-  --from-mb START         int               SNP range start
-  --to-mb END             int               SNP range end
-  --exclude EXCLUDE       string            Comma-delimited list of rsids to be excluded
-  --remove REMOVE         string            Comma-delimited list of individuals to be removed from analysis. This must be in the form of family_id:individual_id
-  --maf MAF               float             Minimum MAF allowed for analysis
-  --max-maf MAX_MAF       float             MAX MAF allowed for analysis
-  --geno GENO             int               MAX per-SNP missing for analysis
-  --mind MIND             int               MAX per-person missing
-  --verbose                                 Output additional data details
-========================  ===============  =================================
+.. option:: --snps LIST
+
+    Comma-delimited list of SNP(s): rs1,rs2,rs3-rs6
+
+.. option:: --chr <integer>
+
+    Select Chromosome. If not selected, all chromosomes are to be analyzed.
+
+.. option:: --from-bp <integer>
+
+    SNP range start
+
+.. option:: --to-bp <integer>
+
+    SNP range end
+
+.. option:: --from-kb <integer>
+
+    SNP range start
+
+.. option:: --to-kb <integer>
+
+    SNP range end
+
+.. option:: --from-mb <integer>
+
+    SNP range start
+
+.. option:: --to-mb <integer>
+
+    SNP range end
+
+.. option:: --exclude LIST
+
+    Comma-delimited list of rsids to be excluded
+
+.. option:: --remove LIST
+
+    Comma-delimited list of individuals to be removed from analysis. This must
+
+    be in the form of family_id:individual_id
+
+.. option:: --maf <float>
+
+    Minimum MAF allowed for analysis
+
+.. option:: --max-maf <float>
+
+    MAX MAF allowed for analysis
+
+.. option:: --geno <integer>
+
+    MAX per-SNP missing for analysis
+
+.. option:: --mind <integer>
+
+    MAX per-person missing
+
+.. option:: --verbose
+
+    Output additional data details in final report

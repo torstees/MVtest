@@ -25,8 +25,13 @@ all:
 	make latexpdf
 	mkdir -p ../../doc
 	cp _build/latex/MVtest.pdf ../../doc
-	pandoc -f rst -t markdown_github -o ../../README.md mvtest.rst installation.rst ../changes.rst
+	make text
+	echo "\n* Changelog" > index.supp
+	echo "\nChangelog\n=========\n" > changelog.header
+	cat _build/text/index.txt index.supp _build/text/installation.txt _build/text/mvtest.txt _build/text/mvmany.txt changelog.header ../../CHANGES  > ../../README.md
 	cp ../../README.md ../../README
+#	pandoc -f rst --columns=80 -t markdown_github -o ../../README.md _build/text/index.txt _build/text/installation.rst _build/text/mvmany.rst _build/text/mvtest.txt ../changes.rst
+#	cp ../../README.md ../../README
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"

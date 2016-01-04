@@ -102,22 +102,37 @@ Command Line Arguments
 mvmany.py exposes the following additional arguments for use when running
 the script.
 
-.. tabularcolumns:: |p{6cm}|p{9cm}|
-=================================  =============================================
-  **Variable**                      **Purpose**
-=================================  =============================================
-  --mv-path                         Set path to mvtest.py if it's not in PATH
-  --logpath                         Path to location of job's error output
-  --res-path                        Path to location of job's results
-  --script-path                     Path for writing script files
-  --template                        Specify a template other than the default
-  --snps-per-job                    Specify the number of SNPs to be run at one
-                                    time
-  --mem                             Specify the amount of memory to be requested
-                                    for each job
-  --wall-time                       Specify amount of time to be requested for
-                                    each job
-=================================  =============================================
+.. option:: --mv-path PATH
+
+   Set path to mvtest.py if it's not in PATH
+
+.. option:: --logpath PATH
+
+   Path to location of job's error output
+
+.. option:: --res-path PATH
+   Path to location of job's results
+
+.. option:: --script-path PATH
+
+   Path for writing script files
+
+.. option:: --template FILENAME
+
+   Specify a template other than the default
+
+.. option:: --snps-per-job INTEGER
+
+   Specify the number of SNPs to be run at one time
+
+.. option:: --mem STRING
+
+   Specify the amount of memory to be requested for each job
+
+.. option:: --wall-time
+
+   Specify amount of time to be requested for each job
+
 
 The option, --mem, is dependent on the type of input that is being used as well
 as configurable options to be used. The user should perform basic test runs
