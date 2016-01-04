@@ -166,9 +166,8 @@ def ParseIndList(ids):
         file = open(ids)
         for line in file:
             words = line.strip().split()
-            ExitIf("%s:%s Individual file lists must contain exactly 2 columns "\
-                + "(first two from ped columns)" % (line.strip(), len(words)),
-                   len(words) != 2 )
+            ExitIf("%s:%s Individual file lists must contain " % (line.strip(), len(words)) +
+                   "(exactly 2 columns (first two from ped columns)", len(words) != 2 )
 
             id_list.append(":".join(words[0:2]))
     else:
