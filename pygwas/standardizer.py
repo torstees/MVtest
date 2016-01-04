@@ -4,6 +4,23 @@ import pheno_covar
 
 from exceptions import InvariantVar
 
+__copyright__ = "Eric Torstenson"
+__license__ = "GPL3.0"
+#     This file is part of pyGWAS.
+#
+#     pyGWAS is free software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+#
+#     pyGWAS is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+#
+#     You should have received a copy of the GNU General Public License
+#     along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+
 def get_standardizer():
     global _standardizer
     return _standardizer
@@ -67,11 +84,11 @@ class StandardizedVariable(object):
             max = covars[idx][covars[idx] != pheno_covar.PhenoCovar.missing_encoding].max()
             if min == max:
                 raise InvariantVar("Covar %s doesn't have enough variation to continue" % (self.datasource.covariate_labels[idx]))
-        min = self.phenotypes[0][nonmissing].min()
-        max = self.phenotypes[0][nonmissing].max()
+        min = self.phenotypes[self.idx][nonmissing].min()
+        max = self.phenotypes[self.idx][nonmissing].max()
         if min == max:
             raise InvariantVar("Phenotype %s doesn't have enough variation to continue" % (self.datasource.phenotype_names[self.idx]))
-        return (self.phenotypes[0][nonmissing], covars, nonmissing)
+        return (self.phenotypes[self.idx][nonmissing], covars, nonmissing)
 
     def get_phenotype_name(self):
         """Returns current phenotype name"""
