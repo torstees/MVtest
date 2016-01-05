@@ -9,4 +9,6 @@
 dist
 *.pdf
 README
+changelog.header
+index.supp
 
