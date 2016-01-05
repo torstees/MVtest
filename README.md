@@ -702,7 +702,7 @@ the final job scripts. The following variables are replaced based on
 the job that is being performed and the parameters passed to the
 program by the user (or their default values):
 
-| **Variable**                      | **Purpose**                                   |
+| Variable                          | Purpose                                       |
 |-----------------------------------|-----------------------------------------------|
 | $jobname                          | Unique name for the current job               |
 | $memory (2G)                      | Amount of memory to provide each job.         |
