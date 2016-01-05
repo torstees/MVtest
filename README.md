@@ -393,7 +393,7 @@ plain text file contains 2 (or optionally 3) columns for each gen
 file:
 
 | **Chromosome**   | **Gen File**   | **.info <filename> (optional)**  |
-------------------------------------------------------------------------
+|------------------|----------------|----------------------------------|
 | N                | <filename>     | <filename>                       |
 | ...              | ...            | ...                              |
 
@@ -703,7 +703,7 @@ the job that is being performed and the parameters passed to the
 program by the user (or their default values):
 
 | **Variable**                      | **Purpose**                                   |
-------------------------------------|------------------------------------------------
+|-----------------------------------|-----------------------------------------------|
 | $jobname                          | Unique name for the current job               |
 | $memory (2G)                      | Amount of memory to provide each job.         |
 | $walltime (3:00:00)               | Define amount of time to be assigned to jobs  |
