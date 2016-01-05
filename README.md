@@ -392,13 +392,10 @@ single file which lists each of the gen files to be analyzed. This
 plain text file contains 2 (or optionally 3) columns for each gen
 file:
 
-+------------------+----------------+----------------------------------+
 | **Chromosome**   | **Gen File**   | **.info <filename> (optional)**  |
-+==================+================+==================================+
+------------------------------------------------------------------------
 | N                | <filename>     | <filename>                       |
-+------------------+----------------+----------------------------------+
 | ...              | ...            | ...                              |
-+------------------+----------------+----------------------------------+
 
 The 3rd column is only required if your .info files and .gen files are
 not the same except for the <extension>.
@@ -486,13 +483,11 @@ separated by whitespace).
 The 2nd column is only required if the filenames aren't identical
 except for the extension.
 
-+--------------------------------+----------------------------------------+
+
 | **Col 1 (dosage <filename>)**  | **Col 2 (optional info <filename>)**   |
-+================================+========================================+
+---------------------------------|----------------------------------------
 | <filename>.dose                | <filename>.info                        |
-+--------------------------------+----------------------------------------+
 | ...                            | ...                                    |
-+--------------------------------+----------------------------------------+
 
 
 Phenotype/Covariate Data
@@ -707,23 +702,15 @@ the final job scripts. The following variables are replaced based on
 the job that is being performed and the parameters passed to the
 program by the user (or their default values):
 
-+-----------------------------------+-----------------------------------------------+
 | **Variable**                      | **Purpose**                                   |
-+===================================+===============================================+
+------------------------------------|------------------------------------------------
 | $jobname                          | Unique name for the current job               |
-+-----------------------------------+-----------------------------------------------+
 | $memory (2G)                      | Amount of memory to provide each job.         |
-+-----------------------------------+-----------------------------------------------+
 | $walltime (3:00:00)               | Define amount of time to be assigned to jobs  |
-+-----------------------------------+-----------------------------------------------+
 | $logpath                          | Directory specified for writing logs          |
-+-----------------------------------+-----------------------------------------------+
 | $respath                          | Directory sepcified for writing results       |
-+-----------------------------------+-----------------------------------------------+
 | $pwd                              | current working dir when mvmany is run        |
-+-----------------------------------+-----------------------------------------------+
 | $body                             | Statements of execution                       |
-+-----------------------------------+-----------------------------------------------+
 
 
 Command Line Arguments
@@ -806,6 +793,6 @@ The results generated can be manually merged once all nodes have
 completed execution.
 
 Changelog
-========
+=========
 
 mvtest.py: 1.0.0 released
