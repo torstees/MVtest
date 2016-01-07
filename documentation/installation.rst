@@ -9,7 +9,7 @@ MVTest's installation will attempt to install these required components
 for you, however, it requires that you have write permission to the
 installation directory. If you are using a shared system and lack the
 necessary privileges to install libraries and software yourself, you should
-please see one of the sections, :ref:`Miniconda` or :ref:`virtual-env` below
+please see one of the sections, Miniconda_ or virtual-env_ below
 for instructions on different options for setting up your own python
 environement which will exist entirely under your own control.
 

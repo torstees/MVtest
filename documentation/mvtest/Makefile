@@ -29,7 +29,7 @@ all:
 	echo "\n* Changelog" > index.supp
 	echo "\nChangelog\n=========\n" > changelog.header
 	cat _build/text/index.txt index.supp _build/text/installation.txt _build/text/mvtest.txt _build/text/mvmany.txt changelog.header ../../CHANGES  > ../../README
-	cat _build/text/README.txt | tr = - | tr \* = > ../../README.md
+	cat readme.pre ../installation.rst readme.post > ../../README.rst
 
 
 help:
