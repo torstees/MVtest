@@ -1,3 +1,10 @@
+MVtest GWAS Analysis
+====================
+
+MVtest is an analysis tool that can be run on many common file formats using
+syntax similar to programs you've probably already used. Instructions for
+installation can be found below.
+
 Installation
 ============
 MVtest requires python 2.7.x as well as the following libraries:
@@ -128,3 +135,11 @@ also required for running mvtest. (setuptools includes easy_install).
 
 Once that has been completed successfully, you should be ready to follow
 the standard instructions for installing mvtest.
+
+MVtest Online Manual
+====================
+
+The online manual can be found at http://edwards-lab.github.io/MVtest/
+
+For developers who would like to use the GWAS parsers, the API manual can be
+found at http://edwards-lab.github.io/MVtest/api/index.html
