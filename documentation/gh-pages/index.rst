@@ -8,10 +8,10 @@ MVTest - GWAS Analysis
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
-   installation.rst
-   mvtest.rst
-   mvmany
-   changes
-
+   installation
+   mvtest
+   `here. <mvtest/index.html>`_
+   online
+   apionline

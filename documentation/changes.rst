@@ -8,9 +8,9 @@ Development Notes
 MVtest authors
 ++++++++++++++
 
-.. include:: ../AUTHORS
+.. include:: ../../AUTHORS
 
 Change Log
 ++++++++++
 
-.. include:: ../CHANGES
+.. include:: ../../CHANGES
