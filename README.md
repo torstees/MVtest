@@ -164,4 +164,4 @@ MVtest Online Manual
 The online manual can be found at http://edwards-lab.github.io/MVtest/
 
 For developers who would like to use the GWAS parsers, the API manual
-can be found here.
+can be found at http://edwards-lab.github.io/MVtest/api/index.html

@@ -13,7 +13,7 @@ installation can be found below.
 MVtest Online Manual
 ====================
 
-The online manual can be found here: `here. <mvtest/index.html>`_
+The online manual can be found at http://edwards-lab.github.io/MVtest/
 
 For developers who would like to use the GWAS parsers, the API manual can be
-found `here. <mvtest/index.html>`_
+found at http://edwards-lab.github.io/MVtest/api/index.html
