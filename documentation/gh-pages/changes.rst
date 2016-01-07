@@ -1,7 +1,3 @@
-:tocdepth: 2
-
-.. _authors:
-
 Development Notes
 =================
 

@@ -1,0 +1,14 @@
+*.pyc
+.git
+.DS_Store
+.idea
+*.egg
+*.zip
+*.egg-info
+*_build
+dist
+*.pdf
+README
+changelog.header
+index.supp
+

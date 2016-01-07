@@ -8,10 +8,11 @@ MVTest - GWAS Analysis
 
 
 .. toctree::
-   :maxdepth: 2
 
-   installation.rst
-   mvtest.rst
+   :maxdepth: 3
+
+   installation
+   mvtest
    mvmany
+   modules
    changes
-

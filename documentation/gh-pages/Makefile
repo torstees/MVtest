@@ -12,6 +12,8 @@ ifeq ($(shell which $(SPHINXBUILD) >/dev/null 2>&1; echo $$?), 1)
 $(error The '$(SPHINXBUILD)' command was not found. Make sure you have Sphinx installed, then set the SPHINXBUILD environment variable to point to the full path of the '$(SPHINXBUILD)' executable. Alternatively you can add the directory with the executable to your PATH. If you don't have Sphinx installed, grab it from http://sphinx-doc.org/)
 endif
 
+
+
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
@@ -22,14 +24,11 @@ I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 .PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest coverage gettext pdf
 
 all:
-	make latexpdf
-	mkdir -p ../../doc
-	cp _build/latex/MVtest.pdf ../../doc
-	make text
-	echo "\n* Changelog" > index.supp
-	echo "\nChangelog\n=========\n" > changelog.header
-	cat _build/text/index.txt index.supp _build/text/installation.txt _build/text/mvtest.txt _build/text/mvmany.txt changelog.header ../../CHANGES  > ../../README
-	cat _build/text/README.txt | tr = - | tr \* = > ../../README.md
+	rm -rf _build/html/mvtest _build/html/api
+	make -C ../mvtest html
+	make -C ../api html
+	make html
+	cp -r ../api/_build/html _build/html/api
 
 
 help:

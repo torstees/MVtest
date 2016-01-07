@@ -32,7 +32,7 @@ setuptools.setup(name="mvtest",
     package_data={'meanvar/tests/bedfiles':['*'],
                   'doc':['*']},
     classifiers=[
-        "Development Status :: 3 - Beta",
+        "Development Status :: 4 - Beta",
         "Topic :: Utilities",
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
         "Topic :: Scientific/Engineering :: Bio-Informatics",
