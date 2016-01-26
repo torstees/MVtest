@@ -1,1 +1,4 @@
+mvtest.py: 1.0.1 reased
+	* changes to the setup.cfg and setup.py to accomodate changes made to work with gh-pages.
+	
 mvtest.py: 1.0.0 released
