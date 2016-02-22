@@ -257,11 +257,13 @@ many files, the format is a single file which contains either pairs of
 dosage/info files, or, if the two files share the same filename except for
 extensions, one dosage file per line.
 
-There is one caveat when using MACH output for analysis: MV-Test requires
-Chromosome and Position for consistency in reporting. As such, the IDs inside
-.info files must be of the form: chrom:pos
+.. important::
 
-If RSIDs or solely positions are found, MVtest will exit with an error.
+    There is one caveat when using MACH output for analysis: MV-Test requires
+    Chromosome and Position for consistency in reporting. As such, the IDs inside
+    .info files must be of the form: chrom:pos
+
+    If RSIDs or solely positions are found, MVtest will exit with an error.
 
 When running MVtest using MACH dosage on a cluster, users can instruct a given
 job to anlyze data from a portion of the files contained within the MACH
