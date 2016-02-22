@@ -269,6 +269,10 @@ class Parser(DataParser):
             if len(words) > 0:
                 loc, al2, al1, freq1, maf, avgcall,rsq = words[0:7]
                 marker = loc.split(":")[0:2]
+                if len(marker) < 2:
+                    raise pygwas.exceptions.MalformedInputFile("MACH .info " +
+                                "file IDs must be in the format chrom:rsid")
+
                 marker[0]=int(marker[0])
                 self.markers.append(marker)
                 self.maf.append(float(maf))
