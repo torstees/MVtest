@@ -50,7 +50,7 @@ components for you, however, it requires that you have write
 permission to the installation directory. If you are using a shared
 system and lack the necessary privileges to install libraries and
 software yourself, you should please see one of the sections,
-Miniconda or virtual-env below for instructions on different options
+Miniconda or Virtual Env below for instructions on different options
 for setting up your own python environement which will exist entirely
 under your own control.
 
@@ -540,7 +540,10 @@ Phenotype/Covariate Data
 Phenotypes and Covariate data can be found inside either the standard
 pedigree headers or within special PLINK style covariate files. Users
 can specify phenotypes and covariates using either header names (if a
-header exists in the file) or by 1 based column indices.
+header exists in the file) or by 1 based column indices. An index of 1
+actually means the first variable column, not the first column. In
+general, this will be the 3rd column, since columns 1 and 2 reference
+FID and IID.
 
 --pheno <filename>
 
