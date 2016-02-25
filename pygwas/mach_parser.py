@@ -268,13 +268,7 @@ class Parser(DataParser):
             words = file.readline().strip().split()
             if len(words) > 0:
                 loc, al2, al1, freq1, maf, avgcall,rsq = words[0:7]
-                marker = loc.split(":")[0:2]
-                if len(marker) < 2:
-                    raise pygwas.exceptions.MalformedInputFile("MACH .info " +
-                                "file IDs must be in the format chrom:rsid")
-
-                marker[0]=int(marker[0])
-                self.markers.append(marker)
+                self.markers.append(lindex)
                 self.maf.append(float(maf))
                 self.alleles.append([al1, al2])
                 self.rsquared.append(float(rsq))
@@ -316,8 +310,8 @@ class Parser(DataParser):
             iteration.cur_idx = 0
             cur_idx = 0
 
-        iteration.chr = self.markers[cur_idx][0]
-        iteration.pos = int(self.markers[cur_idx][1])
+        iteration.chr = -1
+        iteration.pos = -1
 
         if DataParser.boundary.TestBoundary(iteration.chr, iteration.pos, iteration.rsid) and self.rsquared[cur_idx] >= Parser.min_rsquared:
             iteration.major_allele, iteration.minor_allele = self.alleles[cur_idx]
