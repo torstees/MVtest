@@ -341,7 +341,9 @@ Phenotype/Covariate Data
 Phenotypes and Covariate data can be found inside either the standard pedigree
 headers or within special PLINK style covariate files. Users can specify
 phenotypes and covariates using either header names (if a header exists in
-the file) or by 1 based column indices.
+the file) or by 1 based column indices. An index of 1 actually means the
+first variable column, not the first column. In general, this will be the
+3rd column, since columns 1 and 2 reference FID and IID.
 
 .. option:: --pheno <filename>
 
