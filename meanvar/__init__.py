@@ -1,5 +1,5 @@
 __author__ = 'Eric Torstenson'
-__version__ = '1.0.2'
+__version__ = '1.0.3'
 
 __copyright__ = "Copyright (C) 2015 Todd Edwards, Chun Li and Eric Torstenson"
 __license__ = "GPL3.0"

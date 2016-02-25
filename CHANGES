@@ -1,3 +1,5 @@
+mvtest.py: 1.0.3
+    * Removed special requirements for MACH input (chr:pos) and made that optional.
 mvtest.py: 1.0.2
 	* added an exception when using improperly formatted MACH info file(s)
 	* updated documentation to draw attention to the additional MACH info file requirements

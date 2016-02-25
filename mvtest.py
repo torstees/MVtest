@@ -263,6 +263,7 @@ differences, so please consider the list above carefully.
         parser.add_argument("--mach-info-ext", type=str, default="info.gz", help="Portion of filename denotes info filenames")
         parser.add_argument("--mach-dose-ext", type=str, default="dose.gz", help="Portion of filename that denotes dose files")
         parser.add_argument("--mach-min-rsquared", type=float, default=0.3, help="Filter out loci with RSquared < this value")
+        parser.add_argument("--mach-chrpos", action="store_true", help="When true, first col in .info file must be chr:pos (additional pieces allowed)")
 
 
         parser.add_argument("--pheno", type=argparse.FileType('r'), help="File containing phenotypes")
@@ -286,7 +287,7 @@ differences, so please consider the list above carefully.
 
         parser.add_argument("--verbose", action='store_true', help="Output additional data details")
 
-        parser.set_defaults(all_pheno=False, sex=False)
+        parser.set_defaults(all_pheno=False, sex=False, mach_chrpos=False)
         args = parser.parse_args(args)
 
 
@@ -425,6 +426,7 @@ differences, so please consider the list above carefully.
                 print >> sys.stderr, "--mind does not have any impact on imputed data"
                 sys.exit(1)
 
+            mach_parser.Parser.chrpos_encoding = args.mach_chrpos
             mach_parser.Parser.info_ext = args.mach_info_ext
             mach_parser.Parser.dosage_ext = args.mach_dose_ext
             mach_parser.Parser.chunk_stride = args.mach_chunk_size

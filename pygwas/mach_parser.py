@@ -64,6 +64,8 @@ class Parser(DataParser):
     chunk_stride = 50000
     #: rsquared threshold for analysis (obtained from the mach output itself)
     min_rsquared = 0.3
+    # Use Todd's chr:pos encoding:rsid optionally
+    chrpos_encoding = False
 
     def __init__(self, archive_list, info_files=[]):
         """Initialize the structure with the family details file and the list of archives to be parsed
@@ -268,7 +270,18 @@ class Parser(DataParser):
             words = file.readline().strip().split()
             if len(words) > 0:
                 loc, al2, al1, freq1, maf, avgcall,rsq = words[0:7]
-                self.markers.append(lindex)
+                marker = [-1, lindex]
+                if self.chrpos_encoding:
+                    marker = [int(x) for x in loc.split(":")[0:2]]
+                    if len(marker) < 2:
+                        raise pygwas.exceptions.MalformedInputFile("MACH .info " +
+                                "file IDs must be in the format chrom:rsid")
+                    if len(marker) > 2:
+                        self.rsids.append(marker[2])
+                    self.markers.append(marker[0:2])
+                else:
+                    self.markers.append(lindex)
+                    self.rsids.append(loc)
                 self.maf.append(float(maf))
                 self.alleles.append([al1, al2])
                 self.rsquared.append(float(rsq))
@@ -310,10 +323,16 @@ class Parser(DataParser):
             iteration.cur_idx = 0
             cur_idx = 0
 
-        iteration.chr = -1
-        iteration.pos = -1
+        if self.chrpos_encoding:
+            iteration.chr, iteration.pos = self.markers[cur_idx]
+            valid_pos = DataParser.boundary.TestBoundary(iteration.chr, iteration.pos, iteration.rsid)
+        else:
+            iteration.chr = "NA"
+            iteration.pos = "NA"
+            iteration.rsid = self.rsids[cur_idx]
+            valid_pos = cur_idx < len(self.markers)
 
-        if DataParser.boundary.TestBoundary(iteration.chr, iteration.pos, iteration.rsid) and self.rsquared[cur_idx] >= Parser.min_rsquared:
+        if valid_pos and self.rsquared[cur_idx] >= Parser.min_rsquared:
             iteration.major_allele, iteration.minor_allele = self.alleles[cur_idx]
             iteration.genotype_data = numpy.ma.masked_array(self.dosages[cur_idx].astype(numpy.float), self.ind_mask).compressed()
             iteration._maf = numpy.mean(iteration.genotype_data/2)

@@ -33,7 +33,7 @@ class TestBase(unittest.TestCase):
 
         self.phenotypes = [0.1, 0.4, 1.0, 0.5, 0.9, 1.0, 0.1, 0.4, 1.0, 0.5, 0.9, 1.0]
         self.sex = [1,2,1,1,2,2,1,1,2,2,2,1]
-
+        self.chrpos_encoding = mach_parser.Parser.chrpos_encoding
         self.dosage_ext = mach_parser.Parser.dosage_ext
         self.info_ext = mach_parser.Parser.info_ext
         self.chrom = BoundaryCheck.chrom
@@ -68,6 +68,8 @@ class TestBase(unittest.TestCase):
 
         mach_parser.Parser.dosage_ext = self.dosage_ext
         mach_parser.Parser.info_ext = self.info_ext
+        mach_parser.Parser.chrpos_encoding = self.chrpos_encoding
+
         BoundaryCheck.chrom  = self.chrom
         DataParser.boundary  = self.boundary
         DataParser.min_maf   = self.min_maf
@@ -241,6 +243,8 @@ class TestBase(unittest.TestCase):
 
 class TestImputedBasics(TestBase):
     def testChromosomes(self):
+        mach_parser.Parser.chrpos_encoding = True
+
         pc = PhenoCovar()
         parser = mach_parser.Parser([self.gen_file, self.gen_file2])
         parser.load_family_details(pc)
@@ -254,7 +258,24 @@ class TestImputedBasics(TestBase):
 
             idx += 1
         self.assertEqual(20, idx)
+    def testChromosomesNoChrPos(self):
+        mach_parser.Parser.chrpos_encoding = False
+
+        pc = PhenoCovar()
+        parser = mach_parser.Parser([self.gen_file, self.gen_file2])
+        parser.load_family_details(pc)
+        parser.load_genotypes()
+
+        idx = 0
+
+        for snp in parser:
+            self.assertEqual("NA", snp.pos)
+            self.assertEqual("NA", snp.chr)
+            self.assertEqual("%d:%d" % (self.chroms[idx], self.positions[idx]), snp.rsid)
+            idx += 1
+        self.assertEqual(20, idx)
     def testValuesUncompressed(self):
+        mach_parser.Parser.chrpos_encoding = True
         DataParser.compressed_pedigree = False
         mach_parser.Parser.gen_ext = "gen"
         PhenoCovar.sex_as_covariate = True
@@ -276,6 +297,7 @@ class TestImputedBasics(TestBase):
 
 
     def testValues(self):
+        mach_parser.Parser.chrpos_encoding = True
         PhenoCovar.sex_as_covariate = True
         pc = PhenoCovar()
         parser = mach_parser.Parser([self.gen_file, self.gen_file2])
@@ -295,6 +317,8 @@ class TestImputedBasics(TestBase):
 
 
     def testInfoFileUse(self):
+        mach_parser.Parser.chrpos_encoding = True
+
         # We'll give it an invalid gen_ext so that we can be certain that it's using the files provided
         mach_parser.Parser.gen_ext='asdf'
         PhenoCovar.sex_as_covariate = True
@@ -312,7 +336,28 @@ class TestImputedBasics(TestBase):
             idx += 1
         self.assertEqual(20, idx)
 
+    def testInfoFileUseNoChrPos(self):
+        # We'll give it an invalid gen_ext so that we can be certain that it's using the files provided
+        mach_parser.Parser.gen_ext='asdf'
+        PhenoCovar.sex_as_covariate = True
+        pc = PhenoCovar()
+        parser = mach_parser.Parser([self.gen_file, self.gen_file2], info_files=[self.info_file1, self.info_file2])
+        parser.load_family_details(pc)
+        parser.load_genotypes()
+
+        idx = 0
+
+        for snp in parser:
+            self.assertEqual("NA", snp.pos)
+            self.assertEqual("NA", snp.chr)
+            self.assertEqual("%s:%s" % (self.chroms[idx], self.positions[idx]), snp.rsid)
+            for i in range(0, len(self.dosage_encoding[idx])):
+                self.assertAlmostEqual(self.dosage_encoding[idx][i], snp.genotype_data[i], places=3)
+            idx += 1
+        self.assertEqual(20, idx)
+
     def testMAF(self):
+        mach_parser.Parser.chrpos_encoding = True
         pc = PhenoCovar()
         parser = mach_parser.Parser([self.gen_file])
         parser.load_family_details(pc)
@@ -328,6 +373,8 @@ class TestImputedBasics(TestBase):
         self.assertEqual(10, idx)
 
     def testAlelles(self):
+        mach_parser.Parser.chrpos_encoding = True
+
         pc = PhenoCovar()
         parser = mach_parser.Parser([self.gen_file])
         parser.load_family_details(pc)
@@ -343,6 +390,7 @@ class TestImputedBasics(TestBase):
         self.assertEqual(10, idx)
 
     def testChunkStride(self):
+        mach_parser.Parser.chrpos_encoding = True
         pc = PhenoCovar()
         parser = mach_parser.Parser([self.gen_file])
         parser.chunk_stride = 7
@@ -360,6 +408,7 @@ class TestImputedBasics(TestBase):
             idx += 1
         self.assertEqual(10, idx)
     def testLongerList(self):
+        mach_parser.Parser.chrpos_encoding = True
         PhenoCovar.sex_as_covariate = True
         pc = PhenoCovar()
         parser = mach_parser.Parser([self.gen_file, self.gen_file2]*3)
@@ -379,6 +428,7 @@ class TestImputedBasics(TestBase):
         self.assertEqual(60, idx)
 
     def testFilteredInd(self):
+        mach_parser.Parser.chrpos_encoding = True
         DataParser.ind_exclusions = self.ind_ids[0:2]
         PhenoCovar.sex_as_covariate = True
         pc = PhenoCovar()
@@ -397,6 +447,8 @@ class TestImputedBasics(TestBase):
         self.assertEqual(20, idx)
 
     def testBoundaried(self):
+        mach_parser.Parser.chrpos_encoding = True
+
         BoundaryCheck.chrom = 1
         DataParser.boundary = BoundaryCheck(bp=[0, 1137])
         PhenoCovar.sex_as_covariate = True
@@ -415,6 +467,8 @@ class TestImputedBasics(TestBase):
         self.assertEqual(6, idx)
 
     def testBoundedUpper(self):
+        mach_parser.Parser.chrpos_encoding = True
+
         BoundaryCheck.chrom = 3
         DataParser.boundary = BoundaryCheck(bp=[1026, 2000])
         PhenoCovar.sex_as_covariate = True
@@ -433,6 +487,7 @@ class TestImputedBasics(TestBase):
         self.assertEqual(20, idx)
 
     def testBoundedMiddle(self):
+        mach_parser.Parser.chrpos_encoding = True
         BoundaryCheck.chrom = 2
         DataParser.boundary = BoundaryCheck(bp=[1020, 1137])
         PhenoCovar.sex_as_covariate = True
@@ -451,6 +506,7 @@ class TestImputedBasics(TestBase):
 
 
     def testFilterMAF(self):
+        mach_parser.Parser.chrpos_encoding = True
         DataParser.min_maf = 0.45
         pc = PhenoCovar()
         parser = mach_parser.Parser([self.gen_file])
