@@ -260,10 +260,11 @@ extensions, one dosage file per line.
 .. important::
 
     There is one caveat when using MACH output for analysis: MV-Test requires
-    Chromosome and Position for consistency in reporting. As such, the IDs inside
-    .info files must be of the form: chrom:pos
+    Chromosome and Position for consistency in reporting. As such, the intiail
+    column for .info files must be of the form: chrom:pos
 
-    If RSIDs or solely positions are found, MVtest will exit with an error.
+    Currently, if rsIDs (with or without the chromosome) or just the position
+    will produce an error during execution.
 
 When running MVtest using MACH dosage on a cluster, users can instruct a given
 job to anlyze data from a portion of the files contained within the MACH
