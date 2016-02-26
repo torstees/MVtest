@@ -85,7 +85,7 @@ class SnpBoundaryCheck(BoundaryCheck):
             print >> f, BuildReportLine("CHROM", BoundaryCheck.chrom)
             if len(self.start_bounds) > 0:
                 bounds = ",".join(["%s-%s" % (a[0], a[1]) for a in zip(self.start_bounds, self.end_bounds)])
-                print >> f, BuildReportLine("SNP BOUNDARY", "-".join(bounds))
+                print >> f, BuildReportLine("SNP BOUNDARY", bounds)
         if len(self.ignored_rs) > 0:
             print >> f, BuildReportLine("IGNORED RS", ",".join(self.ignored_rs))
         if len(self.target_rs) > 0:
@@ -106,7 +106,7 @@ class SnpBoundaryCheck(BoundaryCheck):
             return False
 
         if self.end_rs:
-            valid = rsid not in self.ignored_rs and pos not in self.dropped_snps[chr]
+            valid = not (rsid in self.ignored_rs or pos in self.dropped_snps[chr])
 
             # Be sure to clear our end if we have reached it
             if rsid==self.end_rs:

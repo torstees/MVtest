@@ -325,14 +325,12 @@ class Parser(DataParser):
 
         if self.chrpos_encoding:
             iteration.chr, iteration.pos = self.markers[cur_idx]
-            valid_pos = DataParser.boundary.TestBoundary(iteration.chr, iteration.pos, iteration.rsid)
         else:
             iteration.chr = "NA"
             iteration.pos = "NA"
             iteration.rsid = self.rsids[cur_idx]
-            valid_pos = cur_idx < len(self.markers)
 
-        if valid_pos and self.rsquared[cur_idx] >= Parser.min_rsquared:
+        if cur_idx < len(self.markers) and DataParser.boundary.TestBoundary(iteration.chr, iteration.pos, iteration.rsid) and self.rsquared[cur_idx] >= Parser.min_rsquared:
             iteration.major_allele, iteration.minor_allele = self.alleles[cur_idx]
             iteration.genotype_data = numpy.ma.masked_array(self.dosages[cur_idx].astype(numpy.float), self.ind_mask).compressed()
             iteration._maf = numpy.mean(iteration.genotype_data/2)

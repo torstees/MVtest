@@ -305,7 +305,12 @@ differences, so please consider the list above carefully.
 
         ###############################################################################################################
         # Here we deal with the various ways we filter SNPs in and out of anlysis
-        BoundaryCheck.chrom = args.chr
+        # We might handle MACH files differently. We'll default the chromosome
+        # to be "NA" which is how those can be returned.
+        if args.mach is None or args.mach_chrpos:
+            BoundaryCheck.chrom = args.chr
+        else:
+            BoundaryCheck.chrom = "NA"
         snps = args.snps.split(",")
         try:
             b = BoundaryCheck(bp=(args.from_bp, args.to_bp),
@@ -425,7 +430,9 @@ differences, so please consider the list above carefully.
             if DataParser.ind_miss_tol != 1.0:
                 print >> sys.stderr, "--mind does not have any impact on imputed data"
                 sys.exit(1)
-
+            if BoundaryCheck.chrom != "NA" and not args.mach_chrpos:
+                pygwas.Exit(("Positional based filtering (--chr, --from/--to)"+
+                        " only work with mach_chrpos. See manual for details."))
             mach_parser.Parser.chrpos_encoding = args.mach_chrpos
             mach_parser.Parser.info_ext = args.mach_info_ext
             mach_parser.Parser.dosage_ext = args.mach_dose_ext
