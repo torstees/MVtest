@@ -259,12 +259,24 @@ extensions, one dosage file per line.
 
 .. important::
 
-    There is one caveat when using MACH output for analysis: MV-Test requires
-    Chromosome and Position for consistency in reporting. As such, the intiail
-    column for .info files must be of the form: chrom:pos
+    MACH doesn't provide anywhere to store chromosome and positions. Users may
+    wish to embed this information into the first column inside the .info file.
+    Doing so will allow MVtest to recognize those values and populate the
+    corresponding fields in the report.
 
-    Currently, if rsIDs (with or without the chromosome) or just the position
-    will produce an error during execution.
+    To use this feature, users much use the --mach-chrpos field and their ID
+    columns inside the .info file must be formatted in the following way:
+
+    chr:pos:(optional rsid)
+
+    When the --mach-chrpos flag is used, MVtest will fail when it encounters
+    IDs that aren't in this format and there must be at least 2 'fields' (i.e.
+    there must be at least one ":" character.
+
+    When processing MACH imputed data without this special encoding of IDs,
+    MCtest will be unable to recognize positions. As a result, unless the
+    --mach-chrpos flag is present, MVtest will exit with an error if the
+    user attempts to use positional filters such as --from-bp, --chr, etc. 
 
 When running MVtest using MACH dosage on a cluster, users can instruct a given
 job to anlyze data from a portion of the files contained within the MACH
@@ -317,6 +329,12 @@ memory is required.
 
     Indicate the minimum threshold for the rsqured value from the .info files
     required for analysis.
+
+.. option:: --mach-chrpos
+    When set, MVtest expects IDs from the .info file to be in the format
+    chr:pos:rsid (rsid is optional). This will allow the report to contain
+    positional details, otherwise, only the RSID column will have a value
+    which will be the contents of the first column from the .info file
 
 MACH File Input
 ^^^^^^^^^^^^^^^
