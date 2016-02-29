@@ -50,7 +50,7 @@ components for you, however, it requires that you have write
 permission to the installation directory. If you are using a shared
 system and lack the necessary privileges to install libraries and
 software yourself, you should please see one of the sections,
-Miniconda or Virtual Env below for instructions on different options
+Miniconda or virtual-env below for instructions on different options
 for setting up your own python environement which will exist entirely
 under your own control.
 
@@ -458,8 +458,8 @@ Important: MACH doesn't provide anywhere to store chromosome and
   recognize those values and populate the corresponding fields in the
   report.To use this feature, users much use the --mach-chrpos field
   and their ID columns inside the .info file must be formatted in the
-  following way:chr:pos:(optional rsid)When the --mach-chrpos flag is
-  used, MVtest will fail when it encounters IDs that aren't in this
+  following way:chr:pos (optionally :rsid)When the --mach-chrpos flag
+  is used, MVtest will fail when it encounters IDs that aren't in this
   format and there must be at least 2 'fields' (i.e. there must be at
   least one ":" character.When processing MACH imputed data without
   this special encoding of IDs, MCtest will be unable to recognize
@@ -500,7 +500,8 @@ from file) but the more memory is required.
 --mach-uncompressed
 
    By default, MACH input is expected to be gzip compressed. If data
-   is plain text, add this flag
+   is plain text, add this flag. *It should be noted that dosage and
+   info files should be either both compressed or both uncompressed.*
 
 --mach-chunk-size <integer>
 
@@ -522,10 +523,12 @@ from file) but the more memory is required.
    files required for analysis.
 
 --mach-chrpos
-When set, MVtest expects IDs from the .info file to be in the format
-chr:pos:rsid (rsid is optional). This will allow the report to contain
-positional details, otherwise, only the RSID column will have a value
-which will be the contents of the first column from the .info file
+
+   When set, MVtest expects IDs from the .info file to be in the
+   format chr:pos:rsid (rsid is optional). This will allow the report
+   to contain positional details, otherwise, only the RSID column will
+   have a value which will be the contents of the first column from
+   the .info file
 
 
 MACH File Input
@@ -609,6 +612,11 @@ When specifying a range of positions for analysis, a chromosome must
 be present. If a chromosome is specified but is not accompanied by a
 range, the entire chromosome will be used. Only one range can be
 specified per run.
+
+In general, when specifying region limits, --chr must be defined
+unless using generic MACH input (which doesn't define a chromosome
+number nor position, in which case positional restrictions do not
+apply).
 
 --snps LIST
 
