@@ -209,7 +209,8 @@ class Parser(transposed_pedigree_parser.Parser):
 
 
     def filter_missing(self):
-        """Filter out individuals and SNPs that have too many missing to be considered
+        """Filter out individuals and SNPs that have too many missing to be \
+            considered
 
         :return: None
 
@@ -228,8 +229,9 @@ class Parser(transposed_pedigree_parser.Parser):
         magic, data_format = struct.unpack("<HB", self.genotype_file.read(3))
 
         if data_format != 1:
-            Exit("MVTEST is currently unable to read data formatted as individual major. " +
-                "You must regenerate your data in SNP major format. ")
+            Exit(("MVTEST is currently unable to read data formatted as " +
+                 "individual major. You must regenerate your data in SNP major"+
+                 " format. "))
 
         self.bytes_per_read = self.ind_count / 4
         if self.ind_count % 4 > 0:
@@ -237,13 +239,15 @@ class Parser(transposed_pedigree_parser.Parser):
         self.fmt_string = "<" + "B"*self.bytes_per_read
 
         for index in range(self.locus_count):
-            buffer = struct.unpack(self.fmt_string, self.genotype_file.read(self.bytes_per_read))
+            buffer = struct.unpack(self.fmt_string,
+                                   self.genotype_file.read(self.bytes_per_read))
 
             chr, pos = self.markers[index]
             rsid = self.rsids[index]
 
             if DataParser.boundary.TestBoundary(chr, pos, rsid):
-                genotypes = numpy.array(self.extract_genotypes(buffer), dtype=numpy.int8)
+                genotypes = numpy.array(self.extract_genotypes(buffer),
+                                        dtype=numpy.int8)
                 locus_count += 1
 
                 if missing is None:
@@ -258,17 +262,19 @@ class Parser(transposed_pedigree_parser.Parser):
         valid_individuals = numpy.sum(self.ind_mask==0)
         max_missing = DataParser.snp_miss_tol * valid_individuals
 
-        # We can't merge these two iterations since we need to know which individuals
-        # to consider for filtering on MAF
+        # We can't merge these two iterations since we need to know which
+        # individuals to consider for filtering on MAF
         dropped_snps = []
         self.genotype_file.seek(0)
         self.genotype_file.read(3)
         self.total_locus_count = self.locus_count
         self.locus_count = 0
         for index in range(self.total_locus_count):
-            buffer = struct.unpack(self.fmt_string, self.genotype_file.read(self.bytes_per_read))
+            buffer = struct.unpack(self.fmt_string,
+                                   self.genotype_file.read(self.bytes_per_read))
 
-            genotypes = numpy.ma.MaskedArray(self.extract_genotypes(buffer), self.ind_mask).compressed()
+            genotypes = numpy.ma.MaskedArray(self.extract_genotypes(buffer),
+                                             self.ind_mask).compressed()
             chr, pos = self.markers[index]
             rsid = self.rsids[index]
             if DataParser.boundary.TestBoundary(chr, pos, rsid):
@@ -303,18 +309,23 @@ class Parser(transposed_pedigree_parser.Parser):
         cur_idx = iteration.cur_idx
 
         if cur_idx < self.total_locus_count:
-            buffer = struct.unpack(self.fmt_string, self.genotype_file.read(self.bytes_per_read))
-            genotypes = numpy.ma.MaskedArray(self.extract_genotypes(buffer), self.ind_mask).compressed()
+            buffer = struct.unpack(self.fmt_string,
+                                   self.genotype_file.read(self.bytes_per_read))
+            genotypes = numpy.ma.MaskedArray(self.extract_genotypes(buffer),
+                                             self.ind_mask).compressed()
 
             iteration.chr, iteration.pos = self.markers[cur_idx]
             iteration.rsid = self.rsids[cur_idx]
 
 
-            if DataParser.boundary.TestBoundary(iteration.chr, iteration.pos, iteration.rsid):
+            if DataParser.boundary.TestBoundary(iteration.chr,
+                                                iteration.pos,
+                                                iteration.rsid):
                 hz_count = numpy.sum(genotypes==1)
                 allele_count1 = numpy.sum(genotypes==0)*2 + hz_count
                 allele_count2 = numpy.sum(genotypes==2)*2 + hz_count
-                iteration.minor_allele, iteration.major_allele = self.alleles[cur_idx]
+                iteration.minor_allele, \
+                    iteration.major_allele = self.alleles[cur_idx]
 
                 if allele_count2 > allele_count1:
                     iteration.maj_allele_count = allele_count2
@@ -324,13 +335,15 @@ class Parser(transposed_pedigree_parser.Parser):
                     iteration.min_allele_count = allele_count2
                 iteration.allele_count2 = allele_count2
                 iteration.genotype_data = genotypes
-                return iteration.maf >= DataParser.min_maf and iteration.maf <= DataParser.max_maf
+                return iteration.maf >= DataParser.min_maf and \
+                       iteration.maf <= DataParser.max_maf
         else:
             raise StopIteration
         return False
 
     def __iter__(self):
-        """Use itself as the iterator, starting back at beginning of the genotypic data
+        """Use itself as the iterator, starting back at beginning of the \
+            genotypic data
 
         :return: ParsedLocus representing the first locus.
         """

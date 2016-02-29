@@ -310,6 +310,9 @@ differences, so please consider the list above carefully.
         if args.mach is None or args.mach_chrpos:
             BoundaryCheck.chrom = args.chr
         else:
+            if args.chr != -1:
+                pygwas.Exit(("Positional based filtering (--chr, --from/--to)" +
+                        " only work with mach_chrpos. See manual for details."))
             BoundaryCheck.chrom = "NA"
         snps = args.snps.split(",")
         try:
@@ -329,6 +332,12 @@ differences, so please consider the list above carefully.
         if b.valid and s.valid:
             print >> sys.stderr, "Only one type of boundary conditions is permitted. Either use --from-bp, etc. or rs123-rs345. "
             sys.exit(1)
+
+        if len(b.bounds) > 0 and not b.valid:
+            if BoundaryCheck.chrom == "NA":
+                pygwas.Exit(("Positional based filtering (--chr, --from/--to)" +
+                        " only work with mach_chrpos. See manual for details."))
+
 
         if s.valid:
             DataParser.boundary = s
@@ -431,7 +440,7 @@ differences, so please consider the list above carefully.
                 print >> sys.stderr, "--mind does not have any impact on imputed data"
                 sys.exit(1)
             if BoundaryCheck.chrom != "NA" and not args.mach_chrpos:
-                pygwas.Exit(("Positional based filtering (--chr, --from/--to)"+
+                pygwas.Exit(("Positional based filtering (--chr, --from/--to)" +
                         " only work with mach_chrpos. See manual for details."))
             mach_parser.Parser.chrpos_encoding = args.mach_chrpos
             mach_parser.Parser.info_ext = args.mach_info_ext

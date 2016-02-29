@@ -1,6 +1,6 @@
 from locus import Locus
 
-__copyright__ = "Eric Torstenson"
+__copyright__ = "Todd Edwards, Chun Li & Eric Torstenson"
 __license__ = "GPL3.0"
 #     This file is part of pyGWAS.
 #

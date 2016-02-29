@@ -8,7 +8,7 @@ from pygwas.exceptions import TooManyAlleles
 from pygwas import sys_call
 from . import BuildReportLine
 
-__copyright__ = "Eric Torstenson"
+__copyright__ = "Todd Edwards, Chun Li & Eric Torstenson"
 __license__ = "GPL3.0"
 #     This file is part of pyGWAS.
 #
@@ -91,12 +91,15 @@ class Parser(DataParser):
             cols = [0, 1, 2]
         markers = numpy.loadtxt(self.mapfile, dtype=str, usecols=cols)
 
-        self.snp_mask = numpy.ones(markers.shape[0]*2, dtype=numpy.int8).reshape(-1, 2)
+        self.snp_mask = numpy.ones(markers.shape[0]*2,
+                                   dtype=numpy.int8).reshape(-1, 2)
 
         if DataParser.boundary.NoExclusions():
             self.markers = numpy.zeros((markers.shape[0], 2), dtype=int)
-            mask = markers[:, 2].astype(int) >= 0    # Check for plink's "off" mode
-            self.snp_mask[:,0] = ~mask               # Turn them all 'on'
+            # Check for plink's "off" mode
+            mask = markers[:, 2].astype(int) >= 0
+            # Turn them all 'on'
+            self.snp_mask[:,0] = ~mask
             self.snp_mask[:,1] = ~mask
             snp_count = numpy.sum(self.snp_mask[:, 0] == 0)
 
@@ -109,14 +112,17 @@ class Parser(DataParser):
             self.markers = []
             self.rsids   = []
             for locus in markers:
-                if DataParser.boundary.TestBoundary(int(locus[0]), int(locus[2]), locus[1]):
+                if DataParser.boundary.TestBoundary(int(locus[0]),
+                                                    int(locus[2]), locus[1]):
                     self.markers.append([locus[0], locus[2]])
                     self.rsids.append(locus[1])
                     self.snp_mask[idx] = 0
                 idx += 1
             self.markers = numpy.array(self.markers, dtype=numpy.int)
             self.rsids   = numpy.array(self.rsids)
-        DataParser.boundary.beyond_upper_bound = False # We don't follow these rules here
+
+        # We don't follow these rules here
+        DataParser.boundary.beyond_upper_bound = False
         self.locus_count    = len(self.markers)
 
 
@@ -151,10 +157,12 @@ class Parser(DataParser):
         dropped_individuals = []
 
         # number of missing SNPs we can tolerate before dropping an individual
-        max_missing_for_individual = numpy.sum(self.snp_mask[:, 0]==0) * DataParser.ind_miss_tol
+        max_missing_for_individual = numpy.sum(
+                self.snp_mask[:, 0]==0) * DataParser.ind_miss_tol
 
         if DataParser.compressed_pedigree:
-            ind_count, err = sys_call("gzip -cd %s | wc -l" % ("%s.gz" % (self.datasource)))
+            ind_count, err = sys_call("gzip -cd %s | wc -l" %
+                                      ("%s.gz" % (self.datasource)))
         else:
             ind_count, err = sys_call("wc -l %s" % (self.datasource))
         ind_count = int(ind_count[0].split()[0]) + 1
@@ -173,17 +181,20 @@ class Parser(DataParser):
             line = line.strip()
             if len(line) > 0:
                 raw_data = line.strip().split()
-                alleles = numpy.ma.MaskedArray(numpy.array(raw_data[first_genotype:]).reshape(-1, 2), self.snp_mask).compressed().reshape(-1, 2)
+                alleles = numpy.ma.MaskedArray(
+                        numpy.array(raw_data[first_genotype:]).reshape(-1, 2),
+                        self.snp_mask).compressed().reshape(-1, 2)
 
                 # Convert the alleles into genotypes
-
                 indid = ":".join(raw_data[0:2])
                 if not DataParser.has_fid:
                     indid = raw_data[0]
 
-                # Ignore any subjects that are to be excluded and remove those that have too much missingness
+                # Ignore any subjects that are to be excluded and remove those
+                # that have too much missingness
                 if DataParser.valid_indid(indid):
-                    missing = numpy.sum(alleles[:, 0] == DataParser.missing_representation)
+                    missing = numpy.sum(alleles[:, 0] ==
+                                        DataParser.missing_representation)
 
                     if missing > max_missing_for_individual:
                         individual_mask += [1, 1]
@@ -219,13 +230,13 @@ class Parser(DataParser):
 
         for i in xrange(0, snp_count):
             snp_geno = allelic_data[:,i]
-            alleles = list(set(numpy.unique(snp_geno)) - set([DataParser.missing_representation]))
+            alleles = list(set(numpy.unique(snp_geno)) -
+                           set([DataParser.missing_representation]))
 
             if len(alleles) > 2:
-                raise TooManyAlleles(chr=self.markers[i][0], rsid=self.rsids[i], alleles=alleles)
-            #if len(alleles) == 1:
-            #    print alleles, snp_geno, self.markers[i]
-            #    raise TooFewAlleles(chr=self.markers[i][0], rsid=self.rsids[i], alleles=alleles)
+                raise TooManyAlleles(chr=self.markers[i][0],
+                                     rsid=self.rsids[i],
+                                     alleles=alleles)
 
             allele_count1 = numpy.sum(snp_geno==alleles[0])
             allele_count2 = 0
@@ -248,16 +259,22 @@ class Parser(DataParser):
                 minor_allele       = alleles[1]
 
                 genotype_data = numpy.sum(snp_geno==alleles[1], axis=1)
-                genotype_data[snp_geno[:, 0]==DataParser.missing_representation] = DataParser.missing_storage
+                genotype_data[
+                    snp_geno[:, 0]==DataParser.missing_representation] = \
+                    DataParser.missing_storage
             else:
                 major_allele = alleles[0]
                 minor_allele = '?'
 
             missing = numpy.sum(genotype_data==DataParser.missing_storage)
-            if maf == 0 or maf < DataParser.min_maf or maf > DataParser.max_maf or max_missing_individuals < missing:
+            if maf == 0 or maf < DataParser.min_maf or \
+                            maf > DataParser.max_maf or \
+                            max_missing_individuals < missing:
                 locus_details = self.markers[i]
-                DataParser.boundary.dropped_snps[locus_details[0]].add(locus_details[1])
-                dropped_loci.append("%s:%s" % (locus_details[0], locus_details[1]))
+                DataParser.boundary.dropped_snps[
+                    locus_details[0]].add(locus_details[1])
+                dropped_loci.append("%s:%s" % (locus_details[0],
+                                               locus_details[1]))
                 self.invalid_loci.append(i)
             else:
                 self.genotypes[valid_snps, :] = genotype_data
@@ -298,8 +315,10 @@ class Parser(DataParser):
             iteration.allele_count2 = self.allele_count2s[cur_idx]
             iteration.genotype_data = self.genotypes[cur_idx, :]
             hetero = numpy.sum(iteration.genotype_data==1)
-            iteration.min_allele_count = numpy.sum(iteration.genotype_data==2)*2 + hetero
-            iteration.maj_allele_count = numpy.sum(iteration.genotype_data==0)*2 + hetero
+            iteration.min_allele_count = numpy.sum(
+                iteration.genotype_data==2)*2 + hetero
+            iteration.maj_allele_count = numpy.sum(
+                iteration.genotype_data==0)*2 + hetero
             return True
         else:
             raise StopIteration
