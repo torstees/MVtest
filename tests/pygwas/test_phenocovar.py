@@ -14,7 +14,7 @@ from pygwas.exceptions import MalformedInputFile
 from pygwas.exceptions import InvalidSelection
 from pygwas.exceptions import NoMatchedPhenoCovars
 from pygwas.data_parser import DataParser
-
+import pygwas.standardizer
 
 class TestBase(unittest.TestCase):
     def setUp(self):
@@ -40,6 +40,8 @@ class TestBase(unittest.TestCase):
         self.sex = [1,1,2,2,1,1]
         self.has_pheno = DataParser.has_pheno
         DataParser.has_pheno = False
+        self.standardizer = pygwas.standardizer.get_standardizer()
+        pygwas.standardizer.set_standardizer(pygwas.standardizer.NoStandardization)
 
 
 
@@ -49,6 +51,7 @@ class TestBase(unittest.TestCase):
             os.remove(file)
         PhenoCovar.sex_as_covariate = self.pcsac
         DataParser.has_pheno = self.has_pheno
+        pygwas.standardizer.set_standardizer(self.standardizer)
 
     def WriteTestFiles(self, prefix = "__test_pheno"):
         filenames = []

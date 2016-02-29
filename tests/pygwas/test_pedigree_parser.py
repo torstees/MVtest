@@ -18,6 +18,7 @@ from pygwas.pheno_covar import PhenoCovar
 from pygwas.pedigree_parser import Parser as PedigreeParser
 from pygwas.boundary import BoundaryCheck
 from pygwas.snp_boundary_check import SnpBoundaryCheck
+import pygwas.standardizer
 
 
 class TestBase(unittest.TestCase):
@@ -45,6 +46,8 @@ class TestBase(unittest.TestCase):
         self.has_fid        = DataParser.has_fid
         self.has_liability  = DataParser.has_liability
         self.sex_as_covariate = PhenoCovar.sex_as_covariate
+        self.standardizer = pygwas.standardizer.get_standardizer()
+        pygwas.standardizer.set_standardizer(pygwas.standardizer.NoStandardization)
 
     def tearDown(self):
 
@@ -63,6 +66,7 @@ class TestBase(unittest.TestCase):
         DataParser.has_liability = self.has_liability
         DataParser.has_parents = self.has_parents
         PhenoCovar.sex_as_covariate = self.sex_as_covariate
+        pygwas.standardizer.set_standardizer(self.standardizer)
 
     def WriteTestFiles(self, prefix = "__test_pedigree"):
         self.filenames = []
