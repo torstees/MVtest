@@ -1,5 +1,5 @@
 
-__copyright__ = "Eric Torstenson"
+__copyright__ = "Todd Edwards, Chun Li & Eric Torstenson"
 __license__ = "GPL3.0"
 #     This file is part of pyGWAS.
 #
@@ -14,7 +14,7 @@ __license__ = "GPL3.0"
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+#     along with MVtest.  If not, see <http://www.gnu.org/licenses/>.
 
 class ReportableException(Exception):
     """Simple exeception with message"""
@@ -28,7 +28,8 @@ class UnsolvedLocus(ReportableException):
 
 class TooManyAlleles(ReportableException):
     """Indicate locus found with more than 2 alleles"""
-    def __init__(self, chr=None, rsid=None, pos=None, alleles=None, index=None, prefix="Too many alleles: "):
+    def __init__(self, chr=None, rsid=None, pos=None, alleles=None, index=None,
+                 prefix="Too many alleles: "):
         #: Chromosome
         self.chr = chr
 
@@ -44,7 +45,9 @@ class TooManyAlleles(ReportableException):
         #: Index of the locus within the file
         self.index = index
 
-        super(TooManyAlleles, self).__init__("%s %s:%s (%s) %s" % (prefix, self.chr, self.pos, self.rsid, self.alleles))
+        super(TooManyAlleles, self).__init__(
+            "%s %s:%s (%s) %s" %
+            (prefix, self.chr, self.pos, self.rsid, self.alleles))
 
 class NanInResult(ReportableException):
     """NaN found in result"""
@@ -64,7 +67,8 @@ class InvariantVar(ReportableException):
 class TooFewAlleles(TooManyAlleles):
     """Indicate fixed allele was found"""
     def __init__(self, chr=None, rsid=None, pos=None, alleles=None, index=None):
-        super(TooFewAlleles, self).__init__(chr, rsid, pos, alleles, index, "Too few alleles: ")
+        super(TooFewAlleles, self).__init__(chr, rsid, pos, alleles, index,
+                                            "Too few alleles: ")
 
 
 class InvalidBoundarySpec(ReportableException):

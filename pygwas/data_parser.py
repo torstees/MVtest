@@ -7,7 +7,7 @@ from boundary import BoundaryCheck
 import numpy
 
 
-__copyright__ = "Eric Torstenson"
+__copyright__ = "Todd Edwards, Chun Li & Eric Torstenson"
 __license__ = "GPL3.0"
 #     This file is part of pyGWAS.
 #
@@ -22,10 +22,11 @@ __license__ = "GPL3.0"
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+#     along with MVtest.  If not, see <http://www.gnu.org/licenses/>.
 
 def check_inclusions(item, included=[], excluded=[]):
-    """Everything passes if both are empty, otherwise, we have to check if empty or is present."""
+    """Everything passes if both are empty, otherwise, we have to check if \
+    empty or is present."""
     if (len(included) == 0):
         if len(excluded) == 0 or item not in excluded:
             return True
@@ -100,7 +101,8 @@ class DataParser(object):
 
     @staticmethod
     def valid_indid(indid):
-        return check_inclusions(indid, DataParser.ind_inclusions, DataParser.ind_exclusions)
+        return check_inclusions(indid, DataParser.ind_inclusions,
+                                DataParser.ind_exclusions)
 
 
     def get_loci(self):

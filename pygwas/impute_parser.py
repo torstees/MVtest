@@ -8,7 +8,7 @@ import numpy
 from exceptions import InvalidSelection
 import os
 
-__copyright__ = "Eric Torstenson"
+__copyright__ = "Todd Edwards, Chun Li & Eric Torstenson"
 __license__ = "GPL3.0"
 #     This file is part of pyGWAS.
 #
@@ -23,7 +23,7 @@ __license__ = "GPL3.0"
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+#     along with MVtest.  If not, see <http://www.gnu.org/licenses/>.
 
 class Encoding(object):
     """Simple enumeration for various model encodings"""

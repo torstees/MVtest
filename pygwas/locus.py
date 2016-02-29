@@ -1,5 +1,5 @@
 
-__copyright__ = "Eric Torstenson"
+__copyright__ = "Todd Edwards, Chun Li & Eric Torstenson"
 __license__ = "GPL3.0"
 #     This file is part of pyGWAS.
 #
@@ -14,7 +14,7 @@ __license__ = "GPL3.0"
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+#     along with MVtest.  If not, see <http://www.gnu.org/licenses/>.
 
 class Locus(object):
     def __init__(self, other=None):
@@ -52,10 +52,12 @@ class Locus(object):
     def flip(self):
         """This will switch major/minor around, regardless of frequency truth.
 
-        This is intended for forcing one of two populations to relate correctly to the same genotype definitions. When
-        flipped, Ps and Qs will be backward, and the maf will no longer relate to the "minor" allele frequency. However,
-        it does allow clients to use the same calls for each population without having to perform checks during
-        those calculations. """
+        This is intended for forcing one of two populations to relate correctly
+        to the same genotype definitions. When flipped, Ps and Qs will be
+        backward, and the maf will no longer relate to the "minor" allele
+        frequency. However, it does allow clients to use the same calls for each
+        population without having to perform checks during those calculations.
+        """
 
         maj_count = self.maj_allele_count
         self.maj_allele_count = self.min_allele_count
@@ -76,8 +78,10 @@ class Locus(object):
 
     @property
     def hetero_freq(self):
-        """Returns the frequency of observed heterozygotes (not available with all parsers)"""
-        return self.hetero_count / (0.5 * (self.min_allele_count + self.maj_allele_count))
+        """Returns the frequency of observed heterozygotes (not available with \
+        all parsers)"""
+        return self.hetero_count / (0.5 * (self.min_allele_count +
+                                           self.maj_allele_count))
     @property
     def exp_hetero_freq(self):
         """Returns the estimated frequency of heterozygotes"""
@@ -123,4 +127,10 @@ class Locus(object):
         return self.chr.__cmp__(other.chr)
 
     def __str__(self):
-        return "%d\t%d:%d %s %s %s %0.4f %0.4f %s" % (self.cur_idx, self.chr, self.pos, self.rsid, self.major_allele, self.minor_allele, self.maf, self.hetero_freq, self.genotype_data)
+        return "%d\t%d:%d %s %s %s %0.4f %0.4f %s" % (self.cur_idx, self.chr,
+                                                      self.pos, self.rsid,
+                                                      self.major_allele,
+                                                      self.minor_allele,
+                                                      self.maf,
+                                                      self.hetero_freq,
+                                                      self.genotype_data)

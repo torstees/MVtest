@@ -1,5 +1,5 @@
 __author__ = 'Eric Torstenson'
-__version__ = '1.0.2'
+__version__ = '1.0.3'
 
 __copyright__ = "Copyright (C) 2015 Todd Edwards, Chun Li and Eric Torstenson"
 __license__ = "GPL3.0"
@@ -16,4 +16,4 @@ __license__ = "GPL3.0"
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+#     along with MVtest.  If not, see <http://www.gnu.org/licenses/>.

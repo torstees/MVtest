@@ -3,7 +3,7 @@ from exceptions import InvalidBoundarySpec
 from . import BuildReportLine
 import os
 
-__copyright__ = "Eric Torstenson"
+__copyright__ = "Todd Edwards, Chun Li & Eric Torstenson"
 __license__ = "GPL3.0"
 #     This file is part of pyGWAS.
 #
@@ -18,7 +18,7 @@ __license__ = "GPL3.0"
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+#     along with MVtest.  If not, see <http://www.gnu.org/licenses/>.
 
 
 class BoundaryCheck(object):
@@ -81,6 +81,16 @@ class BoundaryCheck(object):
         else:
             self.valid = False
 
+        if len(self.bounds) > 0:
+            if BoundaryCheck.chrom == -1:
+                raise InvalidBoundarySpec(("--chr must be present for " +
+                                           "positional filtering to work"))
+            # If there is a meaningful boundary configuration but a meaningless
+            # chromosome in place, then there is a problem
+            try:
+                chr = int(BoundaryCheck.chrom)
+            except:
+                self.valid = False
         #: Is set once the upper limit has been exceeded
         self.beyond_upper_bound = False
 
@@ -159,14 +169,16 @@ class BoundaryCheck(object):
         if BoundaryCheck.chrom != -1:
             print >> f, BuildReportLine("CHROM", BoundaryCheck.chrom)
             if len(self.bounds) > 0:
-                print >> f, BuildReportLine("SNP BOUNDARY", "-".join([str(x) for x in self.bounds]))
+                print >> f, BuildReportLine("SNP BOUNDARY", "-".join(
+                    [str(x) for x in self.bounds]))
         if len(self.ignored_rs) > 0:
             print >> f, BuildReportLine("IGNORED RS", ",".join(self.ignored_rs))
         if len(self.target_rs) > 0:
             print >> f, BuildReportLine("TARGET RS", ",".join(self.target_rs))
 
     def LoadSNPs(self, snps=[]):
-        """Define the SNP inclusions (by RSID). This overrides true boundary definition.
+        """Define the SNP inclusions (by RSID). This overrides true boundary \
+            definition.
 
         :param snps: array of RSIDs
         :return: None

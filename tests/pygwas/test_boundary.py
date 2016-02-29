@@ -183,6 +183,58 @@ class TestSnpBoundaryInitialization(TestBase):
         self.assertFalse(b.TestBoundary(21, 2500000, "rs987654321"))
         self.assertTrue(b.TestBoundary(22, 2500000, "rs987654321"))
 
+class TestSnpBoundaryInitializationNoChr(TestBase):
+    """We are labelling the missing chromosomes in MACH as NA (as are positions).
+    """
+    def testSnpRanges(self):
+        BoundaryCheck.chrom = "NA"
+        b = SnpBoundaryCheck(snps=["rs1-rs500","rs600-rs650","rs987654321"])
+        self.assertFalse(b.NoExclusions())
+        self.assertTrue(b.valid)
+        self.assertFalse(b.TestBoundary(1, 10, "rs1"))
+        self.assertFalse(b.TestBoundary("NA", "NA", "rs750"))
+        self.assertTrue(b.TestBoundary("NA", "NA", "rs1"))
+        self.assertTrue(b.TestBoundary("NA", "NA", "rs50"))
+        self.assertTrue(b.TestBoundary("NA", "NA", "rs1"))
+        # We don't really care which RS numbers we see, except for the boundaries
+        self.assertTrue(b.TestBoundary("NA", "NA", "rs1"))
+        self.assertTrue(b.TestBoundary("NA", "NA", "rs500"))
+        self.assertFalse(b.TestBoundary("NA", "NA", "rs499"))
+        self.assertFalse(b.TestBoundary(22, 23001, "rs500"))
+        self.assertTrue(b.TestBoundary("NA", "NA", "rs600"))
+        self.assertTrue(b.TestBoundary("NA", '23003', "rs625"))
+        self.assertTrue(b.TestBoundary("NA", "NA", "rs20000"))
+        self.assertTrue(b.TestBoundary("NA", "NA", "rs650"))
+        self.assertFalse(b.TestBoundary("NA", "NA", "rs650"))
+        self.assertFalse(b.TestBoundary(21, "NA", "rs987654321"))
+        self.assertTrue(b.TestBoundary("NA", "NA", "rs987654321"))
+
+    def testSnpRangesWithExclusions(self):
+        BoundaryCheck.chrom = "NA"
+        b = SnpBoundaryCheck(snps=["rs1-rs500","1:600-1:650","1:987654321"])
+        b.ignored_rs    = ["1:751","1:501"]
+        self.assertFalse(b.NoExclusions())
+        self.assertTrue(b.valid)
+        self.assertFalse(b.TestBoundary(1, "NA", "rs1"))
+        self.assertFalse(b.TestBoundary("NA", "NA", "rs750"))
+        self.assertTrue(b.TestBoundary("NA", "NA", "rs1"))
+        self.assertFalse(b.TestBoundary("NA", "NA", "1:751"))
+        self.assertTrue(b.TestBoundary("NA", "NA", "1:50"))
+        self.assertTrue(b.TestBoundary("NA", "NA", "rs1"))
+        # We don't really care which RS numbers we see, except for the boundaries
+        self.assertTrue(b.TestBoundary("NA", "NA", "rs1"))
+        self.assertFalse(b.TestBoundary("NA", "NA", "1:501"))
+        self.assertTrue(b.TestBoundary("NA", "NA", "rs500"))
+        self.assertFalse(b.TestBoundary("NA", "NA", "rs499"))
+        self.assertFalse(b.TestBoundary("NA", "NA", "rs500"))
+        self.assertTrue(b.TestBoundary("NA", "NA", "1:600"))
+        self.assertTrue(b.TestBoundary("NA", "NA", "1:625"))
+        self.assertTrue(b.TestBoundary("NA", "NA", "1:20000"))
+        self.assertTrue(b.TestBoundary("NA", "NA", "1:650"))
+        self.assertFalse(b.TestBoundary("NA", "NA", "1:650"))
+        self.assertFalse(b.TestBoundary(21, "NA", "1:987654321"))
+        self.assertTrue(b.TestBoundary("NA", "NA", "1:987654321"))
+
 
 
 

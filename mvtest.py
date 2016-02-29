@@ -17,7 +17,7 @@ __license__ = "GPL3.0"
 #     GNU General Public License for more details.
 #
 #     You should have received a copy of the GNU General Public License
-#     along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+#     along with MVtest.  If not, see <http://www.gnu.org/licenses/>.
 
 
 import argparse
@@ -263,6 +263,7 @@ differences, so please consider the list above carefully.
         parser.add_argument("--mach-info-ext", type=str, default="info.gz", help="Portion of filename denotes info filenames")
         parser.add_argument("--mach-dose-ext", type=str, default="dose.gz", help="Portion of filename that denotes dose files")
         parser.add_argument("--mach-min-rsquared", type=float, default=0.3, help="Filter out loci with RSquared < this value")
+        parser.add_argument("--mach-chrpos", action="store_true", help="When true, first col in .info file must be chr:pos (additional pieces allowed)")
 
 
         parser.add_argument("--pheno", type=argparse.FileType('r'), help="File containing phenotypes")
@@ -286,7 +287,7 @@ differences, so please consider the list above carefully.
 
         parser.add_argument("--verbose", action='store_true', help="Output additional data details")
 
-        parser.set_defaults(all_pheno=False, sex=False)
+        parser.set_defaults(all_pheno=False, sex=False, mach_chrpos=False)
         args = parser.parse_args(args)
 
 
@@ -304,7 +305,15 @@ differences, so please consider the list above carefully.
 
         ###############################################################################################################
         # Here we deal with the various ways we filter SNPs in and out of anlysis
-        BoundaryCheck.chrom = args.chr
+        # We might handle MACH files differently. We'll default the chromosome
+        # to be "NA" which is how those can be returned.
+        if args.mach is None or args.mach_chrpos:
+            BoundaryCheck.chrom = args.chr
+        else:
+            if args.chr != -1:
+                pygwas.Exit(("Positional based filtering (--chr, --from/--to)" +
+                        " only work with mach_chrpos. See manual for details."))
+            BoundaryCheck.chrom = "NA"
         snps = args.snps.split(",")
         try:
             b = BoundaryCheck(bp=(args.from_bp, args.to_bp),
@@ -323,6 +332,12 @@ differences, so please consider the list above carefully.
         if b.valid and s.valid:
             print >> sys.stderr, "Only one type of boundary conditions is permitted. Either use --from-bp, etc. or rs123-rs345. "
             sys.exit(1)
+
+        if len(b.bounds) > 0 and not b.valid:
+            if BoundaryCheck.chrom == "NA":
+                pygwas.Exit(("Positional based filtering (--chr, --from/--to)" +
+                        " only work with mach_chrpos. See manual for details."))
+
 
         if s.valid:
             DataParser.boundary = s
@@ -424,7 +439,10 @@ differences, so please consider the list above carefully.
             if DataParser.ind_miss_tol != 1.0:
                 print >> sys.stderr, "--mind does not have any impact on imputed data"
                 sys.exit(1)
-
+            if BoundaryCheck.chrom != "NA" and not args.mach_chrpos:
+                pygwas.Exit(("Positional based filtering (--chr, --from/--to)" +
+                        " only work with mach_chrpos. See manual for details."))
+            mach_parser.Parser.chrpos_encoding = args.mach_chrpos
             mach_parser.Parser.info_ext = args.mach_info_ext
             mach_parser.Parser.dosage_ext = args.mach_dose_ext
             mach_parser.Parser.chunk_stride = args.mach_chunk_size
