@@ -10,4 +10,5 @@ dist
 *.pdf
 changelog.header
 index.supp
-
+# test files
+scratch
