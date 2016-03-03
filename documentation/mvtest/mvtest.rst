@@ -417,7 +417,7 @@ chromosome will be used. Only one range can be specified per run.
 
 In general, when specifying region limits, --chr must be defined unless using
 generic MACH input (which doesn't define a chromosome number nor position, in
-which case positional restrictions do not apply). 
+which case positional restrictions do not apply).
 
 .. option:: --snps LIST
 

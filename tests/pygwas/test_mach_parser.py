@@ -23,6 +23,7 @@ import gzip
 
 base_freq = [0.95, 0.75, 0.7,0.8, 0.65, 0.7, 0.85, 0.7, 0.7, 0.3]
 
+numpy.random.seed(1557)
 
 class TestBase(unittest.TestCase):
     def setUp(self):
