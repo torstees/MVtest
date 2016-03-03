@@ -61,12 +61,12 @@ class Standardizer(pygwas.standardizer.StandardizedVariable):
             sx = numpy.std(x[nonmissing])
             self.covariates.append((x-mx)/sx)
 
-        #for idx in range(0, self.pheno_count):
-        y = self.datasource.phenotype_data[self.idx]
-        nonmissing = y != PhenoCovar.missing_encoding
-        my = numpy.mean(y[nonmissing])
-        sy = numpy.std(y[nonmissing])
-        self.phenotypes.append((y-my)/sy)
+        for idx in range(0, self.pheno_count):
+            y = self.datasource.phenotype_data[idx]
+            nonmissing = y != PhenoCovar.missing_encoding
+            my = numpy.mean(y[nonmissing])
+            sy = numpy.std(y[nonmissing])
+            self.phenotypes.append((y-my)/sy)
 
     def destandardize(self, estimates, se, **kwargs):
         """Revert the betas and variance components back to the original scale.

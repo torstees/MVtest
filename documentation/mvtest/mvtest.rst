@@ -267,7 +267,7 @@ extensions, one dosage file per line.
     To use this feature, users much use the --mach-chrpos field and their ID
     columns inside the .info file must be formatted in the following way:
 
-    chr:pos:(optional rsid)
+    chr:pos (optionally :rsid)
 
     When the --mach-chrpos flag is used, MVtest will fail when it encounters
     IDs that aren't in this format and there must be at least 2 'fields' (i.e.
@@ -310,7 +310,8 @@ memory is required.
 .. option:: --mach-uncompressed
 
     By default, MACH input is expected to be gzip compressed. If data is plain
-    text, add this flag
+    text, add this flag. *It should be noted that dosage and info files should
+    be either both compressed or both uncompressed.*
 
 .. option:: --mach-chunk-size <integer>
 
@@ -331,6 +332,7 @@ memory is required.
     required for analysis.
 
 .. option:: --mach-chrpos
+
     When set, MVtest expects IDs from the .info file to be in the format
     chr:pos:rsid (rsid is optional). This will allow the report to contain
     positional details, otherwise, only the RSID column will have a value
@@ -412,6 +414,10 @@ Restricting regions for analysis
 When specifying a range of positions for analysis, a chromosome must be present.
 If a chromosome is specified but is not accompanied by a range, the entire
 chromosome will be used. Only one range can be specified per run.
+
+In general, when specifying region limits, --chr must be defined unless using
+generic MACH input (which doesn't define a chromosome number nor position, in
+which case positional restrictions do not apply).
 
 .. option:: --snps LIST
 

@@ -17,6 +17,7 @@ from pygwas.pheno_covar import PhenoCovar
 import pygwas.standardizer
 import gzip
 import unittest
+numpy.random.seed(1337)
 
 base_freq = [0.95, 0.75, 0.7,0.8, 0.65, 0.7, 0.85, 0.7, 0.7, 0.3]
 
@@ -321,6 +322,18 @@ class TestMachCmdLine(TestBase):
         with self.assertRaises(SystemExit) as cm:
             dataset,vars = app.LoadCmdLine(cmds.split(" "))
         self.assertEqual(cm.exception.code, 1)
+
+    def testMachCmdLineMultiplePhenotypes(self):
+        cmds = "--mach %s --pheno %s --pheno-names AGE,BMI" % \
+               (self.mach_file, self.pheno_covar)
+        app = mvtest.MVTestApplication()
+        dataset,vars = app.LoadCmdLine(cmds.split(" "))
+
+        index = 0
+        for var in vars:
+            index += 1
+        self.assertEqual(2, index)
+
 
 
 if __name__ == "__main__":

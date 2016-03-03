@@ -224,7 +224,6 @@ class PhenoCovar(object):
                             "The line in question looks like this: \n--> %s") %
                             (file.name, line_number, line.strip())
                         )
-
         if self.phenotype_data.shape[1] == len(ignored_data):
             raise NoMatchedPhenoCovars("No matching individuals were found in the phenotype file")
 
