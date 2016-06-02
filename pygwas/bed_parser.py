@@ -86,6 +86,12 @@ class Parser(transposed_pedigree_parser.Parser):
                 1:DataParser.missing_storage
         }
 
+    def initialize(self, map3=False, pheno_covar=None):
+        self.load_bim(map3)
+        self.load_fam(pheno_covar)
+        self.load_genotypes()
+
+
     def ReportConfiguration(self, file):
         """ Report configuration for logging purposes.
 
@@ -97,7 +103,7 @@ class Parser(transposed_pedigree_parser.Parser):
         print >> file, BuildReportLine("BIM_FILE", self.bim_file)
         print >> file, BuildReportLine("FAMFILE", self.fam_file)
 
-    def load_fam(self, pheno_covar):
+    def load_fam(self, pheno_covar=None):
         """Load contents from the .fam file, updating the pheno_covar with \
             family ids found.
 
@@ -128,7 +134,8 @@ class Parser(transposed_pedigree_parser.Parser):
                         sex = int(words[sex_col])
                     if DataParser.has_pheno:
                         pheno = float(words[pheno_col])
-                    pheno_covar.add_subject(indid, sex, pheno)
+                    if pheno_covar is not None:
+                        pheno_covar.add_subject(indid, sex, pheno)
                     if len(words) > 0:
                         self.families.append(words)
                 else:
@@ -137,7 +144,8 @@ class Parser(transposed_pedigree_parser.Parser):
         self.ind_mask = numpy.zeros(len(mask_components), dtype=numpy.int8)
         self.ind_mask = mask_components
         self.ind_count = self.ind_mask.shape[0]
-        pheno_covar.freeze_subjects()
+        if pheno_covar is not None:
+            pheno_covar.freeze_subjects()
 
     def load_bim(self, map3=False):
         """Basic marker details loading.
