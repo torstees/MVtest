@@ -37,6 +37,7 @@ class Locus(object):
             self.missing_allele_count = other.missing_allele_count
             #: minor allele if allele info isn't available
             self._maf = other._maf
+            self.cur_idx = other.cur_idx
         else:
             #: minor alelel if allele info isn't available
             self._maf = None
@@ -48,6 +49,7 @@ class Locus(object):
             self.min_allele_count = -1
             self.maj_allele_count = -1
             self.missing_allele_count = -1
+            self.cur_idx = -1
 
     def flip(self):
         """This will switch major/minor around, regardless of frequency truth.
@@ -121,16 +123,25 @@ class Locus(object):
             return self._maf
         return self.q
 
+    def __hash__(self):
+        return hash((self.chr, self.pos))
+
+    def __eq__(self, other):
+        return (self.chr, self.pos) == (other.chr, other.pos)
+
+    def __neq__(self, other):
+        return not(self == other)
+
     def __cmp__(self, other):
         if self.chr == other.chr:
             return self.pos.__cmp__(other.pos)
         return self.chr.__cmp__(other.chr)
 
     def __str__(self):
-        return "%d\t%d:%d %s %s %s %0.4f %0.4f %s" % (self.cur_idx, self.chr,
-                                                      self.pos, self.rsid,
-                                                      self.major_allele,
-                                                      self.minor_allele,
-                                                      self.maf,
-                                                      self.hetero_freq,
-                                                      self.genotype_data)
+        return "%d\t%d:%d %s %s %s %0.4f %0.4f" % (self.cur_idx, self.chr,
+                                                          self.pos, self.rsid,
+                                                          self.major_allele,
+                                                          self.minor_allele,
+                                                          self.maf,
+                                                          self.hetero_freq,
+-                                                         self.genotype_data)

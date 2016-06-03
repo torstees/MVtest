@@ -2,6 +2,8 @@ import test_transped_parser
 from pygwas.data_parser import DataParser
 from pygwas.pheno_covar import PhenoCovar
 from pygwas.transposed_pedigree_parser import Parser as TransposedPedigreeParser
+from pygwas.locus import Locus
+
 
 class TestLocusBasics(test_transped_parser.TestBase):
     # Test to make sure we can load everything
@@ -36,3 +38,37 @@ class TestLocusBasics(test_transped_parser.TestBase):
 
             index += 1
         self.assertEqual(7, index)
+
+    def testLocusRelation(self):
+        l1 = Locus()
+        l1.chr = 1
+        l1.pos = 100
+
+        l2 = Locus()
+        l2.chr = 1
+        l2.pos = 101
+
+        l3 = Locus()
+        l3.chr = 2
+        l3.pos = 50
+
+        l4 = Locus()
+        l4.chr = 1
+        l4.pos = 100
+
+        self.assertTrue(l1 == l1)
+        self.assertTrue(l1 == l4)
+        self.assertTrue(l1 < l2)
+        self.assertTrue(l2 > l1)
+        self.assertTrue(l1 < l3)
+        self.assertTrue(l3 > l1)
+        self.assertFalse(l1 == l2)
+        self.assertFalse(l2 < l1)
+
+        s = set([l1, l2, l3])
+        self.assertTrue(l4 in s)
+
+        d = {l1:"One", l2:"Two", l3:"Three"}
+        self.assertTrue(l4 in d)
+        self.assertTrue(d[l4] == "One")
+

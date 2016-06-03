@@ -522,6 +522,30 @@ class TestPedFiles(TestBase):
             index += 1
         self.assertEqual(7, index)
 
+    def testPedCompleteAlternateIteration(self):
+        """Useful if you need to iterate over these in a more controlled manner"""
+        pc = PhenoCovar()
+        ped_parser = PedigreeParser(self.map_filename, self.ped_filename)
+        ped_parser.load_mapfile()
+        ped_parser.load_genotypes(pc)
+
+        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
+
+        index = 0
+        snp = ped_parser.__iter__().next()
+        try:
+            while True:
+                self.assertEqual(int(mapdata[index][0]), snp.chr)
+                self.assertEqual(int(mapdata[index][3]), snp.pos)
+                self.assertEqual(mapdata[index][1], snp.rsid)
+                self.assertEqual(self.genotypes[index], list(snp.genotype_data))
+                index += 1
+                snp.next()
+
+        except StopIteration:
+            pass
+        self.assertEqual(7, index)
+
     def testPedMultiPheno(self):
         PhenoCovar.sex_as_covariate = True
         pc = PhenoCovar()
