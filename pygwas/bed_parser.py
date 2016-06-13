@@ -6,6 +6,9 @@ from data_parser import DataParser
 from parsed_locus import ParsedLocus
 from . import Exit
 from . import BuildReportLine
+import sys
+from . import sys_call
+import logging
 
 __copyright__ = "Eric Torstenson"
 __license__ = "GPL3.0"
@@ -78,6 +81,9 @@ class Parser(transposed_pedigree_parser.Parser):
         #: Mask indicating valid samples
         self.ind_mask = None
 
+        #: Name used for reporting information about this dataset
+        self.name = bed.split("/")[-1].split(".")[0]
+
         #: Genotype conversion
         self.geno_conversions = {
                 0:2,
@@ -110,7 +116,7 @@ class Parser(transposed_pedigree_parser.Parser):
         :param pheno_covar: Phenotype/covariate object
         :return: None
         """
-
+        logging.info("Loading file: %s" % (self.fam_file))
         pheno_col = 5
         if not DataParser.has_sex:
             pheno_col -= 1
@@ -147,6 +153,7 @@ class Parser(transposed_pedigree_parser.Parser):
         if pheno_covar is not None:
             pheno_covar.freeze_subjects()
 
+
     def load_bim(self, map3=False):
         """Basic marker details loading.
 
@@ -155,30 +162,28 @@ class Parser(transposed_pedigree_parser.Parser):
         :param map3: When true, ignore the genetic distance column
         :return: None
         """
-
         cols = [0, 1, 3, 4, 5]
         if map3:
             cols = [0, 1, 2, 3, 4]
-        markers = numpy.loadtxt(self.bim_file, dtype=str, usecols=cols)
+        logging.info("Loading file: %s" % self.bim_file)
+        val = sys_call('wc -l %s' % (self.bim_file))[0][0].split()[0]
+        marker_count = int(val)
+        self.markers = numpy.zeros((marker_count, 2), dtype=int)
+        self.rsids = []
+        self.alleles = []
 
-        if DataParser.boundary.NoExclusions():
-            self.markers = numpy.zeros((markers.shape[0], 2), dtype=int)
-            self.markers[:, 0] = markers[:, 0].astype(int)
-            self.markers[:, 1] = markers[:, 2].astype(int)
-            self.rsids = markers[:, 1]
-            self.alleles = markers[:, 3:]
-        else:
-            self.markers = []
-            self.rsids = []
-            self.alleles = []
-
-            for locus in markers:
-                self.markers.append([locus[0], locus[2]])
-                self.rsids.append(locus[1])
-                self.alleles.append(locus[3:])
-            self.markers = numpy.array(self.markers, dtype=numpy.int)
-            self.rsids = numpy.array(self.rsids)
-            self.alleles = numpy.array(self.alleles)
+        with open(self.bim_file) as file:
+            index = 0
+            for line in file:
+                if map3:
+                    chr, rsid, pos, al1, al2 = line.strip().split()
+                else:
+                    chr, rsid, gd, pos, al1, al2 = line.strip().split()
+                self.markers[index, 0] = int(chr)
+                self.markers[index, 1] = int(pos)
+                self.alleles.append([al1, al2])
+                self.rsids.append(rsid)
+                index += 1
         self.locus_count = self.markers.shape[0]
 
     def init_genotype_file(self):
@@ -231,7 +236,7 @@ class Parser(transposed_pedigree_parser.Parser):
         """
         missing             = None
         locus_count         = 0
-
+        logging.info("Sorting out missing data from genotype data")
         # Filter out individuals according to missingness
         self.genotype_file.seek(0)
         magic, data_format = struct.unpack("<HB", self.genotype_file.read(3))
@@ -245,15 +250,20 @@ class Parser(transposed_pedigree_parser.Parser):
         if self.ind_count % 4 > 0:
             self.bytes_per_read += 1
         self.fmt_string = "<" + "B"*self.bytes_per_read
-
+        last_chr = -1
         for index in range(self.locus_count):
             buffer = struct.unpack(self.fmt_string,
                                    self.genotype_file.read(self.bytes_per_read))
 
             chr, pos = self.markers[index]
+
             rsid = self.rsids[index]
 
             if DataParser.boundary.TestBoundary(chr, pos, rsid):
+                if last_chr != chr:
+                    print "." ,
+                    sys.stdout.flush()
+                    last_chr = chr
                 genotypes = numpy.array(self.extract_genotypes(buffer),
                                         dtype=numpy.int8)
                 locus_count += 1
@@ -262,6 +272,7 @@ class Parser(transposed_pedigree_parser.Parser):
                     missing = numpy.zeros(genotypes.shape[0], dtype='int8')
                 missing +=  0+(genotypes==DataParser.missing_storage)
 
+        print ""
         max_missing = DataParser.ind_miss_tol * locus_count
         dropped_individuals = 0+(max_missing<missing)
 
@@ -277,6 +288,7 @@ class Parser(transposed_pedigree_parser.Parser):
         self.genotype_file.read(3)
         self.total_locus_count = self.locus_count
         self.locus_count = 0
+        last_chr = -1
         for index in range(self.total_locus_count):
             buffer = struct.unpack(self.fmt_string,
                                    self.genotype_file.read(self.bytes_per_read))
@@ -284,22 +296,26 @@ class Parser(transposed_pedigree_parser.Parser):
             genotypes = numpy.ma.MaskedArray(self.extract_genotypes(buffer),
                                              self.ind_mask).compressed()
             chr, pos = self.markers[index]
+
             rsid = self.rsids[index]
             if DataParser.boundary.TestBoundary(chr, pos, rsid):
+                if last_chr != chr:
+                    print "." % (chr),
+                    sys.stdout.flush()
+                    last_chr = chr
                 missing = numpy.sum(0+(genotypes==DataParser.missing_storage))
                 if missing > max_missing:
                     DataParser.boundary.dropped_snps[int(chr)].add(int(pos))
                     dropped_snps.append(rsid)
                 else:
                     self.locus_count += 1
-
+        print ""
 
     def load_genotypes(self):
         """Prepares the file for genotype parsing.
 
         :return: None
         """
-
         self.genotype_file = open(self.bed_file, "rb")
         self.filter_missing()
 
@@ -343,8 +359,9 @@ class Parser(transposed_pedigree_parser.Parser):
                     iteration.min_allele_count = allele_count2
                 iteration.allele_count2 = allele_count2
                 iteration.genotype_data = genotypes
-                return iteration.maf >= DataParser.min_maf and \
-                       iteration.maf <= DataParser.max_maf
+                maf = iteration.maf
+                return maf >= DataParser.min_maf and \
+                       maf <= DataParser.max_maf
         else:
             raise StopIteration
         return False
