@@ -40,6 +40,9 @@ class Parser(DataParser):
         self.genotype_file = tped
         self.alleles = []
 
+        #: Name used for reporting information about this dataset
+        self.name = tped.split("/")[-1].split(".")[0]
+
     def ReportConfiguration(self, file):
         print >> file, BuildReportLine("TPED FILE", self.tped_file)
         print >> file, BuildReportLine("TFAM FILE", self.tfam_file)

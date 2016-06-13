@@ -16,6 +16,9 @@ __license__ = "GPL3.0"
 #     You should have received a copy of the GNU General Public License
 #     along with MVtest.  If not, see <http://www.gnu.org/licenses/>.
 
+import sys
+import traceback
+
 class Locus(object):
     def __init__(self, other=None):
         if other:

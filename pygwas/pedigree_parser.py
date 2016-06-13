@@ -68,6 +68,9 @@ class Parser(DataParser):
         #: List of MAF at each locus
         markers_maf = None
 
+        #: Name used for reporting information about this dataset
+        self.name = datasource.split("/")[-1].split(".")[0]
+
     def ReportConfiguration(self, file):
         """ Report configuration for logging purposes.
 

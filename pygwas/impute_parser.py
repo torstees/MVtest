@@ -85,9 +85,12 @@ class Parser(DataParser):
         """Initialize the structure with the family details file and the list of archives to be parsed
 
         """
+        self.name = None
         pygwas.ExitIf("Imputed Family file not found, %s" % (fam_details), not os.path.exists(fam_details))
         for file in archive_list:
             pygwas.ExitIf("Archive file not found, %s" % (file), not os.path.exists(file))
+            if self.name is not None:
+                self.name = file.split("/")[-1].split(".")[0]
             if len(info_files) == 0:
                 info_file = file.replace(Parser.gen_ext, Parser.info_ext)
                 pygwas.ExitIf("Info file not found, %s" % (info_file), not os.path.exists(info_file))

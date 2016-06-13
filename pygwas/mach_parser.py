@@ -97,7 +97,7 @@ class Parser(DataParser):
         # provided
         infos = []
         idx = 0
-
+        self.name = None
         if not DataParser.compressed_pedigree:
             if Parser.dosage_ext[-3:] == ".gz":
                 Parser.dosage_ext = Parser.dosage_ext[0:-3]
@@ -105,6 +105,8 @@ class Parser(DataParser):
                 Parser.info_ext = Parser.info_ext[0:-3]
 
         for file in archive_list:
+            if self.name is not None:
+                self.name = file.split("/")[-1].split(".")[0]
             try:
                 s = os.stat(file).st_size
 
