@@ -14,8 +14,8 @@ __author__ = 'Eric Torstenson'
 __version__ = 1.0
 
 import argparse
-from pygwas import sys_call
-from pygwas import ExitIf
+from libgwas import sys_call
+from libgwas import ExitIf
 import os
 import sys
 import math

@@ -10,11 +10,11 @@ if "DEBUG" in sys.argv:
 import numpy
 import os
 import mvtest
-from pygwas.boundary import BoundaryCheck
-from pygwas import mach_parser
-from pygwas.data_parser import DataParser
-from pygwas.pheno_covar import PhenoCovar
-import pygwas.standardizer
+from libgwas.boundary import BoundaryCheck
+from libgwas import mach_parser
+from libgwas.data_parser import DataParser
+from libgwas.pheno_covar import PhenoCovar
+import libgwas.standardizer
 import gzip
 import unittest
 numpy.random.seed(1337)
@@ -52,8 +52,8 @@ class TestBase(unittest.TestCase):
         self.compression = DataParser.compressed_pedigree
         DataParser.compressed_pedigree = True
         #self.chunk_stride = mach_parser.chunk_stride
-        self.standardizer = pygwas.standardizer.get_standardizer()
-        pygwas.standardizer.set_standardizer(pygwas.standardizer.NoStandardization)
+        self.standardizer = libgwas.standardizer.get_standardizer()
+        libgwas.standardizer.set_standardizer(libgwas.standardizer.NoStandardization)
 
     def tearDown(self):
         os.remove(self.gen_file)
@@ -86,7 +86,7 @@ class TestBase(unittest.TestCase):
         PhenoCovar.sex_as_covariate = self.sex_as_covar
         DataParser.compressed_pedigree = self.compression
         #mach_parser.chunk_stride = self.chunk_stride
-        pygwas.standardizer.set_standardizer(self.standardizer)
+        libgwas.standardizer.set_standardizer(self.standardizer)
 
 
     def WriteTestFiles(self, prefix = "__test_imputed"):

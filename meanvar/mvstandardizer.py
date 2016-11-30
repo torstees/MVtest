@@ -1,8 +1,8 @@
 
 import numpy
 import scipy.stats
-from pygwas.pheno_covar import PhenoCovar
-import pygwas.standardizer
+from libgwas.pheno_covar import PhenoCovar
+import libgwas.standardizer
 import sys
 
 __copyright__ = "Copyright (C) 2015 Todd Edwards, Chun Li and Eric Torstenson"
@@ -23,7 +23,7 @@ __license__ = "GPL3.0"
 #     along with MVtest.  If not, see <http://www.gnu.org/licenses/>.
 
 
-class Standardizer(pygwas.standardizer.StandardizedVariable):
+class Standardizer(libgwas.standardizer.StandardizedVariable):
     """Optional plugin object that can be used to standardize covariate and
        phenotype data.
 

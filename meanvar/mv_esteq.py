@@ -7,12 +7,12 @@ import math
 import exceptions
 
 from simple_timer import SimpleTimer
-from pygwas.data_parser import DataParser
+from libgwas.data_parser import DataParser
 from mvresult import MVResult
-from pygwas.exceptions import UnsolvedLocus
-from pygwas.exceptions import NanInResult
-import pygwas.pheno_covar
-from pygwas.standardizer import get_standardizer
+from libgwas.exceptions import UnsolvedLocus
+from libgwas.exceptions import NanInResult
+import libgwas.pheno_covar
+from libgwas.standardizer import get_standardizer
 
 __copyright__ = "Copyright (C) 2015 Todd Edwards, Chun Li and Eric Torstenson"
 __license__ = "GPL3.0"

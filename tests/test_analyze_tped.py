@@ -8,15 +8,15 @@ if "DEBUG" in sys.argv:
     sys.path.insert(0, "../")
     sys.argv.remove("DEBUG")
 
-from pygwas.data_parser import DataParser
-from pygwas.pheno_covar import PhenoCovar
-from pygwas.transposed_pedigree_parser import Parser as TransposedPedigreeParser
-from pygwas.boundary import BoundaryCheck
-from pygwas.snp_boundary_check import SnpBoundaryCheck
+from libgwas.data_parser import DataParser
+from libgwas.pheno_covar import PhenoCovar
+from libgwas.transposed_pedigree_parser import Parser as TransposedPedigreeParser
+from libgwas.boundary import BoundaryCheck
+from libgwas.snp_boundary_check import SnpBoundaryCheck
 from meanvar import mv_esteq
 import unittest
 import os
-import pygwas.standardizer
+import libgwas.standardizer
 
 class TestBase(unittest.TestCase):
     def setUp(self):
@@ -2045,8 +2045,8 @@ class TestBase(unittest.TestCase):
 
 
         DataParser.boundary = BoundaryCheck()
-        self.standardizer = pygwas.standardizer.get_standardizer()
-        pygwas.standardizer.set_standardizer(pygwas.standardizer.NoStandardization)
+        self.standardizer = libgwas.standardizer.get_standardizer()
+        libgwas.standardizer.set_standardizer(libgwas.standardizer.NoStandardization)
 
     def tearDown(self):
         os.remove(self.tfam_filename)
@@ -2061,7 +2061,7 @@ class TestBase(unittest.TestCase):
         DataParser.snp_miss_tol  = self.snp_miss_tol
         DataParser.ind_miss_tol  = self.ind_miss_tol
         DataParser.ind_exclusions = []
-        pygwas.standardizer.set_standardizer(self.standardizer)
+        libgwas.standardizer.set_standardizer(self.standardizer)
 
 # We aren't testing the actual application. Just the analysis portion
 class TestAnalysisTPed(TestBase):

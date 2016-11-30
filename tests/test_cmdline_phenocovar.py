@@ -11,8 +11,8 @@ import os
 
 import mvtest
 import unittest
-from pygwas.boundary import BoundaryCheck
-from pygwas.pheno_covar import PhenoCovar
+from libgwas.boundary import BoundaryCheck
+from libgwas.pheno_covar import PhenoCovar
 
 class TestCmdlinePhenoCovar(unittest.TestCase):
     def setUp(self):

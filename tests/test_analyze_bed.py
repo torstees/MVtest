@@ -7,22 +7,22 @@ if "DEBUG" in sys.argv:
     sys.path.insert(0, ".")
     sys.argv.remove("DEBUG")
 
-from pygwas import bed_parser
-from pygwas.boundary import BoundaryCheck
-from pygwas.snp_boundary_check import SnpBoundaryCheck
-from pygwas.data_parser import DataParser
-from pygwas.pheno_covar import PhenoCovar
+from libgwas import bed_parser
+from libgwas.boundary import BoundaryCheck
+from libgwas.snp_boundary_check import SnpBoundaryCheck
+from libgwas.data_parser import DataParser
+from libgwas.pheno_covar import PhenoCovar
 from meanvar import mv_esteq
 import unittest
 from pkg_resources import resource_filename
-import pygwas.standardizer
+import libgwas.standardizer
 
 class TestBase(unittest.TestCase):
     def setUp(self):
         self.missing = "bedfiles/analysis"
-        self.missing_bed = resource_filename("tests.meanvar", "%s.bed" % (self.missing))
-        self.missing_bim = resource_filename("tests.meanvar", "%s.bim" % (self.missing))
-        self.missing_fam = resource_filename("tests.meanvar", "%s.fam" % (self.missing))
+        self.missing_bed = resource_filename("tests", "%s.bed" % (self.missing))
+        self.missing_bim = resource_filename("tests", "%s.bim" % (self.missing))
+        self.missing_fam = resource_filename("tests", "%s.fam" % (self.missing))
         self.genotypes = [
             [2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2],
             [1, 1, 2, 2, 2, 1, 1, 1, 2, 2, 2, 1],
@@ -34,9 +34,9 @@ class TestBase(unittest.TestCase):
         ]
 
         self.nonmissing = "bedfiles/analysis"
-        self.nonmissing_bed = resource_filename("tests.meanvar", "%s.bed" % (self.nonmissing))
-        self.nonmissing_bim = resource_filename("tests.meanvar", "%s.bim" % (self.nonmissing))
-        self.nonmissing_fam = resource_filename("tests.meanvar", "%s.fam" % (self.nonmissing))
+        self.nonmissing_bed = resource_filename("tests", "%s.bed" % (self.nonmissing))
+        self.nonmissing_bim = resource_filename("tests", "%s.bim" % (self.nonmissing))
+        self.nonmissing_fam = resource_filename("tests", "%s.fam" % (self.nonmissing))
         self.genotypes_w_missing = [
             [2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1],
             [1, 1, 2, 2, 2, 1, 1, 1, 2, 2, 2, 1],
@@ -53,8 +53,8 @@ class TestBase(unittest.TestCase):
         self.snp_miss_tol   = DataParser.snp_miss_tol
         self.ind_miss_tol   = DataParser.ind_miss_tol
         self.sex_as_covar   = PhenoCovar.sex_as_covariate
-        self.standardizer = pygwas.standardizer.get_standardizer()
-        pygwas.standardizer.set_standardizer(pygwas.standardizer.NoStandardization)
+        self.standardizer = libgwas.standardizer.get_standardizer()
+        libgwas.standardizer.set_standardizer(libgwas.standardizer.NoStandardization)
 
         DataParser.boundary = BoundaryCheck()
 
@@ -67,7 +67,7 @@ class TestBase(unittest.TestCase):
         DataParser.snp_miss_tol  = self.snp_miss_tol
         DataParser.ind_miss_tol  = self.ind_miss_tol
         DataParser.ind_exclusions = []
-        pygwas.standardizer.set_standardizer(self.standardizer)
+        libgwas.standardizer.set_standardizer(self.standardizer)
 
 # We aren't testing the actual application. Just the analysis portion
 class TestAnalysisBed(TestBase):

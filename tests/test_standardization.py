@@ -10,27 +10,27 @@ if "DEBUG" in sys.argv:
 
 import unittest
 import numpy
-import tests.pygwas.test_transped_parser
-from pygwas.data_parser import DataParser
-from pygwas.pheno_covar import PhenoCovar
-from pygwas.transposed_pedigree_parser import Parser as TransposedPedigreeParser
-import pygwas.standardizer
+import test_transped_parser
+from libgwas.data_parser import DataParser
+from libgwas.pheno_covar import PhenoCovar
+from libgwas.transposed_pedigree_parser import Parser as TransposedPedigreeParser
+import libgwas.standardizer
 from meanvar.mvstandardizer import Standardizer
 import meanvar.mvstandardizer
 
 
 
-class TestTPedStandardization(tests.pygwas.test_transped_parser.TestBase):
+class TestTPedStandardization(test_transped_parser.TestBase):
     def setUp(self):
         super(TestTPedStandardization, self).setUp()
-        self.standardizer = pygwas.standardizer.get_standardizer()
-        pygwas.standardizer.set_standardizer(Standardizer)
+        self.standardizer = libgwas.standardizer.get_standardizer()
+        libgwas.standardizer.set_standardizer(Standardizer)
 
 
 
     def tearDown(self):
         super(TestTPedStandardization, self).tearDown()
-        pygwas.standardizer.set_standardizer(self.standardizer)
+        libgwas.standardizer.set_standardizer(self.standardizer)
 
     def test_tped_standardization(self):
         DataParser.has_sex = True
@@ -43,7 +43,7 @@ class TestTPedStandardization(tests.pygwas.test_transped_parser.TestBase):
         ped_parser.load_genotypes()
         nonmissing = numpy.empty(pc.phenotype_data[0].shape, dtype=numpy.bool)
         nonmissing[:] = True
-        pygwas.standardizer.set_standardizer(pygwas.standardizer.NoStandardization)
+        libgwas.standardizer.set_standardizer(libgwas.standardizer.NoStandardization)
 
         raw_pheno = [0.1, 0.4, 1.0, 0.5, 0.9, 1.0, 0.1, 0.4, 1.0, 0.5, 0.9, 1.0]
         raw_cov   = [1, 1, 2, 2, 1, 1, 1, 1, 2, 2, 1, 1]
@@ -60,7 +60,7 @@ class TestTPedStandardization(tests.pygwas.test_transped_parser.TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
         pc.do_standardize_variables = True
-        pygwas.standardizer.set_standardizer(Standardizer)
+        libgwas.standardizer.set_standardizer(Standardizer)
 
         std_pheno = [-1.61601695, -0.73455316,  1.02837442, -0.4407319 , 0.73455316, 1.02837442,
                      -1.61601695, -0.73455316,  1.02837442, -0.4407319 , 0.73455316, 1.02837442]
@@ -84,7 +84,7 @@ class TestTPedStandardization(tests.pygwas.test_transped_parser.TestBase):
         ped_parser.load_genotypes()
         nonmissing = numpy.empty(pc.phenotype_data[0].shape, dtype=numpy.bool)
         nonmissing[:] = True
-        pygwas.standardizer.set_standardizer(pygwas.standardizer.NoStandardization)
+        libgwas.standardizer.set_standardizer(libgwas.standardizer.NoStandardization)
 
         raw_pheno = [0.1, 0.4, 1.0, 0.5, 0.9, 1.0, 0.1, 0.4, 1.0, 0.5, 0.9, 1.0]
         raw_cov   = [1, 1, 2, 2, 1, 1, 1, 1, 2, 2, 1, 1]
@@ -101,7 +101,7 @@ class TestTPedStandardization(tests.pygwas.test_transped_parser.TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
         pc.do_standardize_variables = True
-        pygwas.standardizer.set_standardizer(Standardizer)
+        libgwas.standardizer.set_standardizer(Standardizer)
 
         std_pheno = [-1.61601695, -0.73455316,  1.02837442, -0.4407319 , 0.73455316, 1.02837442,
                      -1.61601695, -0.73455316,  1.02837442, -0.4407319 , 0.73455316, 1.02837442]
@@ -125,7 +125,7 @@ class TestTPedStandardization(tests.pygwas.test_transped_parser.TestBase):
         nonmissing[:] = True
         nonmissing[0] = False
         nonmissing[1] = False
-        pygwas.standardizer.set_standardizer(pygwas.standardizer.NoStandardization)
+        libgwas.standardizer.set_standardizer(libgwas.standardizer.NoStandardization)
 
         raw_pheno = [1.0, 0.5, 0.9, 1.0, 0.1, 0.4, 1.0, 0.5, 0.9, 1.0]
         raw_cov   = [2, 2, 1, 1, 1, 1, 2, 2, 1, 1]
@@ -141,7 +141,7 @@ class TestTPedStandardization(tests.pygwas.test_transped_parser.TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
         pc.do_standardize_variables = True
-        pygwas.standardizer.set_standardizer(Standardizer)
+        libgwas.standardizer.set_standardizer(Standardizer)
 
         std_pheno = [1.02837442, -0.4407319 , 0.73455316, 1.02837442,
                      -1.61601695, -0.73455316,  1.02837442, -0.4407319 , 0.73455316, 1.02837442]
@@ -165,7 +165,7 @@ class TestTPedStandardization(tests.pygwas.test_transped_parser.TestBase):
         ped_parser.load_genotypes()
         nonmissing = numpy.empty(pc.phenotype_data[0].shape, dtype=numpy.bool)
         nonmissing[:] = True
-        pygwas.standardizer.set_standardizer(pygwas.standardizer.NoStandardization)
+        libgwas.standardizer.set_standardizer(libgwas.standardizer.NoStandardization)
 
         raw_pheno = [0.1, 0.4, 1.0, 0.5, 0.9, 1.0, 0.1, 0.4, 1.0, 0.5]
         raw_cov   = [1, 1, 2, 2, 1, 1, 1, 1, 2, 2]
@@ -181,7 +181,7 @@ class TestTPedStandardization(tests.pygwas.test_transped_parser.TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
         pc.do_standardize_variables = True
-        pygwas.standardizer.set_standardizer(Standardizer)
+        libgwas.standardizer.set_standardizer(Standardizer)
 
         std_pheno = [-1.43314068, -0.55570761,  1.19915853, -0.26322992,  0.90668084,
                         1.19915853, -1.43314068, -0.55570761,  1.19915853, -0.26322992]
@@ -206,7 +206,7 @@ class TestTPedStandardization(tests.pygwas.test_transped_parser.TestBase):
         nonmissing[:] = True
         nonmissing[0] = False
         nonmissing[1] = False
-        pygwas.standardizer.set_standardizer(pygwas.standardizer.NoStandardization)
+        libgwas.standardizer.set_standardizer(libgwas.standardizer.NoStandardization)
 
         raw_pheno = [1.0, 0.5, 0.9, 1.0, 0.1, 0.4, 1.0, 0.5]
         raw_cov   = [2, 2, 1, 1, 1, 1, 2, 2]
@@ -224,7 +224,7 @@ class TestTPedStandardization(tests.pygwas.test_transped_parser.TestBase):
         ped_parser.load_genotypes()
 
         pc.do_standardize_variables = True
-        pygwas.standardizer.set_standardizer(Standardizer)
+        libgwas.standardizer.set_standardizer(Standardizer)
 
         std_pheno = [ 1.19915853, -0.26322992,  0.90668084,
                         1.19915853, -1.43314068, -0.55570761,  1.19915853, -0.26322992]
