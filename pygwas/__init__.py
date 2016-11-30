@@ -77,7 +77,7 @@ def ExitIf(msg, do_exit, code=1):
     if do_exit:
         Exit(msg, code)
 
-def BuildReportLine(key, value):
+def BuildReportLine(key, value, offset=None):
     """Prepare key/value for reporting in configuration report
 
     :param key: configuration 'keyword'
@@ -85,6 +85,18 @@ def BuildReportLine(key, value):
 
     :return: formatted line starting with a comment
     """
+    reportline = "# " + key.ljust(20) + " : "
 
-    return "# " + key.ljust(20) + " : " + str(value)
+    if offset is None:
+        return reportline + str(value)
 
+    try:
+        try:
+            v=int(value)
+            return reportline + "%*s" % (offset, str(value))
+        except:
+            pass
+        v = float(value)
+        return reportline + "%*s" % (offset - 1 + len(str(value)), str(value))
+    except:
+        return reportline + "%*s" % (offset - 1 + len(value), value)
