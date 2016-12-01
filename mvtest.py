@@ -392,8 +392,7 @@ differences, so please consider the list above carefully.
                 dataset = transposed_pedigree_parser.Parser(args.tfam.name, args.tped.name)
             else:
                 dataset = transposed_pedigree_parser.Parser("%s.tfam" % (args.tfile), "%s.tped" % (args.tfile))
-            dataset.load_tfam(pheno_covar)
-            dataset.load_genotypes()
+            dataset.intialize(None, pheno_covar)
         elif args.bfile != None:
             dataset = bed_parser.Parser("%s.fam" % (args.bfile), "%s.bim" % (args.bfile), "%s.bed" % (args.bfile))
             dataset.load_bim(map3=args.map3)
