@@ -1,3 +1,5 @@
+mvtest.py: 1.0.5
+	* Migrated pygwas out from the MVtest repository and refactored it as libgwas
 mvtest.py: 1.0.4
 	* Fixed a bug associated with running more than one phenotype at once.
 mvtest.py: 1.0.3

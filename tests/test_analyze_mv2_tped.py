@@ -8,14 +8,14 @@ if "DEBUG" in sys.argv:
     sys.path.insert(0, ".")
     sys.argv.remove("DEBUG")
 
-from pygwas.transposed_pedigree_parser import Parser as TransposedPedigreeParser
-from pygwas.boundary import BoundaryCheck
-from pygwas.snp_boundary_check import SnpBoundaryCheck
-from pygwas.data_parser import DataParser
-from pygwas.pheno_covar import PhenoCovar
+from libgwas.transposed_pedigree_parser import Parser as TransposedPedigreeParser
+from libgwas.boundary import BoundaryCheck
+from libgwas.snp_boundary_check import SnpBoundaryCheck
+from libgwas.data_parser import DataParser
+from libgwas.pheno_covar import PhenoCovar
 import unittest
 
-import pygwas.standardizer
+import libgwas.standardizer
 from meanvar.mvstandardizer import Standardizer
 from meanvar import mv_esteq
 import test_analyze_tped
@@ -133,12 +133,12 @@ class TestMv2AnalysisTPed(test_analyze_tped.TestBase):
 class TestMv2AnalysisTPedWithCovariates(test_analyze_tped.TestBase):
     def setUp(self):
         super(TestMv2AnalysisTPedWithCovariates, self).setUp()
-        self.standardizer = pygwas.standardizer.get_standardizer()
-        pygwas.standardizer.set_standardizer(pygwas.standardizer.NoStandardization)
+        self.standardizer = libgwas.standardizer.get_standardizer()
+        libgwas.standardizer.set_standardizer(libgwas.standardizer.NoStandardization)
 
     def tearDown(self):
         super(TestMv2AnalysisTPedWithCovariates, self).tearDown()
-        pygwas.standardizer.set_standardizer(self.standardizer)
+        libgwas.standardizer.set_standardizer(self.standardizer)
 
     def testTPedAnalysisCov(self):
         PhenoCovar.sex_as_covariate = True

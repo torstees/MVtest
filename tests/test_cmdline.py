@@ -13,11 +13,11 @@ import mvtest
 import unittest
 import test_analyze_tped
 import test_analyze_ped
-import tests.pygwas.test_pedigree_parser as test_pedigree_parser
-import tests.pygwas.test_transped_parser as test_transped_parser
+import test_pedigree_parser as test_pedigree_parser
+import test_transped_parser as test_transped_parser
 from meanvar import mv_esteq
-from pygwas.boundary import BoundaryCheck
-from pygwas.data_parser  import DataParser
+from libgwas.boundary import BoundaryCheck
+from libgwas.data_parser  import DataParser
 
 
 class TestCmdlineTPed(test_analyze_tped.TestBase):

@@ -25,30 +25,30 @@ import sys
 import numpy
 import scipy
 import os
-import pygwas
+import libgwas
 import meanvar
-from pygwas.data_parser import DataParser
-from pygwas.boundary import BoundaryCheck
-from pygwas.snp_boundary_check import SnpBoundaryCheck
-from pygwas.exceptions import InvalidBoundarySpec
-from pygwas.pheno_covar import PhenoCovar
-from pygwas.exceptions import ReportableException
-import pygwas.pedigree_parser as pedigree_parser
-import pygwas.transposed_pedigree_parser as transposed_pedigree_parser
-import pygwas.bed_parser as bed_parser
+from libgwas.data_parser import DataParser
+from libgwas.boundary import BoundaryCheck
+from libgwas.snp_boundary_check import SnpBoundaryCheck
+from libgwas.exceptions import InvalidBoundarySpec
+from libgwas.pheno_covar import PhenoCovar
+from libgwas.exceptions import ReportableException
+import libgwas.pedigree_parser as pedigree_parser
+import libgwas.transposed_pedigree_parser as transposed_pedigree_parser
+import libgwas.bed_parser as bed_parser
 import meanvar.mv_esteq as mv_esteq
-from pygwas import BuildReportLine
-from pygwas import impute_parser
-from pygwas import mach_parser
-import pygwas.standardizer
+from libgwas import BuildReportLine
+from libgwas import impute_parser
+from libgwas import mach_parser
+import libgwas.standardizer
 import meanvar.mvstandardizer
-from pygwas import ExitIf
+from libgwas import ExitIf
 
 __version__ = meanvar.__version__
 
 ExitIf("mvtest.py requires python 2.7.x  to run", sys.version_info < (2,7))
 
-pygwas.standardizer.set_standardizer(meanvar.mvstandardizer.Standardizer)
+libgwas.standardizer.set_standardizer(meanvar.mvstandardizer.Standardizer)
 
 """usage: mvtest.py [-h] [-v] [--vall] [--chr N] [--snps SNPS] [--from-bp START]
                  [--to-bp END] [--from-kb START] [--to-kb END]
@@ -298,7 +298,7 @@ differences, so please consider the list above carefully.
 
         if args.vall:
             print >> sys.stderr, "%s: %s" % (os.path.basename(__file__), __version__)
-            print >> sys.stderr, "%s: %s" % (os.path.dirname(pygwas.__file__), pygwas.__version__)
+            print >> sys.stderr, "%s: %s" % (os.path.dirname(libgwas.__file__), libgwas.__version__)
             print >> sys.stderr, "%s: %s" % (os.path.dirname(scipy.__file__), scipy.__version__)
             print >> sys.stderr, "%s: %s" % (os.path.dirname(numpy.__file__), numpy.__version__)
             sys.exit(0)
@@ -311,7 +311,7 @@ differences, so please consider the list above carefully.
             BoundaryCheck.chrom = args.chr
         else:
             if args.chr != -1:
-                pygwas.Exit(("Positional based filtering (--chr, --from/--to)" +
+                libgwas.Exit(("Positional based filtering (--chr, --from/--to)" +
                         " only work with mach_chrpos. See manual for details."))
             BoundaryCheck.chrom = "NA"
         snps = args.snps.split(",")
@@ -335,7 +335,7 @@ differences, so please consider the list above carefully.
 
         if len(b.bounds) > 0 and not b.valid:
             if BoundaryCheck.chrom == "NA":
-                pygwas.Exit(("Positional based filtering (--chr, --from/--to)" +
+                libgwas.Exit(("Positional based filtering (--chr, --from/--to)" +
                         " only work with mach_chrpos. See manual for details."))
 
 
@@ -421,7 +421,7 @@ differences, so please consider the list above carefully.
             impute_parser.SetEncoding(args.impute_encoding)
             impute_parser.Parser.info_ext = args.impute_info_ext
             impute_parser.Parser.info_threshold = args.impute_info_thresh
-            pygwas.ExitIf("--impute-fam is required for when processing imputed data", args.impute_fam == None)
+            libgwas.ExitIf("--impute-fam is required for when processing imputed data", args.impute_fam == None)
             archives, chroms, infos = self.ParseImputeFile(args.impute.name, args.impute_offset, args.impute_count)
             dataset = impute_parser.Parser(args.impute_fam.name, archives, chroms, infos)
             dataset.load_family_details(pheno_covar)
@@ -439,7 +439,7 @@ differences, so please consider the list above carefully.
                 print >> sys.stderr, "--mind does not have any impact on imputed data"
                 sys.exit(1)
             if BoundaryCheck.chrom != "NA" and not args.mach_chrpos:
-                pygwas.Exit(("Positional based filtering (--chr, --from/--to)" +
+                libgwas.Exit(("Positional based filtering (--chr, --from/--to)" +
                         " only work with mach_chrpos. See manual for details."))
             mach_parser.Parser.chrpos_encoding = args.mach_chrpos
             mach_parser.Parser.info_ext = args.mach_info_ext
@@ -466,7 +466,7 @@ differences, so please consider the list above carefully.
                 nphenos = args.pheno_names.split(",")
 
             if len(mphenos) + len(nphenos) == 0 and not args.all_pheno:
-                pygwas.Exit("You must select one or more phenotypes when ")
+                libgwas.Exit("You must select one or more phenotypes when ")
             sample_file = False
             pheno_filename = args.pheno
             if args.sample_pheno:
@@ -504,7 +504,7 @@ differences, so please consider the list above carefully.
             if len(infos) > 0:
                 infos = infos[offset:offset+count]
 
-        pygwas.ExitIf("The impute file listing appears to be misconfigured. All lines must have the same number of columns", len(infos) != 0 and len(infos) != len(archives))
+        libgwas.ExitIf("The impute file listing appears to be misconfigured. All lines must have the same number of columns", len(infos) != 0 and len(infos) != len(archives))
         return archives, chroms, infos
     def ParseMachFile(self, filename, offset=-1, count=-1):
         archives = []
@@ -528,7 +528,7 @@ differences, so please consider the list above carefully.
             if len(infos) > 0:
                 infos = infos[offset:offset+count]
 
-        pygwas.ExitIf("The mach file listing appears to be misconfigured. All lines must have the same number of columns", len(infos) != 0 and len(infos) != len(archives))
+        libgwas.ExitIf("The mach file listing appears to be misconfigured. All lines must have the same number of columns", len(infos) != 0 and len(infos) != len(archives))
         return archives, infos
     def BuildReportLineIf(self, f, key, doPrint, value="TRUE"):
         if doPrint:

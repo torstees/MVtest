@@ -6,3 +6,4 @@
 mvtest
 SciPy>=0.12
 NumPy>=1.7.1
+libgwas>=1.0.0
