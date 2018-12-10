@@ -36,6 +36,8 @@ from libgwas.exceptions import ReportableException
 import libgwas.pedigree_parser as pedigree_parser
 import libgwas.transposed_pedigree_parser as transposed_pedigree_parser
 import libgwas.bed_parser as bed_parser
+import libgwas.bgen_parser as bgen_parser
+import libgwas.vcf_parser as vcf_parser
 import meanvar.mv_esteq as mv_esteq
 from libgwas import BuildReportLine
 from libgwas import impute_parser
@@ -176,6 +178,16 @@ differences, so please consider the list above carefully.
 """
 
 verbose_report = False
+analytic = None
+
+def SetAnalytic(anltc):
+    global analytic
+    if analytic is not None:
+        print >> sys.stderr, "Only one dataset type can be specified at once. "
+        print >> sys.stderr, "Used: %s & %s" % (analytic, anltc)
+        sys.exit(1)
+
+    analytic = anltc
 
 def ParseIndList(ids):
     id_list = []
@@ -202,6 +214,9 @@ class MVTestApplication(object):
 
     def LoadCmdLine(self, args=sys.argv[1:]):
         """Parse user arguments using argparse and set up components"""
+
+        global analytic
+        analytic = None
         parser = argparse.ArgumentParser(description="MV Test: " + __version__, epilog="""
 mvtest.py is uses many of the same arguments as plink, but there are a few
 differences, so please consider the list above carefully.
@@ -255,6 +270,11 @@ differences, so please consider the list above carefully.
         parser.add_argument("--impute-gen-ext", type=str, default='gen.gz', help="Portion of filename that denotes gen file")
         parser.add_argument("--impute-info-thresh", type=float, default=0.4, help="Threshold for filtering imputed SNPs with poor 'info' values")
 
+        parser.add_argument("--bgen", type=argparse.FileType('r'), help="Single BGen file")
+        parser.add_argument("--bgen-sample", type=argparse.FileType('r'), default=None, help='Sample file (only necessary if bgen lacks sample IDs')
+        # Will look into this at a future date.
+        #parser.add_argument("--bgen-meta", type=argparse.FileType('r'), help='META file')
+
         parser.add_argument("--mach", type=argparse.FileType('r'), help="File containing list of MACH output for analysis")
         parser.add_argument("--mach-offset", type=int, default=-1, help="Mach file index (1 based) to begin analysis")
         parser.add_argument("--mach-count", type=int, default=-1, help="Number of mach files to process (for this node)")
@@ -265,6 +285,8 @@ differences, so please consider the list above carefully.
         parser.add_argument("--mach-min-rsquared", type=float, default=0.3, help="Filter out loci with RSquared < this value")
         parser.add_argument("--mach-chrpos", action="store_true", help="When true, first col in .info file must be chr:pos (additional pieces allowed)")
 
+        parser.add_argument('--vcf', type=argparse.FileType('r'), help='VCF file containing data for analysis')
+        parser.add_argument('--vcf-field', type=str, default='GT', help='Alternative column for sample value to be found')
 
         parser.add_argument("--pheno", type=argparse.FileType('r'), help="File containing phenotypes")
         parser.add_argument("--sample-pheno", type=argparse.FileType('r'), help="(Mach) Sample file containing phenotypes")
@@ -304,7 +326,7 @@ differences, so please consider the list above carefully.
             sys.exit(0)
 
         ###############################################################################################################
-        # Here we deal with the various ways we filter SNPs in and out of anlysis
+        # Here we deal with the various ways we filter SNPs in and out of analysis
         # We might handle MACH files differently. We'll default the chromosome
         # to be "NA" which is how those can be returned.
         if args.mach is None or args.mach_chrpos:
@@ -329,7 +351,7 @@ differences, so please consider the list above carefully.
             print >> sys.stderr, "SNPs must be either single or have be a range such as rs123-rs345"
             sys.exit(1)
 
-        if b.valid and s.valid:
+        if (b.valid and len(b.bounds) > 0) and s.valid:
             print >> sys.stderr, "Only one type of boundary conditions is permitted. Either use --from-bp, etc. or rs123-rs345. "
             sys.exit(1)
 
@@ -372,7 +394,7 @@ differences, so please consider the list above carefully.
         self.verbose=False
         if args.verbose:
             self.verbose = True
-
+        analytic = None
         if args.file != None or args.ped or args.map:
             if args.ped and not args.map or args.map  and not args.ped:
                 print >> sys.stderr, "When analyzing pedigree data, both .map and .ped must be specified"
@@ -382,6 +404,7 @@ differences, so please consider the list above carefully.
             else:
                 dataset = pedigree_parser.Parser("%s.map" % (args.file), "%s.ped" % (args.file))
 
+            SetAnalytic('Pedigree')
             dataset.load_mapfile(map3=args.map3)
             dataset.load_genotypes(pheno_covar)
         elif args.tfile != None or args.tped or args.tfam:
@@ -392,10 +415,12 @@ differences, so please consider the list above carefully.
                 dataset = transposed_pedigree_parser.Parser(args.tfam.name, args.tped.name)
             else:
                 dataset = transposed_pedigree_parser.Parser("%s.tfam" % (args.tfile), "%s.tped" % (args.tfile))
+            SetAnalytic('Transposed Pedigree')
             dataset.load_tfam(pheno_covar)
             dataset.load_genotypes()
         elif args.bfile != None:
             dataset = bed_parser.Parser("%s.fam" % (args.bfile), "%s.bim" % (args.bfile), "%s.bed" % (args.bfile))
+            SetAnalytic('Binary Pedigree')
             dataset.load_bim(map3=args.map3)
             dataset.load_fam(pheno_covar)
             dataset.load_genotypes()
@@ -404,6 +429,7 @@ differences, so please consider the list above carefully.
                 print >> sys.stderr, "When analyzing binary pedigree data, .bed, .bim and .fam files must be provided"
                 sys.exit(1)
             dataset = bed_parser.Parser(args.fam, args.bim, args.bed)
+            SetAnalytic('Binary Pedigree')
             dataset.load_bim(map3=args.map3)
             dataset.load_fam(pheno_covar)
             dataset.load_genotypes()
@@ -425,10 +451,16 @@ differences, so please consider the list above carefully.
             libgwas.ExitIf("--impute-fam is required for when processing imputed data", args.impute_fam == None)
             archives, chroms, infos = self.ParseImputeFile(args.impute.name, args.impute_offset, args.impute_count)
             dataset = impute_parser.Parser(args.impute_fam.name, archives, chroms, infos)
+            SetAnalytic('Imputed Gen File')
+            dataset.load_family_details(pheno_covar)
+            dataset.load_genotypes()
+        elif args.bgen:
+            # For now, only additive support is supported
+            dataset = bgen_parser.Parser(args.bgen, args.bgen_sample)
+            SetAnalytic('BGen')
             dataset.load_family_details(pheno_covar)
             dataset.load_genotypes()
         elif args.mach:
-
             DataParser.compressed_pedigree = not args.mach_uncompressed
             if (args.mach_offset > 0 and args.mach_count == -1) or (args.mach_offset == -1 and args.impute_count > 0):
                 print >> sys.stderr, "--mach-count and --mach_offset must both be > 0 if one is set other than -1. "
@@ -449,9 +481,14 @@ differences, so please consider the list above carefully.
             mach_parser.Parser.min_rsquared = args.mach_min_rsquared
             archives, infos = self.ParseMachFile(args.mach.name, args.mach_offset, args.mach_count)
             dataset = mach_parser.Parser(archives, infos)
+            SetAnalytic('Mach')
             dataset.load_family_details(pheno_covar)
             dataset.load_genotypes()
-
+        elif args.vcf:
+            dataset = vcf_parser.Parser(args.vcf, args.vcf_field)
+            SetAnalytic('VCF')
+            dataset.load_family_details(pheno_covar)
+            dataset.load_genotypes()
         else:
             parser.print_usage(sys.stderr)
             print >> sys.stderr, "\nNo data has been specified. Users must specify either pedigree or transposed pedigree to continue"
