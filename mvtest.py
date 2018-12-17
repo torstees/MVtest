@@ -456,7 +456,10 @@ differences, so please consider the list above carefully.
             dataset.load_genotypes()
         elif args.bgen:
             # For now, only additive support is supported
-            dataset = bgen_parser.Parser(args.bgen, args.bgen_sample)
+            sample_filename = None
+            if args.bgen_sample:
+                sample_filename = args.bgen_sample.name
+            dataset = bgen_parser.Parser(args.bgen.name, sample_filename)
             SetAnalytic('BGen')
             dataset.load_family_details(pheno_covar)
             dataset.load_genotypes()
