@@ -13,7 +13,9 @@ from libgwas.exceptions import UnsolvedLocus
 from libgwas.exceptions import NanInResult
 import libgwas.pheno_covar
 from libgwas.standardizer import get_standardizer
+import logging
 
+logger = logging.getLogger('mv_esteq::MeanVarEstEQ')
 __copyright__ = "Copyright (C) 2015 Todd Edwards, Chun Li and Eric Torstenson"
 __license__ = "GPL3.0"
 #     This file is part of MVtest.
@@ -30,6 +32,7 @@ __license__ = "GPL3.0"
 #
 #     You should have received a copy of the GNU General Public License
 #     along with MVtest.  If not, see <http://www.gnu.org/licenses/>.
+
 
 def MeanVarEstEQ(y, x, covariates, tol=1e-8):
     """Perform the mean var calculation using estimated equestions
@@ -218,6 +221,7 @@ def RunMeanVar(pheno, geno, covar=[]):
     """
     return MeanVarEstEQ(pheno, geno, covar)
 
+
 def RunAnalysis(dataset, pheno_covar):
     """Run the actual analysis on all valid loci for each phenotype
 
@@ -231,6 +235,7 @@ def RunAnalysis(dataset, pheno_covar):
     phenotype, covariate(s) or genotype
 
     """
+    log = logging.getLogger('meanvar::RunAnalysis')
     covar_missing = numpy.empty(dataset.ind_count, dtype=bool)
     covar_missing[:] = False
 
@@ -244,12 +249,12 @@ def RunAnalysis(dataset, pheno_covar):
     std = get_standardizer()
 
     for snp in dataset:
+        log.debug("%s:%d\tMean: %0.6f" % (snp.chr, snp.pos, snp.genotype_data[snp.genotype_data!=DataParser.missing_storage].mean()))
         for y in pheno_covar:
             st = SimpleTimer()
             (pheno, covariates, nonmissing) = y.get_variables((snp.genotype_data==DataParser.missing_storage))
 
-
-            genotypes  = snp.genotype_data[nonmissing]
+            genotypes = snp.genotype_data[nonmissing]
 
             try:
                 pvalt, estimates, pvalues, se, v = RunMeanVar(pheno, genotypes, covariates)
@@ -297,7 +302,7 @@ def RunAnalysis(dataset, pheno_covar):
                 result.bvar = estimates[pcount:]
                 yield result
             except NanInResult as e:
-                print >> sys.stderr, "\t".join([str(x) for x in [
+                logger.info("\t".join([str(x) for x in [
                                 snp.chr,
                                 snp.pos,
                                 snp.rsid,
@@ -307,9 +312,9 @@ def RunAnalysis(dataset, pheno_covar):
                                 snp.minor_allele,
                                 snp.allele_count2,
                                 "NAN-Found",
-                                "MAF=%0.4f" % (snp.maf)]])
+                                "MAF=%0.4f" % (snp.maf)]]))
             except ValueError as e:
-                print >> sys.stderr, "\t".join([str(x) for x in [
+                logger.info("\t".join([str(x) for x in [
                                 snp.chr,
                                 snp.pos,
                                 snp.rsid,
@@ -319,9 +324,9 @@ def RunAnalysis(dataset, pheno_covar):
                                 snp.minor_allele,
                                 snp.allele_count2,
                                 "Unsolvable",
-                                "MAF=%0.4f" % (snp.maf)]])
+                                "MAF=%0.4f" % (snp.maf)]]))
             except UnsolvedLocus as e:
-                print >> sys.stderr, "\t".join([str(x) for x in [
+                logger.info("\t".join([str(x) for x in [
                                 snp.chr,
                                 snp.pos,
                                 snp.rsid,
@@ -331,8 +336,20 @@ def RunAnalysis(dataset, pheno_covar):
                                 snp.minor_allele,
                                 snp.allele_count2,
                                 "Unsolved",
-                                "MAF=%0.4f" % (snp.maf)]])
+                                "MAF=%0.4f" % (snp.maf)]]))
                 unsolved.append(snp)
+            except Exception as e:
+                logger.info("\t".join([str(x) for x in [
+                                snp.chr,
+                                snp.pos,
+                                snp.rsid,
+                                y.get_phenotype_name(),
+                                "%d" % (numpy.sum(nonmissing)),
+                                snp.major_allele,
+                                snp.minor_allele,
+                                snp.allele_count2,
+                                "Unknown Exception",
+                                "MAF=%0.4f" % (snp.maf)]]))
     if len(unsolved)>0:
         print >> sys.stderr, "Total unsolvable loci: ", len(unsolved)
 

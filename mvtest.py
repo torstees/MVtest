@@ -25,13 +25,15 @@ import sys
 import numpy
 import scipy
 import os
+import datetime
+import logging
 import libgwas
 import meanvar
 from libgwas.data_parser import DataParser
 from libgwas.boundary import BoundaryCheck
 from libgwas.snp_boundary_check import SnpBoundaryCheck
 from libgwas.exceptions import InvalidBoundarySpec
-from libgwas.pheno_covar import PhenoCovar
+from libgwas.pheno_covar import PhenoCovar, PhenoIdFormat
 from libgwas.exceptions import ReportableException
 import libgwas.pedigree_parser as pedigree_parser
 import libgwas.transposed_pedigree_parser as transposed_pedigree_parser
@@ -308,11 +310,13 @@ differences, so please consider the list above carefully.
         parser.add_argument("--mind", type=float, default=1.0, help="MAX per-person missing")
 
         parser.add_argument("--verbose", action='store_true', help="Output additional data details")
-
-        parser.set_defaults(all_pheno=False, sex=False, mach_chrpos=False)
+        parser.add_argument("--debug", action='store_true', help='Output debugging info to a debug file')
+        parser.add_argument("--log", type=str, default='mvtest', help='Filename for info log (optional debug output)')
+        parser.set_defaults(all_pheno=False, sex=False, mach_chrpos=False, debug=False)
         args = parser.parse_args(args)
 
 
+        log_filename = "%s-%s.log" % (args.log, datetime.datetime.now().strftime("%Y-%m-%d"))
         # Report version, if requested, and exit
         if args.v:
             print >> sys.stderr, "%s: %s" % (os.path.basename(__file__), __version__)
@@ -325,6 +329,17 @@ differences, so please consider the list above carefully.
             print >> sys.stderr, "%s: %s" % (os.path.dirname(numpy.__file__), numpy.__version__)
             sys.exit(0)
 
+        log_format = "%(levelname)s\t%(name)s\t%(message)s"
+        if args.debug == True:
+            logging.basicConfig(filename=log_filename, filemode='w', level=logging.DEBUG, format=log_format)
+        else:
+            logging.basicConfig(filename=log_filename, filemode='w', level=logging.INFO, format=log_format)
+
+        log = logging.getLogger('mvtest::LoadCmdLine')
+        log.info("%s: %s" % (os.path.basename(__file__), __version__))
+        log.info("%s: %s" % (os.path.dirname(libgwas.__file__), libgwas.__version__))
+        log.info("%s: %s" % (os.path.dirname(scipy.__file__), scipy.__version__))
+        log.info("%s: %s" % (os.path.dirname(numpy.__file__), numpy.__version__))
         ###############################################################################################################
         # Here we deal with the various ways we filter SNPs in and out of analysis
         # We might handle MACH files differently. We'll default the chromosome
@@ -457,8 +472,12 @@ differences, so please consider the list above carefully.
         elif args.bgen:
             # For now, only additive support is supported
             sample_filename = None
+            bgen_parser.Parser.default_chromosome = args.chr
+            PhenoCovar.id_encoding = PhenoIdFormat.FID
             if args.bgen_sample:
                 sample_filename = args.bgen_sample.name
+            elif os.path.isfile("%s.sample" % (args.bgen.name)):
+                sample_filename = "%s.sample" % (args.bgen.name)
             dataset = bgen_parser.Parser(args.bgen.name, sample_filename)
             SetAnalytic('BGen')
             dataset.load_family_details(pheno_covar)
@@ -488,7 +507,7 @@ differences, so please consider the list above carefully.
             dataset.load_family_details(pheno_covar)
             dataset.load_genotypes()
         elif args.vcf:
-            dataset = vcf_parser.Parser(args.vcf, args.vcf_field)
+            dataset = vcf_parser.Parser(args.vcf.name, args.vcf_field)
             SetAnalytic('VCF')
             dataset.load_family_details(pheno_covar)
             dataset.load_genotypes()
@@ -547,6 +566,7 @@ differences, so please consider the list above carefully.
 
         libgwas.ExitIf("The impute file listing appears to be misconfigured. All lines must have the same number of columns", len(infos) != 0 and len(infos) != len(archives))
         return archives, chroms, infos
+
     def ParseMachFile(self, filename, offset=-1, count=-1):
         archives = []
         infos = []
@@ -571,42 +591,44 @@ differences, so please consider the list above carefully.
 
         libgwas.ExitIf("The mach file listing appears to be misconfigured. All lines must have the same number of columns", len(infos) != 0 and len(infos) != len(archives))
         return archives, infos
-    def BuildReportLineIf(self, f, key, doPrint, value="TRUE"):
+    def BuildReportLineIf(self, key, log, doPrint, value="TRUE"):
         if doPrint:
-            print >> f, BuildReportLine(key, value)
+            log.info(BuildReportLine(key, value))
 
-    def ReportConfiguration(self, args=[], f=sys.stdout, dataset=None):
+    def ReportConfiguration(self, args=[], dataset=None):
         """Report on the status of application objects. """
-        print >> f, BuildReportLine("MVTEST", __version__)
 
-        print >> f, BuildReportLine("MIN MAF", DataParser.min_maf)
-        print >> f, BuildReportLine("MAX MAF", DataParser.max_maf)
-        print >> f, BuildReportLine("MISS IND TOL", DataParser.ind_miss_tol)
-        print >> f, BuildReportLine("MISS SNP TOL", DataParser.snp_miss_tol)
-        print >> f, BuildReportLine("PHENO MISS ENC", PhenoCovar.missing_encoding)
-        self.BuildReportLineIf(f, "COMPRESSED PEDIGREE", DataParser.compressed_pedigree)
-        self.BuildReportLineIf(f, "SEX AS COV", PhenoCovar.sex_as_covariate)
-        self.BuildReportLineIf(f, "NO SEX", not DataParser.has_sex)
-        self.BuildReportLineIf(f, "NO PARENTS", not DataParser.has_parents)
-        self.BuildReportLineIf(f, "NO FID", not DataParser.has_fid)
-        self.BuildReportLineIf(f, "PHENO in PED", DataParser.has_pheno)
-        self.BuildReportLineIf(f, "HAS LIABILITY", DataParser.has_liability)
-        print >> f, BuildReportLine("MISSING GENO", DataParser.missing_representation)
+        log = logging.getLogger('mvtest::ReportConfiguration')
+        log.info(BuildReportLine("MVTEST", __version__))
+
+        log.info(BuildReportLine("MIN MAF", DataParser.min_maf))
+        log.info(BuildReportLine("MAX MAF", DataParser.max_maf))
+        log.info(BuildReportLine("MISS IND TOL", DataParser.ind_miss_tol))
+        log.info(BuildReportLine("MISS SNP TOL", DataParser.snp_miss_tol))
+        log.info(BuildReportLine("PHENO MISS ENC", PhenoCovar.missing_encoding))
+        self.BuildReportLineIf("COMPRESSED PEDIGREE", log, DataParser.compressed_pedigree)
+        self.BuildReportLineIf("SEX AS COV", log, PhenoCovar.sex_as_covariate)
+        self.BuildReportLineIf("NO SEX", log, not DataParser.has_sex)
+        self.BuildReportLineIf("NO PARENTS", log, not DataParser.has_parents)
+        self.BuildReportLineIf("NO FID", log, not DataParser.has_fid)
+        self.BuildReportLineIf("PHENO in PED", log, DataParser.has_pheno)
+        self.BuildReportLineIf("HAS LIABILITY", log, DataParser.has_liability)
+        log.info(BuildReportLine("MISSING GENO", DataParser.missing_representation))
         if self.verbose:
-            print >> f, BuildReportLine("VERBOSE", "TRUE")
-        DataParser.boundary.ReportConfiguration(f)
+            log.info(BuildReportLine("VERBOSE", "TRUE"))
+        DataParser.boundary.ReportConfiguration()
 
         try:
             index = args.index("MAP3")
-            print >> f, BuildReportLine("MAP3", "TRUE")
+            log.info(BuildReportLine("MAP3", "TRUE"))
         except:
             pass
 
         if dataset:
-            dataset.ReportConfiguration(f)
+            dataset.ReportConfiguration()
 
-        print >> f, BuildReportLine("SCIPY", scipy.__version__)
-        print >> f, BuildReportLine("NUMPY", numpy.__version__)
+        log.info(BuildReportLine("SCIPY", scipy.__version__))
+        log.info(BuildReportLine("NUMPY", numpy.__version__))
 
 
 def main(args=sys.argv[1:], print_cfg=False):
@@ -614,9 +636,8 @@ def main(args=sys.argv[1:], print_cfg=False):
     try:
         app = MVTestApplication()
         dataset, vars = app.LoadCmdLine(args)
-
         if print_cfg:
-            app.ReportConfiguration(args=args, f=sys.stdout, dataset=dataset)
+            app.ReportConfiguration(args=args, dataset=dataset)
 
         printed_header = False
 
