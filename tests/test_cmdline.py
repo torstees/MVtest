@@ -18,7 +18,9 @@ import test_transped_parser as test_transped_parser
 from meanvar import mv_esteq
 from libgwas.boundary import BoundaryCheck
 from libgwas.data_parser  import DataParser
-
+from libgwas.exceptions import InvalidFrequency
+from libgwas.exceptions import TooMuchMissing
+from libgwas.exceptions import TooMuchMissingpPhenoCovar
 
 class TestCmdlineTPed(test_analyze_tped.TestBase):
     def testTPedCmdLineFilenames(self):
@@ -151,19 +153,44 @@ class TestCmdlineTPed(test_analyze_tped.TestBase):
         dataset,vars = app.LoadCmdLine(cmds.split(" "))
         maf = [0.30225, 0.3075, 0.31, 0.3025, 0.30625]
         i=0
+        skipped = 0
         for snp in dataset:
-            self.assertAlmostEqual(maf[i], snp.maf)
-            i += 1
+            snp_filter = numpy.ones(snp.missing_genotypes.shape[0]) == 1
+            try:
+                genodata = snp.get_genotype_data(snp_filter)
+                self.assertAlmostEqual(maf[i], genodata.maf)
+                i += 1
+            except TooMuchMissing as e:
+                pass
+            except InvalidFrequency as e:
+                skipped += 1
+            except TooMuchMissingpPhenoCovar as e:
+                pass
+        self.assertEqual(4, skipped)
+        self.assertEqual(5, i)
+
     def testTPedCmdLineMaxMAF(self):
         cmds = "--tfile %s --max-maf=0.3" % (self.tfam_filename.split(".")[0])
 
         app = mvtest.MVTestApplication()
         dataset,vars = app.LoadCmdLine(cmds.split(" "))
         maf = [0.29925, 0.28775, 0.295, 0.2975]
-        i=0
+        i = 0
+        skipped = 0
         for snp in dataset:
-            self.assertAlmostEqual(maf[i], snp.maf)
-            i += 1
+            snp_filter = numpy.ones(snp.missing_genotypes.shape[0]) == 1
+            try:
+                genodata = snp.get_genotype_data(snp_filter)
+                self.assertAlmostEqual(maf[i], genodata.maf)
+                i += 1
+            except TooMuchMissing as e:
+                pass
+            except InvalidFrequency as e:
+                skipped += 1
+            except TooMuchMissingpPhenoCovar as e:
+                pass
+        self.assertEqual(5, skipped)
+        self.assertEqual(4, i)
 
 
 class TestCmdlinePed(test_analyze_ped.TestBase):
@@ -184,9 +211,22 @@ class TestCmdlinePed(test_analyze_ped.TestBase):
         dataset,vars = app.LoadCmdLine(cmds.split(" "))
         maf = [0.30225, 0.3075, 0.31, 0.3025, 0.30625]
         i=0
+        skipped=0
         for snp in dataset:
-            self.assertAlmostEqual(maf[i], snp.maf, places=4)
-            i += 1
+            snp_filter = numpy.ones(snp.missing_genotypes.shape[0]) == 1
+            try:
+                genodata = snp.get_genotype_data(snp_filter)
+                self.assertAlmostEqual(maf[i], genodata.maf, places=4)
+                i += 1
+            except TooMuchMissing as e:
+                pass
+            except InvalidFrequency as e:
+                skipped += 1
+            except TooMuchMissingpPhenoCovar as e:
+                pass
+        self.assertEqual(i, 5)
+        self.assertEqual(skipped, 4)
+
     def testPedCmdLineMaxMAF(self):
         cmds = "--file %s --max-maf=0.3" % (self.ped_filename.split(".")[0])
 
@@ -194,10 +234,22 @@ class TestCmdlinePed(test_analyze_ped.TestBase):
         dataset,vars = app.LoadCmdLine(cmds.split(" "))
         maf = [0.29925, 0.28775, 0.295, 0.2975]
         i=0
+        skipped=0
+        missing=0
         for snp in dataset:
-            self.assertAlmostEqual(maf[i], snp.maf)
-            i += 1
-
+            snp_filter = numpy.ones(snp.missing_genotypes.shape[0]) == 1
+            try:
+                genodata = snp.get_genotype_data(snp_filter)
+                self.assertAlmostEqual(maf[i], genodata.maf)
+                i += 1
+            except TooMuchMissing as e:
+                missing+=1
+            except InvalidFrequency as e:
+                skipped+=1
+            except TooMuchMissingpPhenoCovar as e:
+                pass
+        self.assertEqual(5, skipped)
+        self.assertEqual(i, 4)
 
 class TestCmdLineSimplePed(test_pedigree_parser.TestBase):
     def testPedCmdLineMIND(self):
@@ -207,24 +259,35 @@ class TestCmdLineSimplePed(test_pedigree_parser.TestBase):
         dataset,vars = app.LoadCmdLine(cmds.split(" "))
 
         genotypes = [
-            [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
-            [-1, -1, -1, -1, -1, 1, -1, -1, -1, 0, 0, 1],
-            [-1, 2, 1, 1, 0, 0, 0, 2, 1, 1, 0, 0],
-            [-1, 1, 2, 1, 1, 0, 0, 1, 2, 1, 1, 0],
-            [-1, 2, 0, 1, 0, 0, 1, 2, 0, 1, 0, 0],
-            [-1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0],
-             [0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0]
+            [ 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
+            [ 1, 0, 0, 1],
+            [ 2, 1, 1, 0, 0, 0, 2, 1, 1, 0, 0],
+            [ 1, 2, 1, 1, 0, 0, 1, 2, 1, 1, 0],
+            [ 2, 0, 1, 0, 0, 1, 2, 0, 1, 0, 0],
+            [ 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+            [ 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0]
         ]
 
         mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
 
         index = 0
+        skipped = 0
         for snp in dataset:
-            self.assertEqual(genotypes[index][1:], list(snp.genotype_data))
-            self.assertEqual(int(mapdata[index][0]), snp.chr)
-            self.assertEqual(int(mapdata[index][3]), snp.pos)
-            self.assertEqual(mapdata[index][1], snp.rsid)
-            index += 1
+            snp_filter = numpy.ones(snp.missing_genotypes.shape[0]) == 1
+            try:
+                genodata = snp.get_genotype_data(snp_filter)
+                self.assertEqual(genotypes[index], list(genodata.genotypes))
+                self.assertEqual(int(mapdata[index][0]), snp.chr)
+                self.assertEqual(int(mapdata[index][3]), snp.pos)
+                self.assertEqual(mapdata[index][1], snp.rsid)
+                index += 1
+            except TooMuchMissing as e:
+                pass
+            except InvalidFrequency as e:
+                skipped += 1
+            except TooMuchMissingpPhenoCovar as e:
+                pass
+        self.assertEqual(0, skipped)
         self.assertEqual(7, index)
 
     def testPedCmdLineMIND2(self):
@@ -247,11 +310,20 @@ class TestCmdLineSimplePed(test_pedigree_parser.TestBase):
 
         index = 0
         for snp in dataset:
-            self.assertEqual(genotypes[index], list(snp.genotype_data))
-            self.assertEqual(int(mapdata[index][0]), snp.chr)
-            self.assertEqual(int(mapdata[index][3]), snp.pos)
-            self.assertEqual(mapdata[index][1], snp.rsid)
-            index += 1
+            snp_filter = numpy.ones(snp.missing_genotypes.shape[0]) == 1
+            try:
+                genodata = snp.get_genotype_data(snp_filter)
+                self.assertEqual(genotypes[index], list(genodata.genotypes))
+                self.assertEqual(int(mapdata[index][0]), snp.chr)
+                self.assertEqual(int(mapdata[index][3]), snp.pos)
+                self.assertEqual(mapdata[index][1], snp.rsid)
+                index += 1
+            except TooMuchMissing as e:
+                pass
+            except InvalidFrequency as e:
+                skipped+=1
+            except TooMuchMissingpPhenoCovar as e:
+                pass
         self.assertEqual(5, index)          # Last two are fixed
 
 
@@ -263,11 +335,11 @@ class TestCmdLineSimplePed(test_pedigree_parser.TestBase):
 
         genotypes = [
             [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
-            [-1, 2, 1, 1, 0, 0, 0, 2, 1, 1, 0, 0],
-            [-1, 1, 2, 1, 1, 0, 0, 1, 2, 1, 1, 0],
-            [-1, 2, 0, 1, 0, 0, 1, 2, 0, 1, 0, 0],
-            [-1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0],
-             [0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0]
+            [2, 1, 1, 0, 0, 0, 2, 1, 1, 0, 0],
+            [1, 2, 1, 1, 0, 0, 1, 2, 1, 1, 0],
+            [2, 0, 1, 0, 0, 1, 2, 0, 1, 0, 0],
+            [0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+            [0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0]
         ]
 
         mapdata = [['1', 'rs0001', '0', '500'], ['1', 'rs0003', '0', '25000'],
@@ -276,11 +348,20 @@ class TestCmdLineSimplePed(test_pedigree_parser.TestBase):
 
         index = 0
         for snp in dataset:
-            self.assertEqual(genotypes[index], list(snp.genotype_data))
-            self.assertEqual(int(mapdata[index][0]), snp.chr)
-            self.assertEqual(int(mapdata[index][3]), snp.pos)
-            self.assertEqual(mapdata[index][1], snp.rsid)
-            index += 1
+            snp_filter = numpy.ones(snp.missing_genotypes.shape[0]) == 1
+            try:
+                genodata = snp.get_genotype_data(snp_filter)
+                self.assertEqual(genotypes[index], list(genodata.genotypes))
+                self.assertEqual(int(mapdata[index][0]), snp.chr)
+                self.assertEqual(int(mapdata[index][3]), snp.pos)
+                self.assertEqual(mapdata[index][1], snp.rsid)
+                index += 1
+            except TooMuchMissing as e:
+                pass
+            except InvalidFrequency as e:
+                skipped+=1
+            except TooMuchMissingpPhenoCovar as e:
+                pass
         self.assertEqual(6, index)
 
     def testPedCmdLineGENO2(self):
@@ -297,11 +378,20 @@ class TestCmdLineSimplePed(test_pedigree_parser.TestBase):
         mapdata = [['1', 'rs0001', '0', '500'], ['2', 'rs0007', '0', '25000']]
         index = 0
         for snp in dataset:
-            self.assertEqual(genotypes[index], list(snp.genotype_data))
-            self.assertEqual(int(mapdata[index][0]), snp.chr)
-            self.assertEqual(int(mapdata[index][3]), snp.pos)
-            self.assertEqual(mapdata[index][1], snp.rsid)
-            index += 1
+            snp_filter = numpy.ones(snp.missing_genotypes.shape[0]) == 1
+            try:
+                genodata = snp.get_genotype_data(snp_filter)
+                self.assertEqual(genotypes[index], list(genodata.genotypes))
+                self.assertEqual(int(mapdata[index][0]), snp.chr)
+                self.assertEqual(int(mapdata[index][3]), snp.pos)
+                self.assertEqual(mapdata[index][1], snp.rsid)
+                index += 1
+            except TooMuchMissing as e:
+                pass
+            except InvalidFrequency as e:
+                skipped+=1
+            except TooMuchMissingpPhenoCovar as e:
+                pass
         self.assertEqual(2, index)
     def testCmdlineMap3File(self):
         cmds = "--ped %s --map %s --map3 --geno=0.05" % (self.ped_filename_missing, self.map3_filename)
@@ -317,11 +407,20 @@ class TestCmdLineSimplePed(test_pedigree_parser.TestBase):
         mapdata = [['1', 'rs0001', '0', '500'], ['2', 'rs0007', '0', '25000']]
         index = 0
         for snp in dataset:
-            self.assertEqual(genotypes[index], list(snp.genotype_data))
-            self.assertEqual(int(mapdata[index][0]), snp.chr)
-            self.assertEqual(int(mapdata[index][3]), snp.pos)
-            self.assertEqual(mapdata[index][1], snp.rsid)
-            index += 1
+            snp_filter = numpy.ones(snp.missing_genotypes.shape[0]) == 1
+            try:
+                genodata = snp.get_genotype_data(snp_filter)
+                self.assertEqual(genotypes[index], list(genodata.genotypes))
+                self.assertEqual(int(mapdata[index][0]), snp.chr)
+                self.assertEqual(int(mapdata[index][3]), snp.pos)
+                self.assertEqual(mapdata[index][1], snp.rsid)
+                index += 1
+            except TooMuchMissing as e:
+                pass
+            except InvalidFrequency as e:
+                skipped+=1
+            except TooMuchMissingpPhenoCovar as e:
+                pass
         self.assertEqual(2, index)
 
 
@@ -333,7 +432,7 @@ class TestCmdLineSimpleTPed(test_transped_parser.TestBase):
         dataset,vars = app.LoadCmdLine(cmds.split(" "))
 
         genotypes = [
-            [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1],
+            [0, 1],
             [1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1],
             [0, 1, 1, 0, 0, 0, 2, 1, 1, 0, 0],
             [0, 2, 1, 1, 0, 0, 1, 2, 1, 1, 0],
@@ -347,12 +446,25 @@ class TestCmdLineSimpleTPed(test_transped_parser.TestBase):
                    ['2', 'rs0006', '0', '10000'], ['2', 'rs0007', '0', '25000']]
 
         index = 0
+        skipped = 0
+        missing = 0
         for snp in dataset:
-            self.assertEqual(genotypes[index], list(snp.genotype_data))
-            self.assertEqual(int(mapdata[index][0]), snp.chr)
-            self.assertEqual(int(mapdata[index][3]), snp.pos)
-            self.assertEqual(mapdata[index][1], snp.rsid)
-            index += 1
+            snp_filter = numpy.ones(snp.missing_genotypes.shape[0]) == 1
+            try:
+                genodata = snp.get_genotype_data(snp_filter)
+                self.assertEqual(genotypes[index], list(genodata.genotypes))
+                self.assertEqual(int(mapdata[index][0]), snp.chr)
+                self.assertEqual(int(mapdata[index][3]), snp.pos)
+                self.assertEqual(mapdata[index][1], snp.rsid)
+                index += 1
+            except TooMuchMissing as e:
+                missing += 1
+            except InvalidFrequency as e:
+                skipped+=1
+            except TooMuchMissingpPhenoCovar as e:
+                pass
+        self.assertEqual(0, missing)
+        self.assertEqual(0, skipped)
         self.assertEqual(7, index)
 
     def testTPedCmdLineMIND2(self):
@@ -376,13 +488,27 @@ class TestCmdLineSimpleTPed(test_transped_parser.TestBase):
                    ['2', 'rs0006', '0', '10000'], ['2', 'rs0007', '0', '25000']]
 
         index = 0
+        skipped = 0
+        missing = 0
         for snp in dataset:
-            self.assertEqual(genotypes[index], list(snp.genotype_data))
-            self.assertEqual(int(mapdata[index][0]), snp.chr)
-            self.assertEqual(int(mapdata[index][3]), snp.pos)
-            self.assertEqual(mapdata[index][1], snp.rsid)
-            index += 1
-        self.assertEqual(7, index)          # Last two are fixed
+            snp_filter = numpy.ones(snp.missing_genotypes.shape[0]) == 1
+            try:
+                genodata = snp.get_genotype_data(snp_filter)
+                self.assertEqual(genotypes[index], list(genodata.genotypes))
+                self.assertEqual(int(mapdata[index][0]), snp.chr)
+                self.assertEqual(int(mapdata[index][3]), snp.pos)
+                self.assertEqual(mapdata[index][1], snp.rsid)
+                index += 1
+            except TooMuchMissing as e:
+                missing += 1
+            except InvalidFrequency as e:
+                skipped+=1
+            except TooMuchMissingpPhenoCovar as e:
+                pass
+        # Low mind threshold, knocks all of the loci out
+        self.assertEqual(7, index)
+        self.assertEqual(0, skipped)
+        self.assertEqual(0, missing)
 
 
     def testTPedCmdLineGENO(self):
@@ -393,11 +519,11 @@ class TestCmdLineSimpleTPed(test_transped_parser.TestBase):
 
         genotypes = [
             [1,  1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1],
-            [0, -1, 1, 1, 0, 0, 0, 2, 1, 1, 0, 0],
-            [0, -1, 2, 1, 1, 0, 0, 1, 2, 1, 1, 0],
-            [1, -1, 0, 1, 0, 0, 1, 2, 0, 1, 0, 0],
-            [1, -1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0],
-            [0, -1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0]
+            [0, 1, 1, 0, 0, 0, 2, 1, 1, 0, 0],
+            [0, 2, 1, 1, 0, 0, 1, 2, 1, 1, 0],
+            [1, 0, 1, 0, 0, 1, 2, 0, 1, 0, 0],
+            [1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+            [0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0]
         ]
 
         mapdata = [['1', 'rs0002', '0', '10000'], ['1', 'rs0003', '0', '25000'],
@@ -406,11 +532,20 @@ class TestCmdLineSimpleTPed(test_transped_parser.TestBase):
 
         index = 0
         for snp in dataset:
-            self.assertEqual(genotypes[index], list(snp.genotype_data))
-            self.assertEqual(int(mapdata[index][0]), snp.chr)
-            self.assertEqual(int(mapdata[index][3]), snp.pos)
-            self.assertEqual(mapdata[index][1], snp.rsid)
-            index += 1
+            snp_filter = numpy.ones(snp.missing_genotypes.shape[0]) == 1
+            try:
+                genodata = snp.get_genotype_data(snp_filter)
+                self.assertEqual(genotypes[index], list(genodata.genotypes))
+                self.assertEqual(int(mapdata[index][0]), snp.chr)
+                self.assertEqual(int(mapdata[index][3]), snp.pos)
+                self.assertEqual(mapdata[index][1], snp.rsid)
+                index += 1
+            except TooMuchMissing as e:
+                pass
+            except InvalidFrequency as e:
+                skipped+=1
+            except TooMuchMissingpPhenoCovar as e:
+                pass
         self.assertEqual(6, index)
 
     def testTPedCmdLineGENO2(self):
@@ -426,11 +561,20 @@ class TestCmdLineSimpleTPed(test_transped_parser.TestBase):
         mapdata = [['1', 'rs0002', '0', '10000']]
         index = 0
         for snp in dataset:
-            self.assertEqual(genotypes[index], list(snp.genotype_data))
-            self.assertEqual(int(mapdata[index][0]), snp.chr)
-            self.assertEqual(int(mapdata[index][3]), snp.pos)
-            self.assertEqual(mapdata[index][1], snp.rsid)
-            index += 1
+            snp_filter = numpy.ones(snp.missing_genotypes.shape[0]) == 1
+            try:
+                genodata = snp.get_genotype_data(snp_filter)
+                self.assertEqual(genotypes[index], list(genodata.genotypes))
+                self.assertEqual(int(mapdata[index][0]), snp.chr)
+                self.assertEqual(int(mapdata[index][3]), snp.pos)
+                self.assertEqual(mapdata[index][1], snp.rsid)
+                index += 1
+            except TooMuchMissing as e:
+                pass
+            except InvalidFrequency as e:
+                skipped+=1
+            except TooMuchMissingpPhenoCovar as e:
+                pass
         self.assertEqual(1, index)
 if __name__ == "__main__":
     unittest.main()
