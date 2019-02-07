@@ -336,6 +336,7 @@ differences, so please consider the list above carefully.
             logging.basicConfig(filename=log_filename, filemode='w', level=logging.INFO, format=log_format)
 
         log = logging.getLogger('mvtest::LoadCmdLine')
+        log.info(" ".join(sys.argv[1:]))
         log.info("%s: %s" % (os.path.basename(__file__), __version__))
         log.info("%s: %s" % (os.path.dirname(libgwas.__file__), libgwas.__version__))
         log.info("%s: %s" % (os.path.dirname(scipy.__file__), scipy.__version__))
