@@ -250,14 +250,12 @@ def RunAnalysis(dataset, pheno_covar):
     std = get_standardizer()
 
     for snp in dataset:
-        log.debug("%s:%d\tMean: %0.6f" % (snp.chr, snp.pos, snp.genotype_data[snp.genotype_data!=DataParser.missing_storage].mean()))
         for y in pheno_covar:
             st = SimpleTimer()
             (pheno, covariates, nonmissing) = y.get_variables(snp.missing_genotypes)
 
             try:
                 genodata = snp.get_genotype_data(nonmissing)
-                log.info("ASDF-->" + str(genodata.genotypes[0:5]))
                 pvalt, estimates, pvalues, se, v = RunMeanVar(pheno, genodata.genotypes, covariates)
 
                 lmgeno = genodata.genotypes
@@ -279,7 +277,6 @@ def RunAnalysis(dataset, pheno_covar):
                         raise NanInResult()
 
                 nonmissing_ct = numpy.sum(nonmissing)
-
                 result = MVResult(
                                 snp.chr,
                                 snp.pos,
