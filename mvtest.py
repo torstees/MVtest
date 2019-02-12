@@ -67,20 +67,23 @@ libgwas.standardizer.set_standardizer(meanvar.mvstandardizer.Standardizer)
                  [--impute-encoding {additive,dominant,recessive,genotype}]
                  [--impute-info-ext IMPUTE_INFO_EXT]
                  [--impute-gen-ext IMPUTE_GEN_EXT]
-                 [--impute-info-thresh IMPUTE_INFO_THRESH] [--mach MACH]
+                 [--impute-info-thresh IMPUTE_INFO_THRESH] [--bgen BGEN]
+                 [--bgen-sample BGEN_SAMPLE] [--mach MACH]
                  [--mach-offset MACH_OFFSET] [--mach-count MACH_COUNT]
                  [--mach-uncompressed] [--mach-chunk-size MACH_CHUNK_SIZE]
                  [--mach-info-ext MACH_INFO_EXT]
                  [--mach-dose-ext MACH_DOSE_EXT]
-                 [--mach-min-rsquared MACH_MIN_RSQUARED] [--pheno PHENO]
+                 [--mach-min-rsquared MACH_MIN_RSQUARED] [--mach-chrpos]
+                 [--vcf VCF] [--vcf-field VCF_FIELD] [--pheno PHENO]
                  [--sample-pheno SAMPLE_PHENO] [--mphenos MPHENOS]
                  [--pheno-names PHENO_NAMES] [--all-pheno] [--covar COVAR]
                  [--sample-covar SAMPLE_COVAR] [--covar-numbers COVAR_NUMBERS]
                  [--covar-names COVAR_NAMES] [--sex]
                  [--missing-phenotype MISSING_PHENOTYPE] [--maf MAF]
                  [--max-maf MAX_MAF] [--geno GENO] [--mind MIND] [--verbose]
+                 [--debug] [--log LOG]
 
-MV Test: 1.0.0rc5
+MV Test: 1.1.0
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -135,6 +138,9 @@ optional arguments:
   --impute-info-thresh IMPUTE_INFO_THRESH
                         Threshold for filtering imputed SNPs with poor 'info'
                         values
+  --bgen BGEN           Single BGen file
+  --bgen-sample BGEN_SAMPLE
+                        Sample file (only necessary if bgen lacks sample IDs
   --mach MACH           File containing list of MACH output for analysis
   --mach-offset MACH_OFFSET
                         Mach file index (1 based) to begin analysis
@@ -150,6 +156,11 @@ optional arguments:
                         Portion of filename that denotes dose files
   --mach-min-rsquared MACH_MIN_RSQUARED
                         Filter out loci with RSquared < this value
+  --mach-chrpos         When true, first col in .info file must be chr:pos
+                        (additional pieces allowed)
+  --vcf VCF             VCF file containing data for analysis
+  --vcf-field VCF_FIELD
+                        Alternative column for sample value to be found
   --pheno PHENO         File containing phenotypes
   --sample-pheno SAMPLE_PHENO
                         (Mach) Sample file containing phenotypes
@@ -174,6 +185,8 @@ optional arguments:
   --geno GENO           MAX per-SNP missing for analysis
   --mind MIND           MAX per-person missing
   --verbose             Output additional data details
+  --debug               Output debugging info to a debug file
+  --log LOG             Filename for info log (optional debug output)
 
 mvtest.py is uses many of the same arguments as plink, but there are a few
 differences, so please consider the list above carefully.
