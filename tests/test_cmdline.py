@@ -126,6 +126,22 @@ class TestCmdlineTPed(test_analyze_tped.TestBase):
         self.assertEqual(5000, results[4].pos)
         self.assertEqual(6000, results[5].pos)
 
+    def testTPedCmdLineWithY(self):
+        cmds = "--tfile %s --chr=Y --from-kb=1 --to-kb=6" % (self.tfam_filename.split(".")[0])
+
+        app = mvtest.MVTestApplication()
+        dataset,vars = app.LoadCmdLine(cmds.split(" "))
+        self.assertEqual(BoundaryCheck.chrom, 24)
+        self.assertEqual(BoundaryCheck.chrom_name, 'Y')
+
+    def testTPedCmdLineWithX(self):
+        cmds = "--tfile %s --chr=X --from-kb=1 --to-kb=6" % (self.tfam_filename.split(".")[0])
+
+        app = mvtest.MVTestApplication()
+        dataset, vars = app.LoadCmdLine(cmds.split(" "))
+        self.assertEqual(BoundaryCheck.chrom, 23)
+        self.assertEqual(BoundaryCheck.chrom_name, 'X')
+
     def testTPedCmdLineWithMB(self):
         cmds = "--tfile %s --chr=1 --from-mb=1 --to-mb=2" % (self.tfam_filename.split(".")[0])
 
