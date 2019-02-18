@@ -240,7 +240,7 @@ differences, so please consider the list above carefully.
         parser.add_argument("-v", action='store_true', help="Print version number")
         parser.add_argument("--vall", action='store_true', help="Print version number along with each dependency")
 
-        parser.add_argument("--chr", type=int, default=-1, metavar="N", help="Select Chromosome")
+        parser.add_argument("--chr", type=str, default=-1, metavar="N", help="Select Chromosome")
         parser.add_argument("--snps", type=str, default="", help="Comma-delimited list of SNP(s): rs1,rs2,rs3-rs6")
         parser.add_argument("--from-bp", type=int, metavar="START", help="SNP range start")
         parser.add_argument("--to-bp", type=int, metavar="END", help="SNP range end")
