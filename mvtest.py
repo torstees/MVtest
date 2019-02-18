@@ -359,7 +359,7 @@ differences, so please consider the list above carefully.
         # We might handle MACH files differently. We'll default the chromosome
         # to be "NA" which is how those can be returned.
         if args.mach is None or args.mach_chrpos:
-            BoundaryCheck.chrom = args.chr
+            BoundaryCheck.set_chrom(args.chr)
         else:
             if args.chr != -1:
                 libgwas.Exit(("Positional based filtering (--chr, --from/--to)" +
