@@ -34,7 +34,7 @@ __license__ = "GPL3.0"
 #     You should have received a copy of the GNU General Public License
 #     along with MVtest.  If not, see <http://www.gnu.org/licenses/>.
 
-
+msolve_max_iteration = 25000
 def MeanVarEstEQ(y, x, covariates, tol=1e-8):
     """Perform the mean var calculation using estimated equestions
 
@@ -146,7 +146,7 @@ def MeanVarEstEQ(y, x, covariates, tol=1e-8):
                 tmp = Phi(theta_new)
                 solution_found = True
             else:
-                if mvsolve_iterations > 25000:
+                if mvsolve_iterations > msolve_max_iteration:
                     #print >> sys.stderr, mvsolve_iterations, "failures"
                     raise UnsolvedLocus("")
 
@@ -194,13 +194,10 @@ def MeanVarEstEQ(y, x, covariates, tol=1e-8):
     B = MVcalcB(mod.theta)
     V = ainv.dot(B).dot(ainv.transpose())
 
-
-
     # Focus on the two parameters of interest
     theta2 = numpy.array([mod.theta[1], mod.theta[pcount+1]])
     V2 = V[1:beta_count:pcount,1:beta_count:pcount]
     pvalt = 1 - scipy.stats.chi2.cdf(theta2.dot(scipy.linalg.inv(V2)).dot(theta2) * N, 2)
-
 
     ## From Chun's updated code:
     theta= mod.theta

@@ -325,10 +325,12 @@ differences, so please consider the list above carefully.
         parser.add_argument("--verbose", action='store_true', help="Output additional data details")
         parser.add_argument("--debug", action='store_true', help='Output debugging info to a debug file')
         parser.add_argument("--log", type=str, default='mvtest', help='Filename for info log (optional debug output)')
+        
+        parser.add_argument('--mv-max-iter', type=int, default=25000, help='Max number of iterations for a given theta during the mean var calculation')
         parser.set_defaults(all_pheno=False, sex=False, mach_chrpos=False, debug=False)
         args = parser.parse_args(args)
 
-
+        meanvar.mv_esteq.msolve_max_iteration = args.mv_max_iter
         log_filename = "%s-%s.log" % (args.log, datetime.datetime.now().strftime("%Y-%m-%d"))
         # Report version, if requested, and exit
         if args.v:
@@ -614,6 +616,7 @@ differences, so please consider the list above carefully.
 
         log = logging.getLogger('mvtest::ReportConfiguration')
         log.info(BuildReportLine("MVTEST", __version__))
+        log.info(BuildReportLine("MAX-ITER", meanvar.mv_esteq.msolve_max_iteration))
 
         log.info(BuildReportLine("MIN MAF", DataParser.min_maf))
         log.info(BuildReportLine("MAX MAF", DataParser.max_maf))
