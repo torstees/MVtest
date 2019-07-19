@@ -325,6 +325,7 @@ differences, so please consider the list above carefully.
         parser.add_argument("--verbose", action='store_true', help="Output additional data details")
         parser.add_argument("--debug", action='store_true', help='Output debugging info to a debug file')
         parser.add_argument("--log", type=str, default='mvtest', help='Filename for info log (optional debug output)')
+        parser.add_argument("--out", type=str, default=None, help='Filename for result file (stdout if not provided)')
         
         parser.add_argument('--mv-max-iter', type=int, default=25000, help='Max number of iterations for a given theta during the mean var calculation')
         parser.set_defaults(all_pheno=False, sex=False, mach_chrpos=False, debug=False)
@@ -337,6 +338,11 @@ differences, so please consider the list above carefully.
             print >> sys.stderr, "%s: %s" % (os.path.basename(__file__), __version__)
             sys.exit(0)
 
+        args.report = sys.stdout
+        if args.out is not None:
+            args.report = open(args.out)
+        
+            
         if args.vall:
             print >> sys.stderr, "%s: %s" % (os.path.basename(__file__), __version__)
             print >> sys.stderr, "%s: %s" % (os.path.dirname(libgwas.__file__), libgwas.__version__)
@@ -553,7 +559,7 @@ differences, so please consider the list above carefully.
         if args.covar:
             pheno_covar.load_covarfile(args.covar, args.covar_numbers.split(","), args.covar_names.split(","))
         pheno_covar.do_standardize_variables = True
-        return dataset, pheno_covar
+        return dataset, pheno_covar, args
 
     def ParseImputeFile(self, filename, offset=-1, count=-1):
         chroms = []
@@ -617,6 +623,8 @@ differences, so please consider the list above carefully.
         log = logging.getLogger('mvtest::ReportConfiguration')
         log.info(BuildReportLine("MVTEST", __version__))
         log.info(BuildReportLine("MAX-ITER", meanvar.mv_esteq.msolve_max_iteration))
+        if args.out is not None:
+            log.info(BuildReportLine("RRESULTS", args.out))
 
         log.info(BuildReportLine("MIN MAF", DataParser.min_maf))
         log.info(BuildReportLine("MAX MAF", DataParser.max_maf))
@@ -652,7 +660,7 @@ def main(args=sys.argv[1:], print_cfg=False):
     """Entry point for actual script. """
     try:
         app = MVTestApplication()
-        dataset, vars = app.LoadCmdLine(args)
+        dataset, vars, args = app.LoadCmdLine(args)
         if print_cfg:
             app.ReportConfiguration(args=args, dataset=dataset)
 
@@ -661,9 +669,9 @@ def main(args=sys.argv[1:], print_cfg=False):
         anl_fn = mv_esteq.RunAnalysis
         for result in anl_fn(dataset, vars):
             if not printed_header:
-                result.print_header(verbose=app.verbose)
+                result.print_header(f=args.report, verbose=app.verbose)
                 printed_header = True
-            result.print_result(verbose=app.verbose)
+            result.print_result(f=args.report, verbose=app.verbose)
 
     except ReportableException, e:
         print >> sys.stderr, e.msg
