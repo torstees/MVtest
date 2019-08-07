@@ -15,6 +15,7 @@ from libgwas.exceptions import InvalidFrequency
 import libgwas.pheno_covar
 from libgwas.standardizer import get_standardizer
 import logging
+import libgwas
 
 logger = logging.getLogger('mv_esteq::MeanVarEstEQ')
 __copyright__ = "Copyright (C) 2015 Todd Edwards, Chun Li and Eric Torstenson"
@@ -149,7 +150,6 @@ def MeanVarEstEQ(y, x, covariates, tol=1e-8):
                 if mvsolve_iterations > msolve_max_iteration:
                     #print >> sys.stderr, mvsolve_iterations, "failures"
                     raise UnsolvedLocus("")
-
         return MvSolveReturn(theta_new, tmp.dtheta), mvsolve_iterations
 
     def MVcalcB(theta):
@@ -183,6 +183,8 @@ def MeanVarEstEQ(y, x, covariates, tol=1e-8):
             #print type(inst)
             pass
         itr += 1
+        
+    libgwas.timer.report_period("   - %d : %d (%0.4f)" % (total_iterations, itr, i))
 
     if not mod:
         raise UnsolvedLocus("")
@@ -244,6 +246,10 @@ def RunAnalysis(dataset, pheno_covar):
 
     pcount = 2+total_covar_count
 
+    total_loci = 0
+    invalid_freqs = 0
+    unsolvable = 0
+    other_errs = 0
     std = get_standardizer()
 
     for snp in dataset:
@@ -292,7 +298,10 @@ def RunAnalysis(dataset, pheno_covar):
                                 lm=lm,
                                 runtime = st.runtime(),
                 )
-
+                logger.info("\t".join([str(x) for x in [snp.chr,
+                                snp.pos,
+                                snp.rsid,
+                                "Valid FREQ"]]))
                 result.blin = estimates[0:pcount]
                 result.bvar = estimates[pcount:]
                 yield result
@@ -361,3 +370,9 @@ def RunAnalysis(dataset, pheno_covar):
     if len(unsolved)>0:
         print >> sys.stderr, "Total unsolvable loci: ", len(unsolved)
 
+    print "Analysis Completed: "
+    print "Total Loci Analyzed: %d" % (total_loci)
+    print "Invalid Freqs: %d" % (invalid_freqs)
+    print "Unsolvables: %d" % (unsolvable)
+    print "Other Errs: %d" % (other_errs)
+    sys.stdout.flush()

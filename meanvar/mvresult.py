@@ -164,5 +164,5 @@ class MVResult(object):
                 self.stringify(self.beta_stderr[1+var_count]),
                 "%.3e" % self.beta_pvalues[1+var_count],
             ])
-
+            f.flush()
 

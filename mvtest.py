@@ -48,6 +48,7 @@ import libgwas.standardizer
 import meanvar.mvstandardizer
 from libgwas import ExitIf
 
+
 __version__ = meanvar.__version__
 
 ExitIf("mvtest.py requires python 2.7.x  to run", sys.version_info < (2,7))
@@ -226,7 +227,10 @@ class MVTestApplication(object):
     the user's preference and then reports the final settings in use.
 
     """
-
+    
+    def __init__(self):
+        self.timer_log = None
+    
     def LoadCmdLine(self, args=sys.argv[1:]):
         """Parse user arguments using argparse and set up components"""
 
@@ -331,6 +335,9 @@ differences, so please consider the list above carefully.
         parser.set_defaults(all_pheno=False, sex=False, mach_chrpos=False, debug=False)
         args = parser.parse_args(args)
 
+        libgwas.timer = libgwas.Timer("%s-timing.log" % args.log)
+        libgwas.timer.report_total("MVtest- arguments parsed")
+        
         meanvar.mv_esteq.msolve_max_iteration = args.mv_max_iter
         log_filename = "%s-%s.log" % (args.log, datetime.datetime.now().strftime("%Y-%m-%d"))
         # Report version, if requested, and exit
@@ -340,7 +347,7 @@ differences, so please consider the list above carefully.
 
         args.report = sys.stdout
         if args.out is not None:
-            args.report = open(args.out)
+            args.report = open(args.out, 'w')
         
             
         if args.vall:
@@ -429,6 +436,7 @@ differences, so please consider the list above carefully.
 
         pheno_covar = PhenoCovar()
         self.verbose=False
+        libgwas.timer.report_period("Loading Dataset")
         if args.verbose:
             self.verbose = True
         analytic = None
@@ -537,7 +545,8 @@ differences, so please consider the list above carefully.
             parser.print_usage(sys.stderr)
             print >> sys.stderr, "\nNo data has been specified. Users must specify either pedigree or transposed pedigree to continue"
             sys.exit(1)
-
+        libgwas.timer.report_period("Datset Loaded")
+        
         if args.pheno or args.sample_pheno:
             mphenos = []
             if args.mphenos != "":
@@ -555,10 +564,11 @@ differences, so please consider the list above carefully.
                 pheno_filename = args.sample_pheno
                 sample_file = True
             pheno_covar.load_phenofile(pheno_filename, mphenos, nphenos, sample_file)
-
+        libgwas.timer.report_period("Phenotypes Loaded")
         if args.covar:
             pheno_covar.load_covarfile(args.covar, args.covar_numbers.split(","), args.covar_names.split(","))
         pheno_covar.do_standardize_variables = True
+        libgwas.timer.report_period("Covariates Loaded")
         return dataset, pheno_covar, args
 
     def ParseImputeFile(self, filename, offset=-1, count=-1):
@@ -666,8 +676,11 @@ def main(args=sys.argv[1:], print_cfg=False):
 
         printed_header = False
 
+        libgwas.timer.report_period("Beginning Analysis")
+
         anl_fn = mv_esteq.RunAnalysis
         for result in anl_fn(dataset, vars):
+            libgwas.timer.report_period("- %s:%d %s analysis completed" % (result.chr, result.pos, result.rsid))
             if not printed_header:
                 result.print_header(f=args.report, verbose=app.verbose)
                 printed_header = True
