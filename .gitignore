@@ -13,3 +13,5 @@ changelog.header
 index.supp
 # test files
 scratch
+*.bak
+*.swp
