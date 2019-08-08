@@ -6,9 +6,9 @@ import scipy.stats
 import math
 import exceptions
 
-from simple_timer import SimpleTimer
+from .simple_timer import SimpleTimer
 from libgwas.data_parser import DataParser
-from mvresult import MVResult
+from .mvresult import MVResult
 from libgwas.exceptions import UnsolvedLocus
 from libgwas.exceptions import NanInResult
 from libgwas.exceptions import InvalidFrequency
@@ -84,7 +84,7 @@ def MeanVarEstEQ(y, x, covariates, tol=1e-8):
 
         """
         if len(y.shape) != 1:
-            print >> sys.stderr, "You can't pass an array of shape %s to dot_diag" % (y.shape)
+            print("You can't pass an array of shape %s to dot_diag" % (y.shape), file=sys.stderr)
             sys.exit(1)
 
         result = numpy.empty(x.shape)
@@ -173,7 +173,7 @@ def MeanVarEstEQ(y, x, covariates, tol=1e-8):
             mod, iterations = MVsolve(theta)
             total_iterations += iterations
             if i > 0.05:
-                print >> sys.stderr, "Completed: ", total_iterations, itr
+                print("Completed: ", total_iterations, itr, file=sys.stderr)
             break
         except exceptions.ValueError as e:
             pass
@@ -355,7 +355,7 @@ def RunAnalysis(dataset, pheno_covar):
                                 "MAF=%0.4f" % (genodata.maf)]]))
                 unsolved.append(snp)
             except Exception as e:
-                print e
+                print(e)
                 logger.info("\t".join([str(x) for x in [
                                 snp.chr,
                                 snp.pos,
@@ -368,11 +368,11 @@ def RunAnalysis(dataset, pheno_covar):
                                 "Unknown Exception",
                                 "MAF=%0.4f" % (genodata.maf)]]))
     if len(unsolved)>0:
-        print >> sys.stderr, "Total unsolvable loci: ", len(unsolved)
+        print("Total unsolvable loci: ", len(unsolved), file=sys.stderr)
 
-    print "Analysis Completed: "
-    print "Total Loci Analyzed: %d" % (total_loci)
-    print "Invalid Freqs: %d" % (invalid_freqs)
-    print "Unsolvables: %d" % (unsolvable)
-    print "Other Errs: %d" % (other_errs)
+    print("Analysis Completed: ")
+    print("Total Loci Analyzed: %d" % (total_loci))
+    print("Invalid Freqs: %d" % (invalid_freqs))
+    print("Unsolvables: %d" % (unsolvable))
+    print("Other Errs: %d" % (other_errs))
     sys.stdout.flush()

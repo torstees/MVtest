@@ -199,8 +199,8 @@ analytic = None
 def SetAnalytic(anltc):
     global analytic
     if analytic is not None:
-        print >> sys.stderr, "Only one dataset type can be specified at once. "
-        print >> sys.stderr, "Used: %s & %s" % (analytic, anltc)
+        print("Only one dataset type can be specified at once. ", file=sys.stderr)
+        print("Used: %s & %s" % (analytic, anltc), file=sys.stderr)
         sys.exit(1)
 
     analytic = anltc
@@ -342,7 +342,7 @@ differences, so please consider the list above carefully.
         log_filename = "%s-%s.log" % (args.log, datetime.datetime.now().strftime("%Y-%m-%d"))
         # Report version, if requested, and exit
         if args.v:
-            print >> sys.stderr, "%s: %s" % (os.path.basename(__file__), __version__)
+            print("%s: %s" % (os.path.basename(__file__), __version__), file=sys.stderr)
             sys.exit(0)
 
         args.report = sys.stdout
@@ -351,10 +351,10 @@ differences, so please consider the list above carefully.
         
             
         if args.vall:
-            print >> sys.stderr, "%s: %s" % (os.path.basename(__file__), __version__)
-            print >> sys.stderr, "%s: %s" % (os.path.dirname(libgwas.__file__), libgwas.__version__)
-            print >> sys.stderr, "%s: %s" % (os.path.dirname(scipy.__file__), scipy.__version__)
-            print >> sys.stderr, "%s: %s" % (os.path.dirname(numpy.__file__), numpy.__version__)
+            print("%s: %s" % (os.path.basename(__file__), __version__), file=sys.stderr)
+            print("%s: %s" % (os.path.dirname(libgwas.__file__), libgwas.__version__), file=sys.stderr)
+            print("%s: %s" % (os.path.dirname(scipy.__file__), scipy.__version__), file=sys.stderr)
+            print("%s: %s" % (os.path.dirname(numpy.__file__), numpy.__version__), file=sys.stderr)
             sys.exit(0)
 
         log_format = "%(levelname)s\t%(name)s\t%(message)s"
@@ -385,18 +385,18 @@ differences, so please consider the list above carefully.
             b = BoundaryCheck(bp=(args.from_bp, args.to_bp),
                       kb=(args.from_kb, args.to_kb),
                       mb=(args.from_mb, args.to_mb))
-        except InvalidBoundarySpec, e:
-            print >> sys.stderr, "Invalid boundary spec associated: %s" % (e.malformed_boundary)
+        except InvalidBoundarySpec as e:
+            print("Invalid boundary spec associated: %s" % (e.malformed_boundary), file=sys.stderr)
             sys.exit(1)
         try:
             s = SnpBoundaryCheck(snps=snps)
-        except InvalidBoundarySpec, e:
-            print >> sys.stderr, "Invalid SNP boundary defined: %s" % (e.malformed_boundary)
-            print >> sys.stderr, "SNPs must be either single or have be a range such as rs123-rs345"
+        except InvalidBoundarySpec as e:
+            print("Invalid SNP boundary defined: %s" % (e.malformed_boundary), file=sys.stderr)
+            print("SNPs must be either single or have be a range such as rs123-rs345", file=sys.stderr)
             sys.exit(1)
 
         if (b.valid and len(b.bounds) > 0) and s.valid:
-            print >> sys.stderr, "Only one type of boundary conditions is permitted. Either use --from-bp, etc. or rs123-rs345. "
+            print("Only one type of boundary conditions is permitted. Either use --from-bp, etc. or rs123-rs345. ", file=sys.stderr)
             sys.exit(1)
 
         if len(b.bounds) > 0 and not b.valid:
@@ -442,7 +442,7 @@ differences, so please consider the list above carefully.
         analytic = None
         if args.file != None or args.ped or args.map:
             if args.ped and not args.map or args.map  and not args.ped:
-                print >> sys.stderr, "When analyzing pedigree data, both .map and .ped must be specified"
+                print("When analyzing pedigree data, both .map and .ped must be specified", file=sys.stderr)
                 sys.exit(1)
             if args.ped:
                 dataset = pedigree_parser.Parser(args.map.name, args.ped.name)
@@ -454,7 +454,7 @@ differences, so please consider the list above carefully.
             dataset.load_genotypes(pheno_covar)
         elif args.tfile != None or args.tped or args.tfam:
             if args.tped and not args.tfam or args.tfam and not args.tped:
-                print >> sys.stderr, "When analyzing transposed pedigree data, both .tfam and .tped must be specified"
+                print("When analyzing transposed pedigree data, both .tfam and .tped must be specified", file=sys.stderr)
                 sys.exit(1)
             if args.tped:
                 dataset = transposed_pedigree_parser.Parser(args.tfam.name, args.tped.name)
@@ -471,7 +471,7 @@ differences, so please consider the list above carefully.
             dataset.load_genotypes()
         elif args.bed or args.bim or args.fam:
             if (args.bed and not args.fam or not args.bim) or (args.bim and not args.bed or not args.fam) or (args.fam and not args.bed or not args.bim):
-                print >> sys.stderr, "When analyzing binary pedigree data, .bed, .bim and .fam files must be provided"
+                print("When analyzing binary pedigree data, .bed, .bim and .fam files must be provided", file=sys.stderr)
                 sys.exit(1)
             dataset = bed_parser.Parser(args.fam, args.bim, args.bed)
             SetAnalytic('Binary Pedigree')
@@ -482,13 +482,13 @@ differences, so please consider the list above carefully.
             DataParser.compressed_pedigree = not args.impute_uncompressed
 
             if (args.impute_offset > 0 and args.impute_count == -1) or (args.impute_offset == -1 and args.impute_count > 0):
-                print >> sys.stderr, "--impute-count and --impute_offset must both > 0 if one is set other than -1.  "
+                print("--impute-count and --impute_offset must both > 0 if one is set other than -1.  ", file=sys.stderr)
                 sys.exit(1)
             if DataParser.snp_miss_tol != 1.0:
-                print >> sys.stderr, "--geno does not have any impact on imputed data"
+                print("--geno does not have any impact on imputed data", file=sys.stderr)
                 sys.exit(1)
             if DataParser.ind_miss_tol != 1.0:
-                print >> sys.stderr, "--mind does not have any impact on imputed data"
+                print("--mind does not have any impact on imputed data", file=sys.stderr)
                 sys.exit(1)
             impute_parser.SetEncoding(args.impute_encoding)
             impute_parser.Parser.info_ext = args.impute_info_ext
@@ -515,13 +515,13 @@ differences, so please consider the list above carefully.
         elif args.mach:
             DataParser.compressed_pedigree = not args.mach_uncompressed
             if (args.mach_offset > 0 and args.mach_count == -1) or (args.mach_offset == -1 and args.impute_count > 0):
-                print >> sys.stderr, "--mach-count and --mach_offset must both be > 0 if one is set other than -1. "
+                print("--mach-count and --mach_offset must both be > 0 if one is set other than -1. ", file=sys.stderr)
                 sys.exit(1)
             if DataParser.snp_miss_tol != 1.0:
-                print >> sys.stderr, "--geno does not have any impact on imputed data"
+                print("--geno does not have any impact on imputed data", file=sys.stderr)
                 sys.exit(1)
             if DataParser.ind_miss_tol != 1.0:
-                print >> sys.stderr, "--mind does not have any impact on imputed data"
+                print("--mind does not have any impact on imputed data", file=sys.stderr)
                 sys.exit(1)
             if BoundaryCheck.chrom != "NA" and not args.mach_chrpos:
                 libgwas.Exit(("Positional based filtering (--chr, --from/--to)" +
@@ -543,7 +543,7 @@ differences, so please consider the list above carefully.
             dataset.load_genotypes()
         else:
             parser.print_usage(sys.stderr)
-            print >> sys.stderr, "\nNo data has been specified. Users must specify either pedigree or transposed pedigree to continue"
+            print("\nNo data has been specified. Users must specify either pedigree or transposed pedigree to continue", file=sys.stderr)
             sys.exit(1)
         libgwas.timer.report_period("Datset Loaded")
         
@@ -580,9 +580,9 @@ differences, so please consider the list above carefully.
             words = line.split()
 
             if len(words) < 2:
-                print >> sys.stderr, "The impute file has too few columns! It should have the following information at a minimum:"
-                print >> sys.stderr, "chr & imputed_datafile with an optional .info file if the info files aren't named such that"
-                print >> sys.stderr, "they are easy for mvtest to find."
+                print("The impute file has too few columns! It should have the following information at a minimum:", file=sys.stderr)
+                print("chr & imputed_datafile with an optional .info file if the info files aren't named such that", file=sys.stderr)
+                print("they are easy for mvtest to find.", file=sys.stderr)
                 sys.exit(1)
 
             chroms.append(int(words[0]))
@@ -607,9 +607,9 @@ differences, so please consider the list above carefully.
             words = line.split()
 
             if len(words) < 1:
-                print >> sys.stderr, "The Mach file has too few columns! It should have the following information at a minimum:"
-                print >> sys.stderr, "imputed_datafile with an optional .info file if the info files aren't named such that"
-                print >> sys.stderr, "they are easy for mvtest to find."
+                print("The Mach file has too few columns! It should have the following information at a minimum:", file=sys.stderr)
+                print("imputed_datafile with an optional .info file if the info files aren't named such that", file=sys.stderr)
+                print("they are easy for mvtest to find.", file=sys.stderr)
                 sys.exit(1)
 
             archives.append(words[0])
@@ -686,8 +686,8 @@ def main(args=sys.argv[1:], print_cfg=False):
                 printed_header = True
             result.print_result(f=args.report, verbose=app.verbose)
 
-    except ReportableException, e:
-        print >> sys.stderr, e.msg
+    except ReportableException as e:
+        print(e.msg, file=sys.stderr)
 
 
 if __name__ == "__main__":
