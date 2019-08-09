@@ -11,22 +11,23 @@ import numpy
 import os
 import mvtest
 import unittest
-from . import test_analyze_tped
-from . import test_analyze_ped
-from . import test_pedigree_parser as test_pedigree_parser
-from . import test_transped_parser as test_transped_parser
+import test_analyze_tped
+import test_analyze_ped
+import test_pedigree_parser as test_pedigree_parser
+import test_transped_parser as test_transped_parser
 from meanvar import mv_esteq
 from libgwas.boundary import BoundaryCheck
 from libgwas.data_parser  import DataParser
 from libgwas.exceptions import InvalidFrequency
 from libgwas.exceptions import TooMuchMissing
 from libgwas.exceptions import TooMuchMissingpPhenoCovar
+import libgwas
 
 class TestCmdlineTPed(test_analyze_tped.TestBase):
     def testTPedCmdLineFilenames(self):
         cmds = "--tfile %s" % (self.tfam_filename.split(".")[0])
         app = mvtest.MVTestApplication()
-        dataset,vars = app.LoadCmdLine(cmds.split(" "))
+        dataset,vars, args = app.LoadCmdLine(cmds.split(" "))
         self.assertEqual("PhenoCovar", vars.__class__.__name__)
 
         self.assertEqual(self.tfam_filename, dataset.tfam_file)
@@ -38,7 +39,7 @@ class TestCmdlineTPed(test_analyze_tped.TestBase):
         cmds = "--tped %s --tfam %s" % (self.tped_filename, self.tfam_filename)
 
         app = mvtest.MVTestApplication()
-        dataset,vars = app.LoadCmdLine(cmds.split(" "))
+        dataset,vars, args = app.LoadCmdLine(cmds.split(" "))
         self.assertEqual("PhenoCovar", vars.__class__.__name__)
 
         self.assertEqual(self.tfam_filename, dataset.tfam_file)
@@ -52,7 +53,7 @@ class TestCmdlineTPed(test_analyze_tped.TestBase):
         cmds = "--tfile %s --exclude %s" % (self.tfam_filename.split(".")[0], missing)
 
         app = mvtest.MVTestApplication()
-        dataset,vars = app.LoadCmdLine(cmds.split(" "))
+        dataset,vars, args = app.LoadCmdLine(cmds.split(" "))
         self.assertEqual("Parser", dataset.__class__.__name__)
         self.assertEqual("PhenoCovar", vars.__class__.__name__)
 
@@ -65,14 +66,14 @@ class TestCmdlineTPed(test_analyze_tped.TestBase):
         self.assertEqual(6, len(results))
 
     def testTPedCmdLineWithExcludeFile(self):
-        file = open("__exclusions", "w")
-        missing = ["%s:%s" % (i, i) for i in range(0, 500)]
-        file.write("\n".join(["%s %s" % (i, i) for i in range(0, 500)]))
-        file.close()
+        with open("__exclusions", "w") as file:
+            missing = ["%s:%s" % (i, i) for i in range(0, 500)]
+            file.write("\n".join(["%s %s" % (i, i) for i in range(0, 500)]))
+
         cmds = "--tfile %s --remove __exclusions" % (self.tfam_filename.split(".")[0])
 
         app = mvtest.MVTestApplication()
-        dataset,vars = app.LoadCmdLine(cmds.split(" "))
+        dataset,vars, args = app.LoadCmdLine(cmds.split(" "))
         self.assertEqual("PhenoCovar", vars.__class__.__name__)
 
         self.assertEqual(self.tfam_filename, dataset.tfam_file)
@@ -87,7 +88,7 @@ class TestCmdlineTPed(test_analyze_tped.TestBase):
         cmds = "--tfile %s --remove %s" % (self.tfam_filename.split(".")[0], ",".join(missing))
 
         app = mvtest.MVTestApplication()
-        dataset,vars = app.LoadCmdLine(cmds.split(" "))
+        dataset,vars, args = app.LoadCmdLine(cmds.split(" "))
         self.assertEqual("PhenoCovar", vars.__class__.__name__)
 
         self.assertEqual(self.tfam_filename, dataset.tfam_file)
@@ -100,7 +101,7 @@ class TestCmdlineTPed(test_analyze_tped.TestBase):
         cmds = "--tfile %s --chr=1 --from-bp=1000 --to-bp=5000" % (self.tfam_filename.split(".")[0])
 
         app = mvtest.MVTestApplication()
-        dataset,vars = app.LoadCmdLine(cmds.split(" "))
+        dataset,vars, args = app.LoadCmdLine(cmds.split(" "))
         self.assertEqual(BoundaryCheck.chrom, 1)
         results = [x for x in mv_esteq.RunAnalysis(dataset, vars)]
 
@@ -115,7 +116,7 @@ class TestCmdlineTPed(test_analyze_tped.TestBase):
         cmds = "--tfile %s --chr=1 --from-kb=1 --to-kb=6" % (self.tfam_filename.split(".")[0])
 
         app = mvtest.MVTestApplication()
-        dataset,vars = app.LoadCmdLine(cmds.split(" "))
+        dataset,vars, args = app.LoadCmdLine(cmds.split(" "))
         self.assertEqual(BoundaryCheck.chrom, 1)
         results = [x for x in mv_esteq.RunAnalysis(dataset, vars)]
         self.assertEqual(6, len(results))
@@ -130,7 +131,7 @@ class TestCmdlineTPed(test_analyze_tped.TestBase):
         cmds = "--tfile %s --chr=Y --from-kb=1 --to-kb=6" % (self.tfam_filename.split(".")[0])
 
         app = mvtest.MVTestApplication()
-        dataset,vars = app.LoadCmdLine(cmds.split(" "))
+        dataset,vars, args = app.LoadCmdLine(cmds.split(" "))
         self.assertEqual(BoundaryCheck.chrom, 24)
         self.assertEqual(BoundaryCheck.chrom_name, 'Y')
 
@@ -138,7 +139,7 @@ class TestCmdlineTPed(test_analyze_tped.TestBase):
         cmds = "--tfile %s --chr=X --from-kb=1 --to-kb=6" % (self.tfam_filename.split(".")[0])
 
         app = mvtest.MVTestApplication()
-        dataset, vars = app.LoadCmdLine(cmds.split(" "))
+        dataset, vars, args = app.LoadCmdLine(cmds.split(" "))
         self.assertEqual(BoundaryCheck.chrom, 23)
         self.assertEqual(BoundaryCheck.chrom_name, 'X')
 
@@ -146,7 +147,7 @@ class TestCmdlineTPed(test_analyze_tped.TestBase):
         cmds = "--tfile %s --chr=1 --from-mb=1 --to-mb=2" % (self.tfam_filename.split(".")[0])
 
         app = mvtest.MVTestApplication()
-        dataset,vars = app.LoadCmdLine(cmds.split(" "))
+        dataset,vars, args = app.LoadCmdLine(cmds.split(" "))
         self.assertEqual(1000000, DataParser.boundary.bounds[0])
         self.assertEqual(2000000, DataParser.boundary.bounds[1])
 
@@ -154,7 +155,7 @@ class TestCmdlineTPed(test_analyze_tped.TestBase):
         cmds = "--tfile %s --chr=1 --snps=rs2000-rs4000" % (self.tfam_filename.split(".")[0])
 
         app = mvtest.MVTestApplication()
-        dataset,vars = app.LoadCmdLine(cmds.split(" "))
+        dataset,vars, args = app.LoadCmdLine(cmds.split(" "))
         self.assertEqual(BoundaryCheck.chrom, 1)
         results = [x for x in mv_esteq.RunAnalysis(dataset, vars)]
         self.assertEqual(3, len(results))
@@ -166,7 +167,7 @@ class TestCmdlineTPed(test_analyze_tped.TestBase):
         cmds = "--tfile %s --maf=0.3" % (self.tfam_filename.split(".")[0])
 
         app = mvtest.MVTestApplication()
-        dataset,vars = app.LoadCmdLine(cmds.split(" "))
+        dataset,vars, args = app.LoadCmdLine(cmds.split(" "))
         maf = [0.30225, 0.3075, 0.31, 0.3025, 0.30625]
         i=0
         skipped = 0
@@ -189,7 +190,7 @@ class TestCmdlineTPed(test_analyze_tped.TestBase):
         cmds = "--tfile %s --max-maf=0.3" % (self.tfam_filename.split(".")[0])
 
         app = mvtest.MVTestApplication()
-        dataset,vars = app.LoadCmdLine(cmds.split(" "))
+        dataset,vars, args = app.LoadCmdLine(cmds.split(" "))
         maf = [0.29925, 0.28775, 0.295, 0.2975]
         i = 0
         skipped = 0
@@ -213,7 +214,7 @@ class TestCmdlinePed(test_analyze_ped.TestBase):
     def testPedCmdLineFilenames(self):
         cmds = "--file %s" % (self.ped_filename.split(".")[0])
         app = mvtest.MVTestApplication()
-        dataset,vars = app.LoadCmdLine(cmds.split(" "))
+        dataset,vars, args = app.LoadCmdLine(cmds.split(" "))
         self.assertEqual("PhenoCovar", vars.__class__.__name__)
 
         self.assertEqual(self.map_filename, dataset.mapfile)
@@ -224,7 +225,7 @@ class TestCmdlinePed(test_analyze_ped.TestBase):
         cmds = "--file %s --maf=0.3" % (self.ped_filename.split(".")[0])
 
         app = mvtest.MVTestApplication()
-        dataset,vars = app.LoadCmdLine(cmds.split(" "))
+        dataset,vars, args = app.LoadCmdLine(cmds.split(" "))
         maf = [0.30225, 0.3075, 0.31, 0.3025, 0.30625]
         i=0
         skipped=0
@@ -247,7 +248,7 @@ class TestCmdlinePed(test_analyze_ped.TestBase):
         cmds = "--file %s --max-maf=0.3" % (self.ped_filename.split(".")[0])
 
         app = mvtest.MVTestApplication()
-        dataset,vars = app.LoadCmdLine(cmds.split(" "))
+        dataset,vars, args = app.LoadCmdLine(cmds.split(" "))
         maf = [0.29925, 0.28775, 0.295, 0.2975]
         i=0
         skipped=0
@@ -272,7 +273,7 @@ class TestCmdLineSimplePed(test_pedigree_parser.TestBase):
         cmds = "--ped %s --map %s --mind=0.5" % (self.ped_filename_missing, self.map_filename)
 
         app = mvtest.MVTestApplication()
-        dataset,vars = app.LoadCmdLine(cmds.split(" "))
+        dataset,vars, args = app.LoadCmdLine(cmds.split(" "))
 
         genotypes = [
             [ 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
@@ -284,7 +285,7 @@ class TestCmdLineSimplePed(test_pedigree_parser.TestBase):
             [ 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0]
         ]
 
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
+        mapdata = libgwas.get_lines(self.map_filename, split=True)
 
         index = 0
         skipped = 0
@@ -310,7 +311,7 @@ class TestCmdLineSimplePed(test_pedigree_parser.TestBase):
         cmds = "--ped %s --map %s --mind=0.10" % (self.ped_filename_missing, self.map_filename)
 
         app = mvtest.MVTestApplication()
-        dataset,vars = app.LoadCmdLine(cmds.split(" "))
+        dataset,vars, args = app.LoadCmdLine(cmds.split(" "))
 
         genotypes = [
             [ 0, 0, 1, 0],
@@ -322,8 +323,8 @@ class TestCmdLineSimplePed(test_pedigree_parser.TestBase):
              [0, 0, 0, 0]
         ]
 
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
-
+        mapdata = libgwas.get_lines(self.map_filename, split=True)
+        
         index = 0
         for snp in dataset:
             snp_filter = numpy.ones(snp.missing_genotypes.shape[0]) == 1
@@ -347,7 +348,7 @@ class TestCmdLineSimplePed(test_pedigree_parser.TestBase):
         cmds = "--ped %s --map %s --geno=0.50" % (self.ped_filename_missing, self.map_filename)
 
         app = mvtest.MVTestApplication()
-        dataset,vars = app.LoadCmdLine(cmds.split(" "))
+        dataset,vars, args = app.LoadCmdLine(cmds.split(" "))
 
         genotypes = [
             [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
@@ -384,7 +385,7 @@ class TestCmdLineSimplePed(test_pedigree_parser.TestBase):
         cmds = "--ped %s --map %s --geno=0.05" % (self.ped_filename_missing, self.map_filename)
 
         app = mvtest.MVTestApplication()
-        dataset,vars = app.LoadCmdLine(cmds.split(" "))
+        dataset,vars, args = app.LoadCmdLine(cmds.split(" "))
 
         genotypes = [
             [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
@@ -413,7 +414,7 @@ class TestCmdLineSimplePed(test_pedigree_parser.TestBase):
         cmds = "--ped %s --map %s --map3 --geno=0.05" % (self.ped_filename_missing, self.map3_filename)
 
         app = mvtest.MVTestApplication()
-        dataset,vars = app.LoadCmdLine(cmds.split(" "))
+        dataset,vars, args = app.LoadCmdLine(cmds.split(" "))
 
         genotypes = [
             [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
@@ -445,7 +446,7 @@ class TestCmdLineSimpleTPed(test_transped_parser.TestBase):
         cmds = "--tped %s --tfam %s --mind=0.5" % (self.miss_tped_filename, self.tfam_filename)
 
         app = mvtest.MVTestApplication()
-        dataset,vars = app.LoadCmdLine(cmds.split(" "))
+        dataset,vars, args = app.LoadCmdLine(cmds.split(" "))
 
         genotypes = [
             [0, 1],
@@ -487,7 +488,7 @@ class TestCmdLineSimpleTPed(test_transped_parser.TestBase):
         cmds = "--tped %s --tfam %s --mind=0.1" % (self.miss_tped_filename, self.tfam_filename)
 
         app = mvtest.MVTestApplication()
-        dataset,vars = app.LoadCmdLine(cmds.split(" "))
+        dataset,vars, args = app.LoadCmdLine(cmds.split(" "))
 
         genotypes = [
             [0, 1],
@@ -531,7 +532,7 @@ class TestCmdLineSimpleTPed(test_transped_parser.TestBase):
         cmds = "--tped %s --tfam %s --geno=0.5" % (self.miss_tped_filename, self.tfam_filename)
 
         app = mvtest.MVTestApplication()
-        dataset,vars = app.LoadCmdLine(cmds.split(" "))
+        dataset,vars, args = app.LoadCmdLine(cmds.split(" "))
 
         genotypes = [
             [1,  1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1],
@@ -568,7 +569,7 @@ class TestCmdLineSimpleTPed(test_transped_parser.TestBase):
         cmds = "--tped %s --tfam %s --geno=0.05" % (self.miss_tped_filename, self.tfam_filename)
 
         app = mvtest.MVTestApplication()
-        dataset,vars = app.LoadCmdLine(cmds.split(" "))
+        dataset,vars, args = app.LoadCmdLine(cmds.split(" "))
 
         genotypes = [
             [1,  1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1]

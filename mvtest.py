@@ -668,6 +668,7 @@ differences, so please consider the list above carefully.
 
 def main(args=sys.argv[1:], print_cfg=False):
     """Entry point for actual script. """
+    
     try:
         app = MVTestApplication()
         dataset, vars, args = app.LoadCmdLine(args)
@@ -689,6 +690,6 @@ def main(args=sys.argv[1:], print_cfg=False):
     except ReportableException as e:
         print(e.msg, file=sys.stderr)
 
-
+    args = None
 if __name__ == "__main__":
     main(print_cfg=True)
