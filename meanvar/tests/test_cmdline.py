@@ -11,10 +11,10 @@ import numpy
 import os
 import mvtest
 import unittest
-import test_analyze_tped
-import test_analyze_ped
-import test_pedigree_parser as test_pedigree_parser
-import test_transped_parser as test_transped_parser
+from meanvar.tests import test_analyze_tped
+from meanvar.tests import test_analyze_ped
+from meanvar.tests import test_pedigree_parser as test_pedigree_parser
+from meanvar.tests import test_transped_parser as test_transped_parser
 from meanvar import mv_esteq
 from libgwas.boundary import BoundaryCheck
 from libgwas.data_parser  import DataParser
