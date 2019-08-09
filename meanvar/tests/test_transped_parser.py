@@ -17,6 +17,8 @@ from libgwas.snp_boundary_check import SnpBoundaryCheck
 from libgwas.exceptions import InvalidFrequency
 from libgwas.exceptions import TooMuchMissing
 from libgwas.exceptions import TooMuchMissingpPhenoCovar
+from libgwas.tests import remove_file
+import libgwas
 
 class TestBase(unittest.TestCase):
     def setUp(self):
@@ -45,7 +47,7 @@ class TestBase(unittest.TestCase):
     def tearDown(self):
 
         for file in self.filenames:
-            os.remove(file)
+            remove_file(file)
         PhenoCovar.sex_as_covariate = self.sex_as_covar
         BoundaryCheck.chrom  = self.chrom
         DataParser.boundary  = self.boundary
@@ -162,8 +164,7 @@ class TestPedFilesTPedIndExclusions(TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
 
-        mapdata = [x.strip().split() for x in open(self.tped_filename).readlines()]
-
+        mapdata = libgwas.get_lines(self.tped_filename, split=True)
         index = 0
         for snp in ped_parser:
             self.assertEqual(int(mapdata[index][0]), snp.chr)
@@ -191,7 +192,7 @@ class TestPedFilesTPedIndExclusions(TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
 
-        mapdata = [x.strip().split() for x in open(self.tped_filename).readlines()]
+        mapdata = libgwas.get_lines(self.tped_filename, split=True)
         index = 4
         for snp in ped_parser:
             self.assertEqual(int(mapdata[index][0]), snp.chr)
@@ -220,7 +221,7 @@ class TestPedFilesTPedIndExclusions(TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
 
-        mapdata = [x.strip().split() for x in open(self.miss_tped_filename).readlines()]
+        mapdata = libgwas.get_lines(self.miss_tped_filename, split=True)
 
 
         index = 0
@@ -240,8 +241,7 @@ class TestPedFilesTPedIndExclusions(TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
 
-        mapdata = [x.strip().split() for x in open(self.miss_tped_filename).readlines()]
-
+        mapdata = libgwas.get_lines(self.miss_tped_filename, split=True)
         genotypes_w_missing = [
             [0, -1, -1, -1, -1, -1, -1, -1, -1, 1],
             [1, 0, 0, 1, 1, 1, 0, 0, 0, 1],
@@ -271,7 +271,7 @@ class TestPedFilesTPed(TestBase):
 
 
         self.assertEqual(12, ped_parser.ind_count)
-        mapdata = [x.strip().split() for x in open(self.tped_filename).readlines()]
+        mapdata = libgwas.get_lines(self.tped_filename, split=True)
 
         index = 0
         for snp in ped_parser:
@@ -293,8 +293,7 @@ class TestPedFilesTPed(TestBase):
         self.assertEqual(12, len(pc.covariate_data[0]))
         self.assertEqual(12, len(pc.phenotype_data[0]))
         self.assertEqual(1, len(pc.phenotype_names))
-        mapdata = [x.strip().split() for x in open(self.tped_filename).readlines()]
-
+        mapdata = libgwas.get_lines(self.tped_filename, split=True)
         index = 0
         self.assertEqual(7, ped_parser.locus_count)
         for snp in ped_parser:
@@ -313,7 +312,7 @@ class TestPedFilesTPed(TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
 
-        mapdata = [x.strip().split() for x in open(self.miss_tped_filename).readlines()]
+        mapdata = libgwas.get_lines(self.miss_tped_filename, split=True)
 
         self.assertEqual(7, ped_parser.locus_count)
 
@@ -334,7 +333,7 @@ class TestPedFilesTPed(TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
 
-        mapdata = [x.strip().split() for x in open(self.miss_tped_filename).readlines()]
+        mapdata = libgwas.get_lines(self.miss_tped_filename, split=True)
         genotypes_w_missing = [
             [0, 1],
             [1,  0, 0, 0, 1, 1, 1, 0, 0, 0, 1],
@@ -383,7 +382,7 @@ class TestPedFilesTPed(TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
 
-        mapdata = [x.strip().split() for x in open(self.miss_tped_filename).readlines()]
+        mapdata = libgwas.get_lines(self.miss_tped_filename, split=True)
 
         genotypes_w_missing = [
             [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0],
@@ -439,7 +438,7 @@ class TestPedFilesTPed(TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
 
-        mapdata = [x.strip().split() for x in open(self.miss_tped_filename).readlines()]
+        mapdata = libgwas.get_lines(self.miss_tped_filename, split=True)
         genotypes_w_missing = [
             [0, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0],
             [1,  0, 0, 0, 1, 1, 1, 0, 0, 0, 1],
@@ -493,7 +492,7 @@ class TestPedFilesTPed(TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
 
-        pedigree = [x.split() for x in open(self.tped_filename).readlines()]
+        pedigree = libgwas.get_lines(self.tped_filename, split=True)
 
         index = 4
         loci = ped_parser.get_loci()
@@ -522,7 +521,7 @@ class TestPedFilesTPed(TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
 
-        pedigree = [x.split() for x in open(self.tped_filename).readlines()]
+        pedigree = libgwas.get_lines(self.tped_filename, split=True)
         index = 0
         loci = ped_parser.get_loci()
         for snp in loci:
@@ -550,7 +549,7 @@ class TestPedFilesTPed(TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
 
-        pedigree = [x.split() for x in open(self.tped_filename).readlines()]
+        pedigree = libgwas.get_lines(self.tped_filename, split=True)
         index = 4
         loci = ped_parser.get_loci()
         for snp in loci:
@@ -579,7 +578,7 @@ class TestPedFilesTPed(TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
 
-        pedigree = [x.split() for x in open(self.tped_filename).readlines()]
+        pedigree = libgwas.get_lines(self.tped_filename, split=True)
         index = 4
         loci = ped_parser.get_loci()
         for snp in loci:
@@ -606,7 +605,7 @@ class TestPedFilesTPed(TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
 
-        pedigree = [x.split() for x in open(self.tped_filename).readlines()]
+        pedigree = libgwas.get_lines(self.tped_filename, split=True)
         index = 4
         loci = ped_parser.get_loci()
         for snp in loci:
@@ -662,7 +661,7 @@ class TestPedFilesTPedVariedColumns(TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
 
-        mapdata = [x.strip().split() for x in open(self.tped_filename).readlines()]
+        mapdata = libgwas.get_lines(self.tped_filename, split=True)
 
         index = 0
         for snp in ped_parser:
@@ -696,7 +695,7 @@ class TestPedFilesTPedVariedColumns(TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
 
-        mapdata = [x.strip().split() for x in open(self.tped_filename).readlines()]
+        mapdata = libgwas.get_lines(self.tped_filename, split=True)
 
         index = 0
         for snp in ped_parser:
@@ -730,7 +729,7 @@ class TestPedFilesTPedVariedColumns(TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
 
-        mapdata = [x.strip().split() for x in open(self.tped_filename).readlines()]
+        mapdata = libgwas.get_lines(self.tped_filename, split=True)
 
         index = 0
         for snp in ped_parser:
@@ -764,7 +763,7 @@ class TestPedFilesTPedVariedColumns(TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
 
-        mapdata = [x.strip().split() for x in open(self.tped_filename).readlines()]
+        mapdata = libgwas.get_lines(self.tped_filename, split=True)
 
         index = 0
         for snp in ped_parser:
@@ -798,7 +797,7 @@ class TestPedFilesTPedVariedColumns(TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
 
-        mapdata = [x.strip().split() for x in open(self.tped_filename).readlines()]
+        mapdata = libgwas.get_lines(self.tped_filename, split=True)
 
         index = 0
         for snp in ped_parser:
@@ -837,8 +836,7 @@ class TestPedFilesTPedVariedColumns(TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
 
-        mapdata = [x.strip().split() for x in open(self.tped_filename).readlines()]
-
+        mapdata = libgwas.get_lines(self.tped_filename, split=True)
         index = 0
         for snp in ped_parser:
             self.assertEqual(int(mapdata[index][0]), snp.chr)
@@ -873,8 +871,7 @@ class TestPedFilesTPedVariedColumns(TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
 
-        mapdata = [x.strip().split() for x in open(self.tped_filename).readlines()]
-
+        mapdata = libgwas.get_lines(self.tped_filename, split=True)
         index = 0
         for snp in ped_parser:
             self.assertEqual(int(mapdata[index][0]), snp.chr)
@@ -892,7 +889,7 @@ class TestTPedFileNegPos(TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
 
-        mapdata = [x.strip().split() for x in open(self.misssnp_tped_filename).readlines()]
+        mapdata = libgwas.get_lines(self.misssnp_tped_filename, split=True)
 
         index = 2
         for snp in ped_parser:
@@ -910,7 +907,7 @@ class TestTPedFileNegPos(TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
 
-        mapdata = [x.strip().split() for x in open(self.misssnp_tped_filename).readlines()]
+        mapdata = libgwas.get_lines(self.misssnp_tped_filename, split=True)
 
         index = 4
         for snp in ped_parser:
@@ -929,7 +926,7 @@ class TestTPedFileNegPos(TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
 
-        mapdata = [x.strip().split() for x in open(self.misssnp_tped_filename).readlines()]
+        mapdata = libgwas.get_lines(self.misssnp_tped_filename, split=True)
 
         index = 2
         for snp in ped_parser:
@@ -949,7 +946,7 @@ class TestTPedFileNegPos(TestBase):
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
 
-        mapdata = [x.strip().split() for x in open(self.misssnp_tped_filename).readlines()]
+        mapdata = libgwas.get_lines(self.misssnp_tped_filename, split=True)
 
         index = 2
         for snp in ped_parser:

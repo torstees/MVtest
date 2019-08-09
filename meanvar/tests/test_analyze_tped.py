@@ -17,6 +17,7 @@ from meanvar import mv_esteq
 import unittest
 import os
 import libgwas.standardizer
+from libgwas.tests import remove_file
 
 class TestBase(unittest.TestCase):
     def setUp(self):
@@ -2049,8 +2050,8 @@ class TestBase(unittest.TestCase):
         libgwas.standardizer.set_standardizer(libgwas.standardizer.NoStandardization)
 
     def tearDown(self):
-        os.remove(self.tfam_filename)
-        os.remove(self.tped_filename)
+        remove_file(self.tfam_filename)
+        remove_file(self.tped_filename)
 
 
         PhenoCovar.sex_as_covariate = self.sex_as_covar

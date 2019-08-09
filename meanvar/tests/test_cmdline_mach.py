@@ -174,6 +174,7 @@ ID0012\tFAM012\t2\t40\t29.21
             idx += 1
         self.mafs[0:10] = mafs/10
         self.dosage_encoding[0:10,:] = numpy.transpose(dosages)
+        info_file.close()
         gen_file.close()
         uncmp_file.close()
         info_file = gzip.open(self.info_file1, 'wt')
@@ -235,6 +236,7 @@ ID0012\tFAM012\t2\t40\t29.21
         self.dosage_encoding[10:,:] = numpy.transpose(dosages)
 
         gen_file.close()
+        uncmp_file.close()
 
         info_file = gzip.open(self.info_file2, 'wt')
         info_cfile = open(self.info_ucmp2, 'w')
@@ -296,12 +298,13 @@ class TestMachCmdLine(TestBase):
         # No exception because we can use chromosomes with chrpos
         dataset,vars, args = app.LoadCmdLine(cmds.split(" "))
 
+
         # You can't use positional boundaries without giving it a chromosome
         cmds ="--mach %s --pheno %s --pheno-names BMI --from-bp 1 --to-bp 10000 --mach-chrpos" % \
                (self.mach_file, self.pheno_covar)
         app = mvtest.MVTestApplication()
         with self.assertRaises(SystemExit) as cm:
-            dataset,vars = app.LoadCmdLine(cmds.split(" "))
+            dataset,vars,args = app.LoadCmdLine(cmds.split(" "))
         self.assertEqual(cm.exception.code, 1)
 
     def testMachCmdLineNoChrPos(self):
@@ -320,7 +323,7 @@ class TestMachCmdLine(TestBase):
         # This is illegal, since we can't use chromosomes along with default
         # MACH
         with self.assertRaises(SystemExit) as cm:
-            dataset,vars = app.LoadCmdLine(cmds.split(" "))
+            dataset,vars,args = app.LoadCmdLine(cmds.split(" "))
         self.assertEqual(cm.exception.code, 1)
 
     def testMachCmdLineMultiplePhenotypes(self):
