@@ -8,13 +8,14 @@ if "DEBUG" in sys.argv:
     sys.path.insert(0, ".")
     sys.argv.remove("DEBUG")
 
-from . import test_pedigree_parser as test_pedigree_parser
+import test_pedigree_parser as test_pedigree_parser
 
 from libgwas.data_parser import DataParser
 from libgwas.pheno_covar import PhenoCovar
 
 import mvtest
 import unittest
+import libgwas
 
 class TestCmdlineVariedColumns(test_pedigree_parser.TestBase):
     def setUp(self):
@@ -52,9 +53,9 @@ class TestCmdlineVariedColumns(test_pedigree_parser.TestBase):
         f.close()
         cmds = "--file %s --no-sex" % (self.ped_filename.split(".")[0])
         app = mvtest.MVTestApplication()
-        ped_parser,pc = app.LoadCmdLine(cmds.split(" "))
+        ped_parser,pc, args = app.LoadCmdLine(cmds.split(" "))
 
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
+        mapdata = libgwas.get_lines(self.map_filename, split=True)
 
         index = 0
         for snp in ped_parser:
@@ -83,10 +84,9 @@ class TestCmdlineVariedColumns(test_pedigree_parser.TestBase):
         f.close()
         cmds = "--file %s --liability" % (self.ped_filename.split(".")[0])
         app = mvtest.MVTestApplication()
-        ped_parser,pc = app.LoadCmdLine(cmds.split(" "))
-
-
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
+        ped_parser,pc, args = app.LoadCmdLine(cmds.split(" "))
+    
+        mapdata = libgwas.get_lines(self.map_filename, split=True)
 
         index = 0
         for snp in ped_parser:
@@ -115,10 +115,10 @@ class TestCmdlineVariedColumns(test_pedigree_parser.TestBase):
         f.close()
         cmds = "--file %s --no-parents" % (self.ped_filename.split(".")[0])
         app = mvtest.MVTestApplication()
-        ped_parser,pc = app.LoadCmdLine(cmds.split(" "))
+        ped_parser,pc,args = app.LoadCmdLine(cmds.split(" "))
 
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
-
+        mapdata = libgwas.get_lines(self.map_filename, split=True)
+        
         index = 0
         for snp in ped_parser:
             self.assertEqual(int(mapdata[index][0]), snp.chr)
@@ -147,10 +147,9 @@ class TestCmdlineVariedColumns(test_pedigree_parser.TestBase):
 
         cmds = "--file %s --sex --no-pheno" % (self.ped_filename.split(".")[0])
         app = mvtest.MVTestApplication()
-        ped_parser,pc = app.LoadCmdLine(cmds.split(" "))
+        ped_parser,pc, args = app.LoadCmdLine(cmds.split(" "))
 
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
-
+        mapdata = libgwas.get_lines(self.map_filename, split=True)
         index = 0
         for snp in ped_parser:
             self.assertEqual(int(mapdata[index][0]), snp.chr)
@@ -177,9 +176,9 @@ class TestCmdlineVariedColumns(test_pedigree_parser.TestBase):
         f.close()
         cmds = "--file %s --no-fid --no-pheno" % (self.ped_filename.split(".")[0])
         app = mvtest.MVTestApplication()
-        ped_parser,pc = app.LoadCmdLine(cmds.split(" "))
+        ped_parser,pc,args = app.LoadCmdLine(cmds.split(" "))
 
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
+        mapdata = libgwas.get_lines(self.map_filename, split=True)
 
         index = 0
         for snp in ped_parser:
@@ -209,10 +208,10 @@ class TestCmdlineVariedColumns(test_pedigree_parser.TestBase):
         f.close()
         cmds = "--file %s --no-fid" % (self.ped_filename.split(".")[0])
         app = mvtest.MVTestApplication()
-        ped_parser,pc = app.LoadCmdLine(cmds.split(" "))
+        ped_parser,pc,args = app.LoadCmdLine(cmds.split(" "))
 
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
-
+        mapdata = libgwas.get_lines(self.map_filename, split=True)
+        
         index = 0
         for snp in ped_parser:
             self.assertEqual(int(mapdata[index][0]), snp.chr)
@@ -240,10 +239,10 @@ class TestCmdlineVariedColumns(test_pedigree_parser.TestBase):
         f.close()
         cmds = "--file %s --no-parents --no-fid --no-sex" % (self.ped_filename.split(".")[0])
         app = mvtest.MVTestApplication()
-        ped_parser,pc = app.LoadCmdLine(cmds.split(" "))
+        ped_parser,pc,args = app.LoadCmdLine(cmds.split(" "))
 
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
-
+        mapdata = libgwas.get_lines(self.map_filename, split=True)
+        
         index = 0
         for snp in ped_parser:
             self.assertEqual(int(mapdata[index][0]), snp.chr)
