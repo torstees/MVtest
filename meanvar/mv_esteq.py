@@ -4,7 +4,6 @@ import numpy
 import scipy
 import scipy.stats
 import math
-import exceptions
 
 from .simple_timer import SimpleTimer
 from libgwas.data_parser import DataParser
@@ -175,7 +174,7 @@ def MeanVarEstEQ(y, x, covariates, tol=1e-8):
             if i > 0.05:
                 print("Completed: ", total_iterations, itr, file=sys.stderr)
             break
-        except exceptions.ValueError as e:
+        except ValueError as e:
             pass
         except numpy.linalg.linalg.LinAlgError as e:
             pass
