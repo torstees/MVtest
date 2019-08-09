@@ -50,13 +50,15 @@ def MeanVarEstEQ(y, x, covariates, tol=1e-8):
     X = numpy.ones((N, pcount))
     X[:, 1] = x
 
-    aprime = [1, 0]
+    aprime = [1.0, 0.0]
     idx = 2
     for cov in covariates:
         aprime.append(-numpy.mean(cov)/numpy.std(cov))
         X[:, idx] = cov
         idx += 1
-    aprime = numpy.matrix(aprime)
+    #aprime = numpy.matrix(aprime)
+    # This was changed based on the fact that matrix will soon be deprecated
+    aprime = numpy.array(aprime, dtype=float)
 
     # http://stackoverflow.com/questions/7267226/range-for-floats
     def frange(x, y, jump):
