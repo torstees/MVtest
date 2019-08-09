@@ -35,12 +35,12 @@ from libgwas.snp_boundary_check import SnpBoundaryCheck
 from libgwas.exceptions import InvalidBoundarySpec
 from libgwas.pheno_covar import PhenoCovar, PhenoIdFormat
 from libgwas.exceptions import ReportableException
-import libgwas.pedigree_parser as pedigree_parser
-import libgwas.transposed_pedigree_parser as transposed_pedigree_parser
-import libgwas.bed_parser as bed_parser
-import libgwas.bgen_parser as bgen_parser
-import libgwas.vcf_parser as vcf_parser
-import meanvar.mv_esteq as mv_esteq
+import libgwas.pedigree_parser
+import libgwas.transposed_pedigree_parser
+import libgwas.bed_parser
+import libgwas.bgen_parser
+import libgwas.vcf_parser
+import meanvar.mv_esteq
 from libgwas import BuildReportLine
 from libgwas import impute_parser
 from libgwas import mach_parser
@@ -208,13 +208,13 @@ def SetAnalytic(anltc):
 def ParseIndList(ids):
     id_list = []
     if os.path.isfile(ids):
-        file = open(ids)
-        for line in file:
-            words = line.strip().split()
-            ExitIf("%s:%s Individual file lists must contain " % (line.strip(), len(words)) +
-                   "(exactly 2 columns (first two from ped columns)", len(words) != 2 )
+        with open(ids) as file:
+            for line in file:
+                words = line.strip().split()
+                ExitIf("%s:%s Individual file lists must contain " % (line.strip(), len(words)) +
+                       "(exactly 2 columns (first two from ped columns)", len(words) != 2 )
 
-            id_list.append(":".join(words[0:2]))
+                id_list.append(":".join(words[0:2]))
     else:
         id_list = ids.split(",")
 
@@ -230,6 +230,17 @@ class MVTestApplication(object):
     
     def __init__(self):
         self.timer_log = None
+        self.args = None
+        
+    def __del__(self):
+        self.close_files()        
+    
+    def close_files(self):
+        if self.args is not None:
+            libgwas.close_file(self.args.pheno)
+            libgwas.close_file(self.args.covar)
+            libgwas.close_file(self.args.mach)
+                
     
     def LoadCmdLine(self, args=sys.argv[1:]):
         """Parse user arguments using argparse and set up components"""
@@ -334,6 +345,7 @@ differences, so please consider the list above carefully.
         parser.add_argument('--mv-max-iter', type=int, default=25000, help='Max number of iterations for a given theta during the mean var calculation')
         parser.set_defaults(all_pheno=False, sex=False, mach_chrpos=False, debug=False)
         args = parser.parse_args(args)
+        self.args = args
 
         libgwas.timer = libgwas.Timer("%s-timing.log" % args.log)
         libgwas.timer.report_total("MVtest- arguments parsed")
@@ -343,6 +355,7 @@ differences, so please consider the list above carefully.
         # Report version, if requested, and exit
         if args.v:
             print("%s: %s" % (os.path.basename(__file__), __version__), file=sys.stderr)
+            self.close_files()
             sys.exit(0)
 
         args.report = sys.stdout
@@ -445,9 +458,11 @@ differences, so please consider the list above carefully.
                 print("When analyzing pedigree data, both .map and .ped must be specified", file=sys.stderr)
                 sys.exit(1)
             if args.ped:
-                dataset = pedigree_parser.Parser(args.map.name, args.ped.name)
+                dataset = libgwas.pedigree_parser.Parser(args.map.name, args.ped.name)
+                args.map.close()
+                args.ped.close()
             else:
-                dataset = pedigree_parser.Parser("%s.map" % (args.file), "%s.ped" % (args.file))
+                dataset = libgwas.pedigree_parser.Parser("%s.map" % (args.file), "%s.ped" % (args.file))
 
             SetAnalytic('Pedigree')
             dataset.load_mapfile(map3=args.map3)
@@ -457,14 +472,16 @@ differences, so please consider the list above carefully.
                 print("When analyzing transposed pedigree data, both .tfam and .tped must be specified", file=sys.stderr)
                 sys.exit(1)
             if args.tped:
-                dataset = transposed_pedigree_parser.Parser(args.tfam.name, args.tped.name)
+                dataset = libgwas.transposed_pedigree_parser.Parser(args.tfam.name, args.tped.name)
+                args.tfam.close()
+                args.tped.close()
             else:
-                dataset = transposed_pedigree_parser.Parser("%s.tfam" % (args.tfile), "%s.tped" % (args.tfile))
+                dataset = libgwas.transposed_pedigree_parser.Parser("%s.tfam" % (args.tfile), "%s.tped" % (args.tfile))
             SetAnalytic('Transposed Pedigree')
             dataset.load_tfam(pheno_covar)
             dataset.load_genotypes()
         elif args.bfile != None:
-            dataset = bed_parser.Parser("%s.fam" % (args.bfile), "%s.bim" % (args.bfile), "%s.bed" % (args.bfile))
+            dataset = libgwas.bed_parser.Parser("%s.fam" % (args.bfile), "%s.bim" % (args.bfile), "%s.bed" % (args.bfile))
             SetAnalytic('Binary Pedigree')
             dataset.load_bim(map3=args.map3)
             dataset.load_fam(pheno_covar)
@@ -473,7 +490,7 @@ differences, so please consider the list above carefully.
             if (args.bed and not args.fam or not args.bim) or (args.bim and not args.bed or not args.fam) or (args.fam and not args.bed or not args.bim):
                 print("When analyzing binary pedigree data, .bed, .bim and .fam files must be provided", file=sys.stderr)
                 sys.exit(1)
-            dataset = bed_parser.Parser(args.fam, args.bim, args.bed)
+            dataset = libgwas.bed_parser.Parser(args.fam, args.bim, args.bed)
             SetAnalytic('Binary Pedigree')
             dataset.load_bim(map3=args.map3)
             dataset.load_fam(pheno_covar)
@@ -499,6 +516,8 @@ differences, so please consider the list above carefully.
             SetAnalytic('Imputed Gen File')
             dataset.load_family_details(pheno_covar)
             dataset.load_genotypes()
+            args.impute.close()
+            args.impute_fam.close()
         elif args.bgen:
             # For now, only additive support is supported
             sample_filename = None
@@ -512,6 +531,7 @@ differences, so please consider the list above carefully.
             SetAnalytic('BGen')
             dataset.load_family_details(pheno_covar)
             dataset.load_genotypes()
+            args.bgen.close()
         elif args.mach:
             DataParser.compressed_pedigree = not args.mach_uncompressed
             if (args.mach_offset > 0 and args.mach_count == -1) or (args.mach_offset == -1 and args.impute_count > 0):
@@ -536,11 +556,13 @@ differences, so please consider the list above carefully.
             SetAnalytic('Mach')
             dataset.load_family_details(pheno_covar)
             dataset.load_genotypes()
+            args.mach.close()
         elif args.vcf:
             dataset = vcf_parser.Parser(args.vcf.name, args.vcf_field)
             SetAnalytic('VCF')
             dataset.load_family_details(pheno_covar)
             dataset.load_genotypes()
+            args.vcf.close()
         else:
             parser.print_usage(sys.stderr)
             print("\nNo data has been specified. Users must specify either pedigree or transposed pedigree to continue", file=sys.stderr)
@@ -569,6 +591,8 @@ differences, so please consider the list above carefully.
             pheno_covar.load_covarfile(args.covar, args.covar_numbers.split(","), args.covar_names.split(","))
         pheno_covar.do_standardize_variables = True
         libgwas.timer.report_period("Covariates Loaded")
+        
+        self.args = args
         return dataset, pheno_covar, args
 
     def ParseImputeFile(self, filename, offset=-1, count=-1):
@@ -603,18 +627,19 @@ differences, so please consider the list above carefully.
         archives = []
         infos = []
 
-        for line in open(filename):
-            words = line.split()
+        with open(filename) as f:
+            for line in f:
+                words = line.split()
 
-            if len(words) < 1:
-                print("The Mach file has too few columns! It should have the following information at a minimum:", file=sys.stderr)
-                print("imputed_datafile with an optional .info file if the info files aren't named such that", file=sys.stderr)
-                print("they are easy for mvtest to find.", file=sys.stderr)
-                sys.exit(1)
+                if len(words) < 1:
+                    print("The Mach file has too few columns! It should have the following information at a minimum:", file=sys.stderr)
+                    print("imputed_datafile with an optional .info file if the info files aren't named such that", file=sys.stderr)
+                    print("they are easy for mvtest to find.", file=sys.stderr)
+                    sys.exit(1)
 
-            archives.append(words[0])
-            if len(words) > 2:
-                infos.append(words[1])
+                archives.append(words[0])
+                if len(words) > 2:
+                    infos.append(words[1])
         if offset >= 0 and count > 0:
             offset -= 1
             archives = archives[offset:offset+count]
@@ -690,6 +715,7 @@ def main(args=sys.argv[1:], print_cfg=False):
     except ReportableException as e:
         print(e.msg, file=sys.stderr)
 
-    args = None
+
+    libgwas.timer.close()
 if __name__ == "__main__":
     main(print_cfg=True)
