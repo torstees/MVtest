@@ -13,6 +13,7 @@ import mvtest
 import unittest
 from libgwas.boundary import BoundaryCheck
 from libgwas.pheno_covar import PhenoCovar
+import libgwas
 
 class TestCmdlinePhenoCovar(unittest.TestCase):
     def setUp(self):
@@ -92,9 +93,9 @@ class TestCmdlinePhenoCovar(unittest.TestCase):
     def testCmdLinePhenoWithNames(self):
         cmds = "--file %s --pheno %s --pheno-names=BMI --covar %s --covar-names SEX,AGE" % (self.ped_filename.split(".")[0], self.pheno_covar, self.pheno_covar)
         app = mvtest.MVTestApplication()
-        ped_parser,pc = app.LoadCmdLine(cmds.split(" "))
+        ped_parser,pc, args = app.LoadCmdLine(cmds.split(" "))
 
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
+        mapdata = libgwas.get_lines(self.map_filename, split=True)
 
         c = pc.covariate_data
         y = pc.phenotype_data
@@ -112,10 +113,10 @@ class TestCmdlinePhenoCovar(unittest.TestCase):
     def testCmdLinePhenoWithIndices(self):
         cmds = "--file %s --pheno %s --mphenos=3 --covar %s --covar-numbers 1,2" % (self.ped_filename.split(".")[0], self.pheno_covar, self.pheno_covar)
         app = mvtest.MVTestApplication()
-        ped_parser,pc = app.LoadCmdLine(cmds.split(" "))
+        ped_parser,pc, args = app.LoadCmdLine(cmds.split(" "))
 
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
-
+        mapdata = libgwas.get_lines(self.map_filename, split=True)
+        
         c = pc.covariate_data
         y = pc.phenotype_data
 
@@ -131,10 +132,9 @@ class TestCmdlinePhenoCovar(unittest.TestCase):
     def testCmdLineNoExternalVars(self):
         cmds = "--file %s --sex" % (self.ped_filename.split(".")[0])
         app = mvtest.MVTestApplication()
-        ped_parser,pc = app.LoadCmdLine(cmds.split(" "))
+        ped_parser,pc, args = app.LoadCmdLine(cmds.split(" "))
 
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
-
+        mapdata = libgwas.get_lines(self.map_filename, split=True)
         c = pc.covariate_data
         y = pc.phenotype_data
 
