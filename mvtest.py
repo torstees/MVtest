@@ -247,6 +247,7 @@ class MVTestApplication(object):
 
         global analytic
         analytic = None
+        libgwas.timer.report_period("Parsing Arguments")
         parser = argparse.ArgumentParser(description="MV Test: " + __version__, epilog="""
 mvtest.py is uses many of the same arguments as plink, but there are a few
 differences, so please consider the list above carefully.
@@ -347,7 +348,7 @@ differences, so please consider the list above carefully.
         args = parser.parse_args(args)
         self.args = args
 
-        libgwas.timer = libgwas.Timer("%s-timing.log" % args.log)
+        libgwas.timer.open("%s-timing.log" % args.log, "opening log file: %s-timing.log" % args.log)
         libgwas.timer.report_total("MVtest- arguments parsed")
         
         meanvar.mv_esteq.msolve_max_iteration = args.mv_max_iter
@@ -521,13 +522,13 @@ differences, so please consider the list above carefully.
         elif args.bgen:
             # For now, only additive support is supported
             sample_filename = None
-            bgen_parser.Parser.default_chromosome = args.chr
+            libgwas.bgen_parser.Parser.default_chromosome = args.chr
             PhenoCovar.id_encoding = PhenoIdFormat.FID
             if args.bgen_sample:
                 sample_filename = args.bgen_sample.name
             elif os.path.isfile("%s.sample" % (args.bgen.name)):
                 sample_filename = "%s.sample" % (args.bgen.name)
-            dataset = bgen_parser.Parser(args.bgen.name, sample_filename)
+            dataset = libgwas.bgen_parser.Parser(args.bgen.name, sample_filename)
             SetAnalytic('BGen')
             dataset.load_family_details(pheno_covar)
             dataset.load_genotypes()
@@ -704,7 +705,7 @@ def main(args=sys.argv[1:], print_cfg=False):
 
         libgwas.timer.report_period("Beginning Analysis")
 
-        anl_fn = mv_esteq.RunAnalysis
+        anl_fn = meanvar.mv_esteq.RunAnalysis
         for result in anl_fn(dataset, vars):
             libgwas.timer.report_period("- %s:%d %s analysis completed" % (result.chr, result.pos, result.rsid))
             if not printed_header:

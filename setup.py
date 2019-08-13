@@ -37,6 +37,6 @@ setuptools.setup(name="mvtest",
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
         "Topic :: Scientific/Engineering :: Bio-Informatics",
         "Topic :: Software Development :: Libraries",
-        "Programming Language :: Python :: 2.7"
+        "Programming Language :: Python :: 3.7"
     ],
 )

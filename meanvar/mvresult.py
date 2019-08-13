@@ -122,7 +122,7 @@ class MVResult(object):
         :param f: stream to print output
         :param verbose: print all data or only the most important parts?
         """
-        var_count = len(self.betas)/2
+        var_count = int(len(self.betas)/2)
         if verbose:
             results = [str(x) for x in [
                 self.chr,
