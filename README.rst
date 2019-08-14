@@ -7,12 +7,15 @@ installation can be found below.
 
 Installation
 ============
-MVtest requires python 2.7.x as well as the following libraries:
+MVtest requires python 3.7.x as well as the following libraries:
 
-* NumPy (version 1.7.2 or later)   www.numpy.org
-* SciPY (version 0.13.2 or later)  www.scipy.org
+* NumPy (version 1.16.2 or later)           www.numpy.org
+* SciPY (version 1.3.0 or later)            www.scipy.org
+* pytabix (version 0.1 or later)            https://pypi.org/project/pytabix/
+* bgen-reader (version 3.0.6 or later)      https://pypi.org/project/bgen-reader/
+* libGWAS (version 1.2.0 or later)          https://github.com/edwards-lab/libGWAS
 
-MVTest's installation will attempt to install these required components
+MVtest's installation will attempt to install these required components
 for you, however, it requires that you have write permission to the
 installation directory. If you are using a shared system and lack the
 necessary privileges to install libraries and software yourself, you should
@@ -30,7 +33,7 @@ To install using python's package manager, pip, simply use the following command
 $ `pip install MVtest`
 
 If you have proper permission to install packages, this will attempt to download
-and install all dependencies along with MVtest itself.
+and install all dependencies along with libGWAS itself.
 
 Manual Installation
 +++++++++++++++++++
@@ -51,14 +54,15 @@ $ `python setup.py install`
 
 If no errors are reported, it should be installed and ready to use.
 
-**Regarding PYTHON 3** I began the process of updating the code to work with
-both python versions 2 and 3, however, there are some real issues with some
-library support of version 3 that is discouraging. So, until those have been
-resolved, I have no plans to invest further time toward support for python 3.
+**Regarding PYTHON 2** I have completely switched over to python 3 without 
+trying to remain compatible with Python 2 because the bgen_reader no longer
+supports 2 and the end of life is only a few months from my writing this. 
+
+As such, if you wish to use python2, you will need to install an older version.
 
 System Requirements
 +++++++++++++++++++
-Aside from the library dependencies, MVTest's requirements depend largely on
+Aside from the library dependencies, MVtest's requirements depend largely on
 the number of SNPs and individuals being analyzed as well as the data format
 being used. In general, GWAS sized datasets will require several gigabytes of
 memory when using the traditional pedigree format, however, even 10s of
@@ -67,11 +71,11 @@ the data is formatted as transposed pedigree or PLINK's default bed format.
 
 Otherwise, it is recommended that the system be run on a unix-like system
 such as Linux or OS X, but it should work under windows as well (we can't
-offer support for running MVTest under windows).
+offer support for running MVtest under windows).
 
 Running Unit Tests
 ++++++++++++++++++
-MVTest comes with a unit test suite which can be run prior to installation.
+MVtest comes with a unit test suite which can be run prior to installation.
 To run the tests, simply run the following command from within the root
 directory of the extracted archive's contents:
 
@@ -87,7 +91,7 @@ Virtual ENV is a powerful too for python programmers and end users alike as it
 allows for users to deploy different versions of python applications without
 the need for root access to the machine.
 
-Because MVTest requires version 2.7, you'll need to ensure that your machine's
+Because MVtest requires version 3.7, you'll need to ensure that your machine's
 python version is in compliance. Virtual Env basically uses the the system
 version of python, but creates a user owned environment wrapper allowing
 users to install libraries easily without administrative rights to the
@@ -135,6 +139,7 @@ also required for running mvtest. (setuptools includes easy_install).
 
 Once that has been completed successfully, you should be ready to follow
 the standard instructions for installing mvtest.
+
 
 MVtest Online Manual
 ====================
