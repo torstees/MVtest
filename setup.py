@@ -16,7 +16,7 @@ def read(fname):
 
 
 setuptools.setup(name="mvtest",
-    version=mvtest.__version__,
+    version=meanvar.__version__,
     author="Eric Torstenson",
     author_email="eric.s.torstenson@vanderbilt.edu",
     url="https://github.com/edwards-lab/MVtest",
