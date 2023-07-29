@@ -16,6 +16,8 @@ from libgwas.standardizer import get_standardizer
 import logging
 import libgwas
 
+import pdb
+
 logger = logging.getLogger('mv_esteq::MeanVarEstEQ')
 __copyright__ = "Copyright (C) 2015 Todd Edwards, Chun Li and Eric Torstenson"
 __license__ = "GPL3.0"
@@ -256,6 +258,7 @@ def RunAnalysis(dataset, pheno_covar):
     for snp in dataset:
         for y in pheno_covar:
             st = SimpleTimer()
+            #pdb.set_trace()
             (pheno, covariates, nonmissing) = y.get_variables(snp.missing_genotypes)
 
             try:
@@ -280,13 +283,14 @@ def RunAnalysis(dataset, pheno_covar):
                     if numpy.isnan(var):
                         raise NanInResult()
 
+                #pdb.set_trace()
                 nonmissing_ct = numpy.sum(nonmissing)
                 result = MVResult(
                                 snp.chr,
                                 snp.pos,
                                 snp.rsid,
-                                genodata.major_allele,
-                                genodata.minor_allele,
+                                snp.alleles[0],
+                                snp.alleles[1],
                                 genodata.effa_freq,
                                 non_miss_count=nonmissing_ct,
                                 ph_label=y.get_phenotype_name(),
