@@ -210,7 +210,7 @@ def MeanVarEstEQ(y, x, covariates, tol=1e-8):
     pval = 2*scipy.stats.norm.cdf(-numpy.absolute(mod.theta/se))
     return pvalt, theta, pval, se, V/N
 
-def RunMeanVar(pheno, geno, covar=[]):
+def RunMeanVar(pheno, geno, covar=numpy.array([])):
     """Setup and execute the mean var calculation.
 
     :param pheno: Phenotype data (one phenotype at a time)
@@ -256,6 +256,7 @@ def RunAnalysis(dataset, pheno_covar):
     std = get_standardizer()
 
     for snp in dataset:
+        total_loci += 1
         for y in pheno_covar:
             st = SimpleTimer()
             #pdb.set_trace()
@@ -311,6 +312,7 @@ def RunAnalysis(dataset, pheno_covar):
                 result.bvar = estimates[pcount:]
                 yield result
             except InvalidFrequency as e:
+                invalid_freqs += 1
                 logger.info("\t".join([str(x) for x in [
                     snp.chr,
                     snp.pos,
@@ -323,6 +325,7 @@ def RunAnalysis(dataset, pheno_covar):
                     "Invalid Freq",
                     "MAF=%0.4f" % (e.maf)]]))
             except NanInResult as e:
+                other_errs += 1
                 logger.info("\t".join([str(x) for x in [
                                 snp.chr,
                                 snp.pos,
@@ -335,6 +338,7 @@ def RunAnalysis(dataset, pheno_covar):
                                 "NAN-Found",
                                 "MAF=%0.4f" % (genodata.maf)]]))
             except ValueError as e:
+                other_errs += 1
                 logger.info("\t".join([str(x) for x in [
                                 snp.chr,
                                 snp.pos,
@@ -347,6 +351,7 @@ def RunAnalysis(dataset, pheno_covar):
                                 "Unsolvable",
                                 "MAF=%0.4f" % (genodata.maf)]]))
             except UnsolvedLocus as e:
+                unsolvable += 1
                 logger.info("\t".join([str(x) for x in [
                                 snp.chr,
                                 snp.pos,
@@ -360,6 +365,7 @@ def RunAnalysis(dataset, pheno_covar):
                                 "MAF=%0.4f" % (genodata.maf)]]))
                 unsolved.append(snp)
             except Exception as e:
+                other_errs += 1
                 print(e)
                 logger.info("\t".join([str(x) for x in [
                                 snp.chr,
