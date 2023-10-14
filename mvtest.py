@@ -48,6 +48,7 @@ import libgwas.standardizer
 import meanvar.mvstandardizer
 from libgwas import ExitIf
 
+import pdb
 
 __version__ = meanvar.__version__
 
@@ -207,6 +208,7 @@ def SetAnalytic(anltc):
 
 def ParseIndList(ids):
     id_list = []
+
     if os.path.isfile(ids):
         with open(ids) as file:
             for line in file:
@@ -523,7 +525,7 @@ differences, so please consider the list above carefully.
             # For now, only additive support is supported
             sample_filename = None
             libgwas.bgen_parser.Parser.default_chromosome = args.chr
-            PhenoCovar.id_encoding = PhenoIdFormat.FID
+            #PhenoCovar.id_encoding = PhenoIdFormat.FID
             if args.bgen_sample:
                 sample_filename = args.bgen_sample.name
             elif os.path.isfile("%s.sample" % (args.bgen.name)):
@@ -531,6 +533,7 @@ differences, so please consider the list above carefully.
             dataset = libgwas.bgen_parser.Parser(args.bgen.name, sample_filename)
             SetAnalytic('BGen')
             dataset.load_family_details(pheno_covar)
+
             dataset.load_genotypes()
             args.bgen.close()
         elif args.mach:
