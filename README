@@ -1,4 +1,3 @@
-
 MVTest - GWAS Analysis
 **********************
 
@@ -35,17 +34,24 @@ MVTest - GWAS Analysis
   * Change Log
 
 * Changelog
-
 Installation
 ************
 
-MVtest requires python 2.7.x as well as the following libraries:
+MVtest requires python 3.7.x as well as the following libraries:
 
-* NumPy (version 1.7.2 or later)   www.numpy.org
+* NumPy (version 1.16.2 or later)           www.numpy.org
 
-* SciPY (version 0.13.2 or later)  www.scipy.org
+* SciPY (version 1.3.0 or later)            www.scipy.org
 
-MVTest's installation will attempt to install these required
+* pytabix (version 0.1 or later) https://pypi.org/project/pytabix/
+
+* bgen-reader (version 3.0.6 or later)      https://pypi.org/project
+  /bgen-reader/
+
+* libGWAS (version 1.2.0 or later)          https://github.com
+  /edwards-lab/libGWAS
+
+MVtest’s installation will attempt to install these required
 components for you, however, it requires that you have write
 permission to the installation directory. If you are using a shared
 system and lack the necessary privileges to install libraries and
@@ -60,13 +66,13 @@ Installation can be done in two ways:
 Install with PIP
 ================
 
-To install using python's package manager, pip, simply use the
+To install using python’s package manager, pip, simply use the
 following command:
 
 $ *pip install MVtest*
 
 If you have proper permission to install packages, this will attempt
-to download and install all dependencies along with MVtest itself.
+to download and install all dependencies along with libGWAS itself.
 
 
 Manual Installation
@@ -91,35 +97,37 @@ $ *python setup.py install*
 
 If no errors are reported, it should be installed and ready to use.
 
-**Regarding PYTHON 3** I began the process of updating the code to
-work with both python versions 2 and 3, however, there are some real
-issues with some library support of version 3 that is discouraging.
-So, until those have been resolved, I have no plans to invest further
-time toward support for python 3.
+**Regarding PYTHON 2** I have completely switched over to python 3
+without trying to remain compatible with Python 2 because the
+bgen_reader no longer supports 2 and the end of life is only a few
+months from my writing this.
+
+As such, if you wish to use python2, you will need to install an older
+version.
 
 
 System Requirements
 ===================
 
-Aside from the library dependencies, MVTest's requirements depend
+Aside from the library dependencies, MVtest’s requirements depend
 largely on the number of SNPs and individuals being analyzed as well
 as the data format being used. In general, GWAS sized datasets will
 require several gigabytes of memory when using the traditional
 pedigree format, however, even 10s of thousands of subjects can be
 analyzed with less than 1 gigabyte of RAM when the data is formatted
-as transposed pedigree or PLINK's default bed format.
+as transposed pedigree or PLINK’s default bed format.
 
 Otherwise, it is recommended that the system be run on a unix-like
 system such as Linux or OS X, but it should work under windows as well
-(we can't offer support for running MVTest under windows).
+(we can’t offer support for running MVtest under windows).
 
 
 Running Unit Tests
 ==================
 
-MVTest comes with a unit test suite which can be run prior to
+MVtest comes with a unit test suite which can be run prior to
 installation. To run the tests, simply run the following command from
-within the root directory of the extracted archive's contents:
+within the root directory of the extracted archive’s contents:
 
 $ *python setup.py test*
 
@@ -134,8 +142,8 @@ Virtual ENV is a powerful too for python programmers and end users
 alike as it allows for users to deploy different versions of python
 applications without the need for root access to the machine.
 
-Because MVTest requires version 2.7, you'll need to ensure that your
-machine's python version is in compliance. Virtual Env basically uses
+Because MVtest requires version 3.7, you’ll need to ensure that your
+machine’s python version is in compliance. Virtual Env basically uses
 the the system version of python, but creates a user owned environment
 wrapper allowing users to install libraries easily without
 administrative rights to the machine.
@@ -150,14 +158,14 @@ Miniconda
 Miniconda is a minimal version of the package manager used by the
 Anaconda python distribution. It makes it easy to create local
 installations of python with the latest versions of the common
-scientific libraries for users who don't have root access to their
-target machines. Basically, when you use miniconda, you'll be
+scientific libraries for users who don’t have root access to their
+target machines. Basically, when you use miniconda, you’ll be
 installing your own version of Python into a directory under your
 control which allows you to install anything else you need without
 having to submit a helpdesk ticket for administrative assistance.
 
 Unlike pip, the folks behind the conda distributions provide binary
-downloads of it's selected library components. As such, only the most
+downloads of it’s selected library components. As such, only the most
 popular libraries, such as pip, NumPY and SciPy, are supported by
 conda itself. However, these do not require compilation and may be
 easier to get installed than when using pip alone. I have experienced
@@ -185,12 +193,11 @@ also required for running mvtest. (setuptools includes easy_install).
 
 Once that has been completed successfully, you should be ready to
 follow the standard instructions for installing mvtest.
-
 What is MVtest?
 ***************
 
 *TODO: Write some background information about the application and
-it's scientific basis.*
+it’s scientific basis.*
 
 
 Documentation
@@ -204,7 +211,7 @@ arguments:
 
 or
 
-> *mvtest.py --help*
+> *mvtest.py –help*
 
 In general, overlapping functionality should mimic that of PLINK.
 
@@ -218,13 +225,13 @@ functionality differs significantly.)
 
 For the parameters listed below, when a parameter requires a value,
 the value must follow the argument with a single space separating the
-two (no '=' signs.) For flags with no specified value, passing the
-flag indicates that condition is to be "activated".
+two (no ‘=’ signs.) For flags with no specified value, passing the
+flag indicates that condition is to be “activated”.
 
-When there is no value listed in the "Type" column, the arguments are
+When there is no value listed in the “Type” column, the arguments are
 *off* by default and *on* when the argument is present (i.e. by
-default, compression is turned off except when the flag,
---compression, has been provided.)
+default, compression is turned off except when the flag, –compression,
+has been provided.)
 
 
 Getting help
@@ -263,7 +270,7 @@ loading pedigree data, MVtest must load the entire dataset into memory
 prior to analysis, which can result in a substantial amount of memory
 overhead that is unnecessary.
 
-Flags like --no-pheno and --no-sex can be used in any combination
+Flags like –no-pheno and –no-sex can be used in any combination
 creating MAP files with highly flexible header structures.
 
 --file <prefix>
@@ -284,19 +291,19 @@ creating MAP files with highly flexible header structures.
 
 --no-sex
 
-   Pedigree file doesn't have column 5 (sex)
+   Pedigree file doesn’t have column 5 (sex)
 
 --no-parents
 
-   Pedigree file doesn't have columns 3 and 4 (parents)
+   Pedigree file doesn’t have columns 3 and 4 (parents)
 
 --no-fid
 
-   Pedgiree file doesn't have column 1 (family ID)
+   Pedgiree file doesn’t have column 1 (family ID)
 
 --no-pheno
 
-   Pedigree file doesn't have column 6 (phenotype)
+   Pedigree file doesn’t have column 6 (phenotype)
 
 --liability
 
@@ -333,7 +340,7 @@ Transposed Pedigree Data
 
 Transposed Pedigree data is similar to standard pedigree except that
 the data is arranged such that the data is organized as SNPs as rows,
-instead of individuals. This allows MVtest to run it's analysis
+instead of individuals. This allows MVtest to run it’s analysis
 without loading the entire dataset into memory.
 
 --tfile <prefix>
@@ -354,7 +361,7 @@ Pedigree/Transposed Pedigree Common Flags
 
 By default, Pedigree and Transposed Pedigree data is assumed to be
 uncompressed. However, MVtest can directly use gzipped data files if
-they have the extension .tgz with the addition of the --compressed
+they have the extension .tgz with the addition of the –compressed
 argument.
 
 --compressed
@@ -366,7 +373,7 @@ argument.
 IMPUTE output
 ~~~~~~~~~~~~~
 
-MVtest doesn't call genotypes when performing analysis and allows
+MVtest doesn’t call genotypes when performing analysis and allows
 users to define which model to use when analyzing the data. Due to the
 fact that there is no specific location for chromosome within the
 input files, MVtest requires that users provide chromosome, impute
@@ -421,7 +428,7 @@ replaced by .info.
 
 --impute-info-thresh <float>
 
-   Threshold for filtering imputed SNPs with poor 'info' values
+   Threshold for filtering imputed SNPs with poor ‘info’ values
 
 
 IMPUTE File Input
@@ -434,10 +441,10 @@ file:
 
 +------------------+----------------+----------------------------------+
 | **Chromosome**   | **Gen File**   | **.info <filename> (optional)**  |
-+==================+================+==================================+
+|==================|================|==================================|
 | N                | <filename>     | <filename>                       |
 +------------------+----------------+----------------------------------+
-| ...              | ...            | ...                              |
+| …                | …              | …                                |
 +------------------+----------------+----------------------------------+
 
 The 3rd column is only required if your .info files and .gen files are
@@ -452,34 +459,33 @@ require many files, the format is a single file which contains either
 pairs of dosage/info files, or, if the two files share the same
 filename except for extensions, one dosage file per line.
 
-Important: MACH doesn't provide anywhere to store chromosome and
+Important: MACH doesn’t provide anywhere to store chromosome and
   positions. Users may wish to embed this information into the first
   column inside the .info file. Doing so will allow MVtest to
   recognize those values and populate the corresponding fields in the
-  report.To use this feature, users much use the --mach-chrpos field
+  report.To use this feature, users much use the –mach-chrpos field
   and their ID columns inside the .info file must be formatted in the
-  following way:chr:pos (optionally :rsid)When the --mach-chrpos flag
-  is used, MVtest will fail when it encounters IDs that aren't in this
-  format and there must be at least 2 'fields' (i.e. there must be at
-  least one ":" character.When processing MACH imputed data without
+  following way:chr:pos (optionally :rsid)When the –mach-chrpos flag
+  is used, MVtest will fail when it encounters IDs that aren’t in this
+  format and there must be at least 2 ‘fields’ (i.e. there must be at
+  least one “:” character.When processing MACH imputed data without
   this special encoding of IDs, MCtest will be unable to recognize
-  positions. As a result, unless the --mach-chrpos flag is present,
+  positions. As a result, unless the –mach-chrpos flag is present,
   MVtest will exit with an error if the user attempts to use
-  positional filters such as --from-bp, --chr, etc.
+  positional filters such as –from-bp, –chr, etc.
 
 When running MVtest using MACH dosage on a cluster, users can instruct
 a given job to anlyze data from a portion of the files contained
-within the MACH dosage file list by changing the --mach-offset and
---mach-count arguments. By default, the offset starts with 1 (the
-first file in the dosage list) and runs all it finds. However, if one
-were to want to split the jobs up to analyze three dosage files per
-job, they might set those values to --mach-offset 1 --mach-count 3 or
---mach-offset 4 --mach-count 3 depending on which job is being
-defined.
+within the MACH dosage file list by changing the –mach-offset and
+–mach-count arguments. By default, the offset starts with 1 (the first
+file in the dosage list) and runs all it finds. However, if one were
+to want to split the jobs up to analyze three dosage files per job,
+they might set those values to –mach-offset 1 –mach-count 3 or –mach-
+offset 4 –mach-count 3 depending on which job is being defined.
 
 In order to minimize memory requirements, MACH dosage files can be
 loaded incrementally such that only N loci are stored in memory at a
-time. This can be controlled using the --mach-chunk-size argument. The
+time. This can be controlled using the –mach-chunk-size argument. The
 larger this number is, the faster MVtest will run (fewer times reading
 from file) but the more memory is required.
 
@@ -540,15 +546,15 @@ file which lists of each dosage file and (optionally) the matching
 dosage filename) or 2 (dosage filename followed by the info filename
 separated by whitespace).
 
-The 2nd column is only required if the filenames aren't identical
+The 2nd column is only required if the filenames aren’t identical
 except for the extension.
 
 +--------------------------------+----------------------------------------+
 | **Col 1 (dosage <filename>)**  | **Col 2 (optional info <filename>)**   |
-+================================+========================================+
+|================================|========================================|
 | <filename>.dose                | <filename>.info                        |
 +--------------------------------+----------------------------------------+
-| ...                            | ...                                    |
+| …                              | …                                      |
 +--------------------------------+----------------------------------------+
 
 
@@ -565,8 +571,8 @@ FID and IID.
 
 --pheno <filename>
 
-   File containing phenotypes. Unless --all-pheno is present, user
-   must provide either index(s) or label(s) of the phenotypes to be
+   File containing phenotypes. Unless –all-pheno is present, user must
+   provide either index(s) or label(s) of the phenotypes to be
    analyzed.
 
 --mphenos LIST
@@ -576,7 +582,7 @@ FID and IID.
 
 --pheno-names LIST
 
-   Name for phenotype(s) to be analyzed (must be in --pheno file).
+   Name for phenotype(s) to be analyzed (must be in –pheno file).
    Comma separated list if more than one is to be used.
 
 --covar <filename>
@@ -613,10 +619,9 @@ be present. If a chromosome is specified but is not accompanied by a
 range, the entire chromosome will be used. Only one range can be
 specified per run.
 
-In general, when specifying region limits, --chr must be defined
-unless using generic MACH input (which doesn't define a chromosome
-number nor position, in which case positional restrictions do not
-apply).
+In general, when specifying region limits, –chr must be defined unless
+using generic MACH input (which doesn’t define a chromosome number nor
+position, in which case positional restrictions do not apply).
 
 --snps LIST
 
@@ -681,7 +686,6 @@ apply).
 --verbose
 
    Output additional data details in final report
-
 mvmany Helper script
 ********************
 
@@ -701,7 +705,7 @@ The Default Template
 ====================
 
 When mvmany.py is first run, it will generate a copy of the default
-template inside the user's home directory named .mv-many.template.
+template inside the user’s home directory named .mv-many.template.
 This template is used to define the job details that will be written
 to each of the job scripts. By default, the template is configured for
 the SLURM cluster software, but can easily be changed to work with any
@@ -735,10 +739,10 @@ An example template might look like the following
    $body
 
 It is important to note that this block of text contains a mix of
-SLURM preprocessor settings (such as #SBATCH --job-name) as well as
+SLURM preprocessor settings (such as #SBATCH –job-name) as well as
 variables which will be replaced with appropriate values (such as
 $jobname being replaced with a string of text which is unique to that
-particular job). Each cluster type has it's own syntax for setting the
+particular job). Each cluster type has it’s own syntax for setting the
 necessary variables and it is assumed that the user will know how to
 correctly edit the default template to suit their needs.
 
@@ -774,7 +778,7 @@ program by the user (or their default values):
 
 +-----------------------------------+-----------------------------------------------+
 | **Variable**                      | **Purpose**                                   |
-+===================================+===============================================+
+|===================================|===============================================|
 | $jobname                          | Unique name for the current job               |
 +-----------------------------------+-----------------------------------------------+
 | $memory (2G)                      | Amount of memory to provide each job.         |
@@ -799,11 +803,11 @@ running the script.
 
 --mv-path PATH
 
-   Set path to mvtest.py if it's not in PATH
+   Set path to mvtest.py if it’s not in PATH
 
 --logpath PATH
 
-   Path to location of job's error output
+   Path to location of job’s error output
 
 --res-path PATH
 Path to location of job's results
@@ -828,15 +832,15 @@ Path to location of job's results
 
    Specify amount of time to be requested for each job
 
-The option, --mem, is dependent on the type of input that is being
-used as well as configurable options to be used. The user should
-perform basic test runs to determine proper settings for their jobs.
-By default, 2G is used, which is generally more than adequate for
-binary pedigrees, IMPUTE and transposed pedigrees. Others will vary
-greatly based on the size of the dataset and the settings being used.
+The option, –mem, is dependent on the type of input that is being used
+as well as configurable options to be used. The user should perform
+basic test runs to determine proper settings for their jobs. By
+default, 2G is used, which is generally more than adequate for binary
+pedigrees, IMPUTE and transposed pedigrees. Others will vary greatly
+based on the size of the dataset and the settings being used.
 
-The option, --wall-time, is largely machine dependent but will vary
-based on the actual dataset's size and completeness of the data. Users
+The option, –wall-time, is largely machine dependent but will vary
+based on the actual dataset’s size and completeness of the data. Users
 should perform spot tests to determine reasonable values. By default,
 the requested wall-time is 3 days, which is sufficient for a GWAS
 dataset, but probably not sufficient for an entire whole exome dataset
@@ -864,7 +868,7 @@ simply ask the program itself
 Users can have mvmany split certain types of jobs up into pieces and
 can specify how many independent commands to be run per job. At this
 time, mvmany.py assumes that imputation data is already split into
-fragments and doesn't support running parts of a single file on
+fragments and doesn’t support running parts of a single file on
 multiple nodes.
 
 The results generated can be manually merged once all nodes have
@@ -873,6 +877,8 @@ completed execution.
 Changelog
 =========
 
+mvtest.py: 1.0.5
+	* Migrated pygwas out from the MVtest repository and refactored it as libgwas
 mvtest.py: 1.0.4
 	* Fixed a bug associated with running more than one phenotype at once.
 mvtest.py: 1.0.3

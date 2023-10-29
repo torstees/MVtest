@@ -47,7 +47,6 @@ class Standardizer(libgwas.standardizer.StandardizedVariable):
 
         """
 
-
         nonmissing = numpy.invert(self.missing)
         nmcount = numpy.sum(nonmissing)
 

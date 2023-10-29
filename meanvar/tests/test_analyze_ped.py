@@ -17,13 +17,14 @@ from meanvar import mv_esteq
 import unittest
 import os
 import libgwas.standardizer
+from libgwas.tests import remove_file
 
 class TestBase(unittest.TestCase):
     def setUp(self):
         self.map_filename  = "__testfile.map"
         self.ped_filename  = "__testfile.ped"
         with open(self.map_filename, "w") as file:
-            print >> file, """1 rs1000 0 1000
+            print("""1 rs1000 0 1000
 1 rs2000 0 2000
 1 rs3000 0 3000
 1 rs4000 0 4000
@@ -31,10 +32,10 @@ class TestBase(unittest.TestCase):
 1 rs6000 0 6000
 1 rs7000 0 7000
 1 rs8000 0 8000
-1 rs9000 0 9000"""
+1 rs9000 0 9000""", file=file)
 
         with open(self.ped_filename, "w") as file:
-            print >> file, """0 0 0 0 2 -1.887199 1 2 1 1 1 2 1 1 1 1 1 2 1 1 1 2 1 1
+            print("""0 0 0 0 2 -1.887199 1 2 1 1 1 2 1 1 1 1 1 2 1 1 1 2 1 1
 1 1 0 0 1 0.2589925 1 1 1 2 1 2 1 2 2 2 1 1 1 1 1 2 1 1
 2 2 0 0 2 -0.607625 1 2 1 1 1 2 2 2 1 2 1 2 1 1 1 1 1 1
 3 3 0 0 1 0.4918569 1 2 1 1 1 2 1 1 1 1 1 1 1 2 1 2 1 1
@@ -2033,7 +2034,7 @@ class TestBase(unittest.TestCase):
 1996 1996 0 0 1 1.244124 1 2 1 1 2 2 1 1 1 1 1 2 1 1 1 1 1 1
 1997 1997 0 0 2 1.593677 1 2 1 2 1 1 1 1 1 1 1 1 1 1 1 1 1 2
 1998 1998 0 0 2 0.0003277403 2 2 1 2 1 1 2 2 1 1 1 2 1 2 1 1 1 1
-1999 1999 0 0 1 -0.3809802 1 1 1 2 1 2 1 2 1 1 1 2 1 2 1 1 1 1"""
+1999 1999 0 0 1 -0.3809802 1 1 1 2 1 2 1 2 1 1 1 2 1 2 1 1 1 1""", file=file)
 
         self.chrom          = BoundaryCheck.chrom
         self.boundary       = DataParser.boundary
@@ -2050,8 +2051,8 @@ class TestBase(unittest.TestCase):
 
 
     def tearDown(self):
-        os.remove(self.map_filename)
-        os.remove(self.ped_filename)
+        remove_file(self.map_filename)
+        remove_file(self.ped_filename)
 
 
         PhenoCovar.sex_as_covariate = self.sex_as_covar

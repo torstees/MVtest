@@ -4,16 +4,21 @@ import numpy
 import scipy
 import scipy.stats
 import math
-import exceptions
 
-from simple_timer import SimpleTimer
+from .simple_timer import SimpleTimer
 from libgwas.data_parser import DataParser
-from mvresult import MVResult
+from .mvresult import MVResult
 from libgwas.exceptions import UnsolvedLocus
 from libgwas.exceptions import NanInResult
+from libgwas.exceptions import InvalidFrequency
 import libgwas.pheno_covar
 from libgwas.standardizer import get_standardizer
+import logging
+import libgwas
 
+import pdb
+
+logger = logging.getLogger('mv_esteq::MeanVarEstEQ')
 __copyright__ = "Copyright (C) 2015 Todd Edwards, Chun Li and Eric Torstenson"
 __license__ = "GPL3.0"
 #     This file is part of MVtest.
@@ -31,6 +36,7 @@ __license__ = "GPL3.0"
 #     You should have received a copy of the GNU General Public License
 #     along with MVtest.  If not, see <http://www.gnu.org/licenses/>.
 
+msolve_max_iteration = 25000
 def MeanVarEstEQ(y, x, covariates, tol=1e-8):
     """Perform the mean var calculation using estimated equestions
 
@@ -46,13 +52,15 @@ def MeanVarEstEQ(y, x, covariates, tol=1e-8):
     X = numpy.ones((N, pcount))
     X[:, 1] = x
 
-    aprime = [1, 0]
+    aprime = [1.0, 0.0]
     idx = 2
     for cov in covariates:
         aprime.append(-numpy.mean(cov)/numpy.std(cov))
         X[:, idx] = cov
         idx += 1
-    aprime = numpy.matrix(aprime)
+    #aprime = numpy.matrix(aprime)
+    # This was changed based on the fact that matrix will soon be deprecated
+    aprime = numpy.array(aprime, dtype=float)
 
     # http://stackoverflow.com/questions/7267226/range-for-floats
     def frange(x, y, jump):
@@ -79,7 +87,7 @@ def MeanVarEstEQ(y, x, covariates, tol=1e-8):
 
         """
         if len(y.shape) != 1:
-            print >> sys.stderr, "You can't pass an array of shape %s to dot_diag" % (y.shape)
+            print("You can't pass an array of shape %s to dot_diag" % (y.shape), file=sys.stderr)
             sys.exit(1)
 
         result = numpy.empty(x.shape)
@@ -142,10 +150,9 @@ def MeanVarEstEQ(y, x, covariates, tol=1e-8):
                 tmp = Phi(theta_new)
                 solution_found = True
             else:
-                if mvsolve_iterations > 25000:
+                if mvsolve_iterations > msolve_max_iteration:
                     #print >> sys.stderr, mvsolve_iterations, "failures"
                     raise UnsolvedLocus("")
-
         return MvSolveReturn(theta_new, tmp.dtheta), mvsolve_iterations
 
     def MVcalcB(theta):
@@ -169,9 +176,9 @@ def MeanVarEstEQ(y, x, covariates, tol=1e-8):
             mod, iterations = MVsolve(theta)
             total_iterations += iterations
             if i > 0.05:
-                print >> sys.stderr, "Completed: ", total_iterations, itr
+                print("Completed: ", total_iterations, itr, file=sys.stderr)
             break
-        except exceptions.ValueError as e:
+        except ValueError as e:
             pass
         except numpy.linalg.linalg.LinAlgError as e:
             pass
@@ -179,6 +186,8 @@ def MeanVarEstEQ(y, x, covariates, tol=1e-8):
             #print type(inst)
             pass
         itr += 1
+        
+    libgwas.timer.report_period("   - %d : %d (%0.4f)" % (total_iterations, itr, i))
 
     if not mod:
         raise UnsolvedLocus("")
@@ -190,13 +199,10 @@ def MeanVarEstEQ(y, x, covariates, tol=1e-8):
     B = MVcalcB(mod.theta)
     V = ainv.dot(B).dot(ainv.transpose())
 
-
-
     # Focus on the two parameters of interest
     theta2 = numpy.array([mod.theta[1], mod.theta[pcount+1]])
     V2 = V[1:beta_count:pcount,1:beta_count:pcount]
     pvalt = 1 - scipy.stats.chi2.cdf(theta2.dot(scipy.linalg.inv(V2)).dot(theta2) * N, 2)
-
 
     ## From Chun's updated code:
     theta= mod.theta
@@ -204,7 +210,7 @@ def MeanVarEstEQ(y, x, covariates, tol=1e-8):
     pval = 2*scipy.stats.norm.cdf(-numpy.absolute(mod.theta/se))
     return pvalt, theta, pval, se, V/N
 
-def RunMeanVar(pheno, geno, covar=[]):
+def RunMeanVar(pheno, geno, covar=numpy.array([])):
     """Setup and execute the mean var calculation.
 
     :param pheno: Phenotype data (one phenotype at a time)
@@ -217,6 +223,7 @@ def RunMeanVar(pheno, geno, covar=[]):
 
     """
     return MeanVarEstEQ(pheno, geno, covar)
+
 
 def RunAnalysis(dataset, pheno_covar):
     """Run the actual analysis on all valid loci for each phenotype
@@ -231,6 +238,7 @@ def RunAnalysis(dataset, pheno_covar):
     phenotype, covariate(s) or genotype
 
     """
+    log = logging.getLogger('meanvar::RunAnalysis')
     covar_missing = numpy.empty(dataset.ind_count, dtype=bool)
     covar_missing[:] = False
 
@@ -241,20 +249,24 @@ def RunAnalysis(dataset, pheno_covar):
 
     pcount = 2+total_covar_count
 
+    total_loci = 0
+    invalid_freqs = 0
+    unsolvable = 0
+    other_errs = 0
     std = get_standardizer()
 
     for snp in dataset:
+        total_loci += 1
         for y in pheno_covar:
             st = SimpleTimer()
-            (pheno, covariates, nonmissing) = y.get_variables((snp.genotype_data==DataParser.missing_storage))
 
-
-            genotypes  = snp.genotype_data[nonmissing]
+            (pheno, covariates, nonmissing) = y.get_variables(snp.missing_genotypes)
 
             try:
-                pvalt, estimates, pvalues, se, v = RunMeanVar(pheno, genotypes, covariates)
+                genodata = snp.get_genotype_data(nonmissing)
+                pvalt, estimates, pvalues, se, v = RunMeanVar(pheno, genodata.genotypes, covariates)
 
-                lmgeno = genotypes
+                lmgeno = genodata.genotypes
                 for c in covariates:
                     lmgeno = lmgeno + c
                 lm = scipy.stats.linregress(pheno, lmgeno)[3]
@@ -273,66 +285,104 @@ def RunAnalysis(dataset, pheno_covar):
                         raise NanInResult()
 
                 nonmissing_ct = numpy.sum(nonmissing)
-
                 result = MVResult(
                                 snp.chr,
                                 snp.pos,
                                 snp.rsid,
-                                snp.major_allele,
-                                snp.minor_allele,
-                                dataset.get_effa_freq(genotypes),
+                                snp.alleles[0],
+                                snp.alleles[1],
+                                genodata.effa_freq,
                                 non_miss_count=nonmissing_ct,
                                 ph_label=y.get_phenotype_name(),
                                 p_mvtest=pvalt,
                                 beta_values=list(betas)+list(vars),
                                 pvalues=pvalues,
                                 stderrors=list(betase) + list(varse),
-                                maf=snp.maf,
+                                maf=genodata.maf,
                                 covar_labels=y.get_covariate_names(),
                                 lm=lm,
                                 runtime = st.runtime(),
                 )
-
+                logger.info("\t".join([str(x) for x in [snp.chr,
+                                snp.pos,
+                                snp.rsid,
+                                "Valid FREQ"]]))
                 result.blin = estimates[0:pcount]
                 result.bvar = estimates[pcount:]
                 yield result
+            except InvalidFrequency as e:
+                invalid_freqs += 1
+                logger.info("\t".join([str(x) for x in [
+                    snp.chr,
+                    snp.pos,
+                    snp.rsid,
+                    y.get_phenotype_name(),
+                    "%d" % (numpy.sum(nonmissing)),
+                    e.major_allele,
+                    e.minor_allele,
+                    e.a2_count,
+                    "Invalid Freq",
+                    "MAF=%0.4f" % (e.maf)]]))
             except NanInResult as e:
-                print >> sys.stderr, "\t".join([str(x) for x in [
+                other_errs += 1
+                logger.info("\t".join([str(x) for x in [
                                 snp.chr,
                                 snp.pos,
                                 snp.rsid,
                                 y.get_phenotype_name(),
                                 "%d" % (numpy.sum(nonmissing)),
-                                snp.major_allele,
-                                snp.minor_allele,
-                                snp.allele_count2,
+                                genodata.major_allele,
+                                genodata.minor_allele,
+                                genodata.a2_count,
                                 "NAN-Found",
-                                "MAF=%0.4f" % (snp.maf)]])
+                                "MAF=%0.4f" % (genodata.maf)]]))
             except ValueError as e:
-                print >> sys.stderr, "\t".join([str(x) for x in [
+                other_errs += 1
+                logger.info("\t".join([str(x) for x in [
                                 snp.chr,
                                 snp.pos,
                                 snp.rsid,
                                 y.get_phenotype_name(),
                                 "%d" % (numpy.sum(nonmissing)),
-                                snp.major_allele,
-                                snp.minor_allele,
-                                snp.allele_count2,
+                                genodata.major_allele,
+                                genodata.minor_allele,
+                                genodata.a2_count,
                                 "Unsolvable",
-                                "MAF=%0.4f" % (snp.maf)]])
+                                "MAF=%0.4f" % (genodata.maf)]]))
             except UnsolvedLocus as e:
-                print >> sys.stderr, "\t".join([str(x) for x in [
+                unsolvable += 1
+                logger.info("\t".join([str(x) for x in [
                                 snp.chr,
                                 snp.pos,
                                 snp.rsid,
                                 y.get_phenotype_name(),
                                 "%d" % (numpy.sum(nonmissing)),
-                                snp.major_allele,
-                                snp.minor_allele,
-                                snp.allele_count2,
+                                genodata.major_allele,
+                                genodata.minor_allele,
+                                genodata.a2_count,
                                 "Unsolved",
-                                "MAF=%0.4f" % (snp.maf)]])
+                                "MAF=%0.4f" % (genodata.maf)]]))
                 unsolved.append(snp)
+            except Exception as e:
+                other_errs += 1
+                print(e)
+                logger.info("\t".join([str(x) for x in [
+                                snp.chr,
+                                snp.pos,
+                                snp.rsid,
+                                y.get_phenotype_name(),
+                                "%d" % (numpy.sum(nonmissing)),
+                                genodata.major_allele,
+                                genodata.minor_allele,
+                                genodata.a2_count,
+                                "Unknown Exception",
+                                "MAF=%0.4f" % (genodata.maf)]]))
     if len(unsolved)>0:
-        print >> sys.stderr, "Total unsolvable loci: ", len(unsolved)
+        print("Total unsolvable loci: ", len(unsolved), file=sys.stderr)
 
+    print("Analysis Completed: ")
+    print("Total Loci Analyzed: %d" % (total_loci))
+    print("Invalid Freqs: %d" % (invalid_freqs))
+    print("Unsolvables: %d" % (unsolvable))
+    print("Other Errs: %d" % (other_errs))
+    sys.stdout.flush()

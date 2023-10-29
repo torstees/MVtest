@@ -10,15 +10,13 @@ if "DEBUG" in sys.argv:
 
 import unittest
 import numpy
-import test_transped_parser
+from . import test_transped_parser
 from libgwas.data_parser import DataParser
 from libgwas.pheno_covar import PhenoCovar
 from libgwas.transposed_pedigree_parser import Parser as TransposedPedigreeParser
 import libgwas.standardizer
 from meanvar.mvstandardizer import Standardizer
 import meanvar.mvstandardizer
-
-
 
 class TestTPedStandardization(test_transped_parser.TestBase):
     def setUp(self):
@@ -41,7 +39,7 @@ class TestTPedStandardization(test_transped_parser.TestBase):
         ped_parser = TransposedPedigreeParser(self.tfam_filename, self.tped_filename)
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
-        nonmissing = numpy.empty(pc.phenotype_data[0].shape, dtype=numpy.bool)
+        nonmissing = numpy.empty(pc.phenotype_data[0].shape, dtype=bool)
         nonmissing[:] = True
         libgwas.standardizer.set_standardizer(libgwas.standardizer.NoStandardization)
 
@@ -82,7 +80,7 @@ class TestTPedStandardization(test_transped_parser.TestBase):
         ped_parser = TransposedPedigreeParser(self.tfam_filename, self.tped_filename)
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
-        nonmissing = numpy.empty(pc.phenotype_data[0].shape, dtype=numpy.bool)
+        nonmissing = numpy.empty(pc.phenotype_data[0].shape, dtype=bool)
         nonmissing[:] = True
         libgwas.standardizer.set_standardizer(libgwas.standardizer.NoStandardization)
 
@@ -121,7 +119,7 @@ class TestTPedStandardization(test_transped_parser.TestBase):
         ped_parser = TransposedPedigreeParser(self.tfam_filename, self.tped_filename)
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
-        nonmissing = numpy.empty(pc.phenotype_data[0].shape, dtype=numpy.bool)
+        nonmissing = numpy.empty(pc.phenotype_data[0].shape, dtype=bool)
         nonmissing[:] = True
         nonmissing[0] = False
         nonmissing[1] = False
@@ -163,7 +161,7 @@ class TestTPedStandardization(test_transped_parser.TestBase):
         ped_parser = TransposedPedigreeParser(self.tfam_filename, self.tped_filename)
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
-        nonmissing = numpy.empty(pc.phenotype_data[0].shape, dtype=numpy.bool)
+        nonmissing = numpy.empty(pc.phenotype_data[0].shape, dtype=bool)
         nonmissing[:] = True
         libgwas.standardizer.set_standardizer(libgwas.standardizer.NoStandardization)
 
@@ -202,7 +200,7 @@ class TestTPedStandardization(test_transped_parser.TestBase):
         ped_parser = TransposedPedigreeParser(self.tfam_filename, self.tped_filename)
         ped_parser.load_tfam(pc)
         ped_parser.load_genotypes()
-        nonmissing = numpy.empty(pc.phenotype_data[0].shape, dtype=numpy.bool)
+        nonmissing = numpy.empty(pc.phenotype_data[0].shape, dtype=bool)
         nonmissing[:] = True
         nonmissing[0] = False
         nonmissing[1] = False

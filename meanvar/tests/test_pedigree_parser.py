@@ -19,13 +19,16 @@ from libgwas.pedigree_parser import Parser as PedigreeParser
 from libgwas.boundary import BoundaryCheck
 from libgwas.snp_boundary_check import SnpBoundaryCheck
 import libgwas.standardizer
-
-
+from libgwas.exceptions import InvalidFrequency
+from libgwas.exceptions import TooMuchMissing
+from libgwas.exceptions import TooMuchMissingpPhenoCovar
+from libgwas import get_lines
+from libgwas.tests import remove_file
 class TestBase(unittest.TestCase):
     def setUp(self):
         self.WriteTestFiles()
 
-        self.ped            = [l.strip() for l in open(self.ped_filename).readlines()]
+        self.ped = get_lines(self.ped_filename)
 
         self.phenotypes     = [0.1, 0.4, 1.0, 0.5, 0.9, 1.0, 0.1, 0.4, 1.0, 0.5, 0.9, 1.0]
         self.sex            = [1,1,2,2,1,1,1,1,2,2,1,1]
@@ -52,7 +55,7 @@ class TestBase(unittest.TestCase):
     def tearDown(self):
 
         for file in self.filenames:
-            os.remove(file)
+            remove_file(file)
         BoundaryCheck.chrom  = self.chrom
         DataParser.boundary  = self.boundary
         DataParser.min_maf   = self.min_maf
@@ -112,10 +115,20 @@ class TestBase(unittest.TestCase):
             [-1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0],
             [0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0]
         ]
+
+        self.missing_genotypes = [
+            [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
+            [1,  0, 0, 1],
+            [2, 1, 1, 0, 0, 0, 2, 1, 1, 0, 0],
+            [1, 2, 1, 1, 0, 0, 1, 2, 1, 1, 0],
+            [2, 0, 1, 0, 0, 1, 2, 0, 1, 0, 0],
+            [0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+            [0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0]
+        ]
         self.ped_filename = "%s.ped" % (prefix)
-        f = open(self.ped_filename, "w")
-        self.filenames.append(self.ped_filename)
-        f.write("""
+        with open(self.ped_filename, "w") as f:
+            self.filenames.append(self.ped_filename)
+            f.write("""
 1 1 0 0 1 0.1 A A G T A A G G C T G T T T
 2 2 0 0 1 0.4 A C G T G G C G T T G G C T
 3 3 0 0 2 1.0 A A G G A G C C C C G T C T
@@ -129,12 +142,11 @@ class TestBase(unittest.TestCase):
 11 11 0 0 1 0.9 A C G G A A C G C C G G T T
 12 12 0 0 1 1.0 A A G T A A G G C C G G T T""")
 
-        f.close()
 
         self.map_filename = "%s.map" % (prefix)
         self.filenames.append(self.map_filename)
-        f = open(self.map_filename, "w")
-        f.write("""1 rs0001 0 500
+        with open(self.map_filename, "w") as f:
+            f.write("""1 rs0001 0 500
 1 rs0002 0 10000
 1 rs0003 0 25000
 1 rs0004 0 45000
@@ -142,11 +154,10 @@ class TestBase(unittest.TestCase):
 2 rs0006 0 10000
 2 rs0007 0 25000
 """)
-        f.close()
         self.ped_filename_missing = "%s-miss.ped" % (prefix)
-        f = open(self.ped_filename_missing, "w")
-        self.filenames.append(self.ped_filename_missing)
-        f.write("""
+        with open(self.ped_filename_missing, "w") as f:
+            self.filenames.append(self.ped_filename_missing)
+            f.write("""
 1 1 0 0 1 0.1 A A 0 0 0 0 0 0 0 0 0 0 T T
 2 2 0 0 1 0.4 A C 0 0 G G C G T T G G C T
 3 3 0 0 2 1.0 A A 0 0 A G C C C C G T C T
@@ -160,11 +171,10 @@ class TestBase(unittest.TestCase):
 11 11 0 0 -9 0.9 A C G G A A C G C C G G T T
 12 12 0 0 -9 1.0 A A G T A A G G C C G G T T""")
 
-        f.close()
         self.map3_filename = "%s.map3" % (prefix)
         self.filenames.append(self.map3_filename)
-        f = open(self.map3_filename, "w")
-        f.write("""1 rs0001 500
+        with open(self.map3_filename, "w") as f:
+            f.write("""1 rs0001 500
 1 rs0002 10000
 1 rs0003 25000
 1 rs0004 45000
@@ -172,12 +182,11 @@ class TestBase(unittest.TestCase):
 2 rs0006 10000
 2 rs0007 25000
 """)
-        f.close()
-
+    
         self.map_miss_filename = "%s-miss.map" % (prefix)
         self.filenames.append(self.map_miss_filename)
-        f = open(self.map_miss_filename, "w")
-        f.write("""1 rs0001 0 -500
+        with open(self.map_miss_filename, "w") as f:
+            f.write("""1 rs0001 0 -500
 1 rs0002 0 -10000
 1 rs0003 0 25000
 1 rs0004 0 45000
@@ -185,23 +194,20 @@ class TestBase(unittest.TestCase):
 2 rs0006 0 10000
 2 rs0007 0 25000
 """)
-        f.close()
-
+    
         self.miniped_filename = "%s-mini.ped" % (prefix)
-        f = open(self.miniped_filename, "w")
-        self.filenames.append(self.miniped_filename)
-        f.write("""
+        with open(self.miniped_filename, "w") as f:
+            self.filenames.append(self.miniped_filename)
+            f.write("""
 1 1 0 0 1 0.1 A A G T A A G G C T G T T T
 2 2 0 0 1 0.4 A C G T G G C G T T G G C T
 3 3 0 0 2 1.0 A A G G A G C G T C G T C T""")
 
-        f.close()
-
 
         self.pheno_file = "%s_mch.txt" % (prefix)
-        f = open(self.pheno_file, "w")
-        self.filenames.append(self.pheno_file)
-        f.write("""FID\tIID\tBMI\tIBM\tMSA
+        with open(self.pheno_file, "w") as f:
+            self.filenames.append(self.pheno_file)
+            f.write("""FID\tIID\tBMI\tIBM\tMSA
 1\t1\t0.1\t1.0\t0.5
 2\t2\t0.2\t0.5\t1.0
 3\t3\t0.3\t0.6\t0.1
@@ -214,7 +220,6 @@ class TestBase(unittest.TestCase):
 10\t10\t0.4\t0.5\t0.5
 11\t11\t0.5\t1.0\t1.0
 12\t12\t0.6\t0.1\t0.2""")
-        f.close()
         self.ped_parser = PedigreeParser(self.map_filename, self.ped_filename)
 
 
@@ -270,8 +275,8 @@ class TestPedigreeVariedColumns(TestBase):
 
     def testPedigreeNoSex(self):
         DataParser.has_sex = False
-        f = open(self.ped_filename, "w")
-        f.write("""1 1 0 0 0.1 A A G T A A G G C T G T T T
+        with open(self.ped_filename, "w") as f:
+            f.write("""1 1 0 0 0.1 A A G T A A G G C T G T T T
 2 2 0 0 0.4 A C G T G G C G T T G G C T
 3 3 0 0 1.0 A A G G A G C C C C G T C T
 4 4 0 0 0.5 A A G G A G C G C T G G T T
@@ -284,14 +289,12 @@ class TestPedigreeVariedColumns(TestBase):
 11 11 0 1 0.9 A C G G A A C G C C G G T T
 12 12 0 1 1.0 A A G T A A G G C C G G T T""")
 
-        f.close()
-
         pc = PhenoCovar()
         ped_parser = PedigreeParser(self.map_filename, self.ped_filename)
         ped_parser.load_mapfile()
         ped_parser.load_genotypes(pc)
 
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
+        mapdata = get_lines(self.map_filename, split=True)
 
         index = 0
         for snp in ped_parser:
@@ -304,8 +307,8 @@ class TestPedigreeVariedColumns(TestBase):
 
     def testPedigreeWithLiability(self):
         DataParser.has_liability = True
-        f = open(self.ped_filename, "w")
-        f.write("""1 1 0 0 1 0.1 1 A A G T A A G G C T G T T T
+        with open(self.ped_filename, "w") as f:
+            f.write("""1 1 0 0 1 0.1 1 A A G T A A G G C T G T T T
 2 2 0 0 1 0.4 1 A C G T G G C G T T G G C T
 3 3 0 0 2 1.0 1 A A G G A G C C C C G T C T
 4 4 0 0 2 0.5 1 A A G G A G C G C T G G T T
@@ -318,13 +321,11 @@ class TestPedigreeVariedColumns(TestBase):
 11 11 0 0 1 0.9 1 A C G G A A C G C C G G T T
 12 12 0 0 1 1.0 1 A A G T A A G G C C G G T T""")
 
-        f.close()
         pc = PhenoCovar()
         ped_parser = PedigreeParser(self.map_filename, self.ped_filename)
         ped_parser.load_mapfile()
         ped_parser.load_genotypes(pc)
-
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
+        mapdata = get_lines(self.map_filename, split=True)
 
         index = 0
         for snp in ped_parser:
@@ -337,8 +338,8 @@ class TestPedigreeVariedColumns(TestBase):
 
     def testPedigreeNoParents(self):
         DataParser.has_parents = False
-        f = open(self.ped_filename, "w")
-        f.write("""1 1 1 0.1 A A G T A A G G C T G T T T
+        with open(self.ped_filename, "w") as f:
+            f.write("""1 1 1 0.1 A A G T A A G G C T G T T T
 2 2 1 0.4 A C G T G G C G T T G G C T
 3 3 2 1.0 A A G G A G C C C C G T C T
 4 4 2 0.5 A A G G A G C G C T G G T T
@@ -351,13 +352,11 @@ class TestPedigreeVariedColumns(TestBase):
 11 11 1 0.9 A C G G A A C G C C G G T T
 12 12 1 1.0 A A G T A A G G C C G G T T""")
 
-        f.close()
         pc = PhenoCovar()
         ped_parser = PedigreeParser(self.map_filename, self.ped_filename)
         ped_parser.load_mapfile()
         ped_parser.load_genotypes(pc)
-
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
+        mapdata = get_lines(self.map_filename, split=True)
 
         index = 0
         for snp in ped_parser:
@@ -370,8 +369,8 @@ class TestPedigreeVariedColumns(TestBase):
 
     def testPedigreeNoPheno(self):
         DataParser.has_pheno = False
-        f = open(self.ped_filename, "w")
-        f.write("""1 1 0 0 1 A A G T A A G G C T G T T T
+        with open(self.ped_filename, "w") as f:
+            f.write("""1 1 0 0 1 A A G T A A G G C T G T T T
 2 2 0 0 1 A C G T G G C G T T G G C T
 3 3 0 0 2 A A G G A G C C C C G T C T
 4 4 0 0 2 A A G G A G C G C T G G T T
@@ -384,14 +383,12 @@ class TestPedigreeVariedColumns(TestBase):
 11 11 0 0 1 A C G G A A C G C C G G T T
 12 12 0 0 1 A A G T A A G G C C G G T T""")
 
-        f.close()
         PhenoCovar.sex_as_covariate = True
         pc = PhenoCovar()
         ped_parser = PedigreeParser(self.map_filename, self.ped_filename)
         ped_parser.load_mapfile()
         ped_parser.load_genotypes(pc)
-
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
+        mapdata = get_lines(self.map_filename, split=True)
 
         index = 0
         for snp in ped_parser:
@@ -404,8 +401,8 @@ class TestPedigreeVariedColumns(TestBase):
     def testPedigreeNoPhenoNoFam(self):
         DataParser.has_fid = False
         DataParser.has_pheno = False
-        f = open(self.ped_filename, "w")
-        f.write("""1 0 0 1 A A G T A A G G C T G T T T
+        with open(self.ped_filename, "w") as f:
+            f.write("""1 0 0 1 A A G T A A G G C T G T T T
 2 0 0 1 A C G T G G C G T T G G C T
 3 0 0 2 A A G G A G C C C C G T C T
 4 0 0 2 A A G G A G C G C T G G T T
@@ -417,14 +414,11 @@ class TestPedigreeVariedColumns(TestBase):
 10 0 0 2 A A G G A G C G C T G G T T
 11 0 0 1 A C G G A A C G C C G G T T
 12 0 0 1 A A G T A A G G C C G G T T""")
-
-        f.close()
         pc = PhenoCovar()
         ped_parser = PedigreeParser(self.map_filename, self.ped_filename)
         ped_parser.load_mapfile()
         ped_parser.load_genotypes(pc)
-
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
+        mapdata = get_lines(self.map_filename, split=True)
 
         index = 0
         for snp in ped_parser:
@@ -438,8 +432,8 @@ class TestPedigreeVariedColumns(TestBase):
 
     def testPedigreeNoFamId(self):
         DataParser.has_fid = False
-        f = open(self.ped_filename, "w")
-        f.write("""1 0 0 1 0.1 A A G T A A G G C T G T T T
+        with open(self.ped_filename, "w") as f:
+            f.write("""1 0 0 1 0.1 A A G T A A G G C T G T T T
 2 0 0 1 0.4 A C G T G G C G T T G G C T
 3 0 0 2 1.0 A A G G A G C C C C G T C T
 4 0 0 2 0.5 A A G G A G C G C T G G T T
@@ -452,13 +446,11 @@ class TestPedigreeVariedColumns(TestBase):
 11 0 0 1 0.9 A C G G A A C G C C G G T T
 12 0 0 1 1.0 A A G T A A G G C C G G T T""")
 
-        f.close()
         pc = PhenoCovar()
         ped_parser = PedigreeParser(self.map_filename, self.ped_filename)
         ped_parser.load_mapfile()
         ped_parser.load_genotypes(pc)
-
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
+        mapdata = get_lines(self.map_filename, split=True)
 
         index = 0
         for snp in ped_parser:
@@ -473,8 +465,8 @@ class TestPedigreeVariedColumns(TestBase):
         DataParser.has_fid = False
         DataParser.has_sex = False
         DataParser.has_parents = False
-        f = open(self.ped_filename, "w")
-        f.write("""1 0.1 A A G T A A G G C T G T T T
+        with open(self.ped_filename, "w") as f:
+            f.write("""1 0.1 A A G T A A G G C T G T T T
 2 0.4 A C G T G G C G T T G G C T
 3 1.0 A A G G A G C C C C G T C T
 4 0.5 A A G G A G C G C T G G T T
@@ -487,13 +479,11 @@ class TestPedigreeVariedColumns(TestBase):
 11 0.9 A C G G A A C G C C G G T T
 12 1.0 A A G T A A G G C C G G T T""")
 
-        f.close()
         pc = PhenoCovar()
         ped_parser = PedigreeParser(self.map_filename, self.ped_filename)
         ped_parser.load_mapfile()
         ped_parser.load_genotypes(pc)
-
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
+        mapdata = get_lines(self.map_filename, split=True)
 
         index = 0
         for snp in ped_parser:
@@ -510,8 +500,7 @@ class TestPedFiles(TestBase):
         ped_parser = PedigreeParser(self.map_filename, self.ped_filename)
         ped_parser.load_mapfile()
         ped_parser.load_genotypes(pc)
-
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
+        mapdata = get_lines(self.map_filename, split=True)
 
         index = 0
         for snp in ped_parser:
@@ -528,11 +517,10 @@ class TestPedFiles(TestBase):
         ped_parser = PedigreeParser(self.map_filename, self.ped_filename)
         ped_parser.load_mapfile()
         ped_parser.load_genotypes(pc)
-
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
+        mapdata = get_lines(self.map_filename, split=True)
 
         index = 0
-        snp = ped_parser.__iter__().next()
+        snp = next(ped_parser.__iter__())
         try:
             while True:
                 self.assertEqual(int(mapdata[index][0]), snp.chr)
@@ -540,7 +528,7 @@ class TestPedFiles(TestBase):
                 self.assertEqual(mapdata[index][1], snp.rsid)
                 self.assertEqual(self.genotypes[index], list(snp.genotype_data))
                 index += 1
-                snp.next()
+                next(snp)
 
         except StopIteration:
             pass
@@ -552,8 +540,10 @@ class TestPedFiles(TestBase):
         ped_parser = PedigreeParser(self.map_filename, self.ped_filename)
         ped_parser.load_mapfile()
         ped_parser.load_genotypes(pc)
-        pc.load_phenofile(open(self.pheno_file), indices=[2,3])
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
+        
+        with open(self.pheno_file) as f:
+            pc.load_phenofile(f, indices=[2,3])
+        mapdata = get_lines(self.map_filename, split=True)
 
         sex = [1,1,2,2,1,1,1,2,2,1,1]
         pheno_data = [[0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
@@ -590,8 +580,8 @@ class TestPedFiles(TestBase):
     def testForInvariant(self):
         prefix = "__test_pedigree"
         self.pheno_file = "%s_mch.txt" % (prefix)
-        f = open(self.pheno_file, "w")
-        f.write("""FID\tIID\tBMI\tIBM\tMSA
+        with open(self.pheno_file, "w") as f:
+            f.write("""FID\tIID\tBMI\tIBM\tMSA
 1\t1\t0.1\t1.0\t1.0
 2\t2\t0.2\t0.5\t1.0
 3\t3\t0.3\t0.6\t1.0
@@ -604,25 +594,22 @@ class TestPedFiles(TestBase):
 10\t10\t0.4\t0.5\t1.0
 11\t11\t0.5\t1.0\t1.0
 12\t12\t0.6\t0.1\t1.0""")
-        f.close()
-
-
+    
         PhenoCovar.sex_as_covariate = True
         pc = PhenoCovar()
         ped_parser = PedigreeParser(self.map_filename, self.ped_filename)
         ped_parser.load_mapfile()
         ped_parser.load_genotypes(pc)
-        pc.load_phenofile(open(self.pheno_file), indices=[3])
-        index = 0
+        with open(self.pheno_file) as f2:
+            pc.load_phenofile(f2, indices=[3])
+            index = 0
+            mapdata = get_lines(self.map_filename, split=True)
 
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
-
-
-        with self.assertRaises(InvariantVar):
-            for snp in ped_parser:
-                for y in pc:
-                    non_missing = numpy.ones(len(snp.genotype_data), dtype=bool)
-                    (pheno, covariates, nonmissing) = y.get_variables(numpy.invert(non_missing))
+            with self.assertRaises(InvariantVar):
+                for snp in ped_parser:
+                    for y in pc:
+                        non_missing = numpy.ones(len(snp.genotype_data), dtype=bool)
+                        (pheno, covariates, nonmissing) = y.get_variables(numpy.invert(non_missing))
 
 
 
@@ -635,8 +622,7 @@ class TestPedFiles(TestBase):
         BoundaryCheck.chrom = 2
         ped_parser.load_mapfile()
         ped_parser.load_genotypes(pc)
-
-        pedigree = [x.split() for x in open(self.map_filename).readlines()]
+        pedigree = get_lines(self.map_filename, split=True)
 
         index = 4
         for snp in ped_parser:
@@ -655,8 +641,7 @@ class TestIndExclusions(TestBase):
         ped_parser = PedigreeParser(self.map_filename, self.ped_filename)
         ped_parser.load_mapfile()
         ped_parser.load_genotypes(pc)
-
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
+        mapdata = get_lines(self.map_filename, split=True)
 
         index = 0
         for snp in ped_parser:
@@ -673,8 +658,7 @@ class TestIndExclusions(TestBase):
         ped_parser = PedigreeParser(self.map_filename, self.ped_filename_missing)
         ped_parser.load_mapfile()
         ped_parser.load_genotypes(pc)
-
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
+        mapdata = get_lines(self.map_filename, split=True)
 
         genotypes = [
             [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
@@ -687,7 +671,6 @@ class TestIndExclusions(TestBase):
         ]
         index = 0
         for snp in ped_parser:
-
             self.assertEqual(genotypes[index][0:10], list(snp.genotype_data))
             self.assertEqual(int(mapdata[index][0]), snp.chr)
             self.assertEqual(int(mapdata[index][3]), snp.pos)
@@ -702,8 +685,7 @@ class TestIndExclusions(TestBase):
         ped_parser = PedigreeParser(self.map_filename, self.ped_filename_missing)
         ped_parser.load_mapfile()
         ped_parser.load_genotypes(pc)
-
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
+        mapdata = get_lines(self.map_filename, split=True)
         genotypes = [
             [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
             [-1, -1, -1, -1, 1, -1, -1, -1, 0, 0, 1],
@@ -730,17 +712,28 @@ class TestMissingData(TestBase):
         ped_parser = PedigreeParser(self.map_filename, self.ped_filename_missing)
         ped_parser.load_mapfile()
         ped_parser.load_genotypes(pc)
-
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
+        mapdata = get_lines(self.map_filename, split=True)
 
         index = 0
+        missing = 0
+        valid = 0
         for snp in ped_parser:
-            self.assertEqual(self.missing_genotypes[index], list(snp.genotype_data))
-            self.assertEqual(int(mapdata[index][0]), snp.chr)
-            self.assertEqual(int(mapdata[index][3]), snp.pos)
-            self.assertEqual(mapdata[index][1], snp.rsid)
+            for y in pc:
+                (pheno, covars, nonmissing) = y.get_variables(snp.missing_genotypes)
+                try:
+                    genodata = snp.get_genotype_data(nonmissing)
+                    self.assertEqual(self.missing_genotypes[index], list(genodata.genotypes))
+                    self.assertEqual(int(mapdata[index][0]), snp.chr)
+                    self.assertEqual(int(mapdata[index][3]), snp.pos)
+                    self.assertEqual(mapdata[index][1], snp.rsid)
+                    valid += 1
+                except TooMuchMissing as e:
+                    missing+=1
+                except InvalidFrequency as e:
+                    pass
             index += 1
-        self.assertEqual(7, index)
+        self.assertEqual(0, missing)
+        self.assertEqual(7, valid)
 
 
     def testMissingIndThresh(self):
@@ -749,19 +742,40 @@ class TestMissingData(TestBase):
         ped_parser = PedigreeParser(self.map_filename, self.ped_filename_missing)
         ped_parser.load_mapfile()
         ped_parser.load_genotypes(pc)
+        mapdata = get_lines(self.map_filename, split=True)
 
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
-
+        missing_genotypes = [
+            [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
+            [1, 0, 0, 1],
+            [2, 1, 1, 0, 0, 0, 2, 1, 1, 0, 0],
+            [1, 2, 1, 1, 0, 0, 1, 2, 1, 1, 0],
+            [2, 0, 1, 0, 0, 1, 2, 0, 1, 0, 0],
+            [0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+            [1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0]
+        ]
 
         index = 0
+        missing = 0
         map_idx = 0
+        valid = 0
         for snp in ped_parser:
-            self.assertEqual(int(mapdata[map_idx][0]), snp.chr)
-            self.assertEqual(int(mapdata[map_idx][3]), snp.pos)
-            self.assertEqual(mapdata[map_idx][1], snp.rsid)
-            self.assertEqual(self.missing_genotypes[index][1:], list(snp.genotype_data))
+            for y in pc:
+                (pheno, covars, nonmissing) = y.get_variables(snp.missing_genotypes)
+                try:
+                    genodata = snp.get_genotype_data(nonmissing)
+                    self.assertEqual(int(mapdata[map_idx][0]), snp.chr)
+                    self.assertEqual(int(mapdata[map_idx][3]), snp.pos)
+                    self.assertEqual(mapdata[map_idx][1], snp.rsid)
+                    self.assertEqual(missing_genotypes[index], list(genodata.genotypes))
+                    valid += 1
+                except TooMuchMissing as e:
+                    missing+=1
+                except InvalidFrequency as e:
+                    pass
             index += 1
             map_idx += 1
+        self.assertEqual(0, missing)
+        self.assertEqual(7, valid)
         self.assertEqual(7, index)
 
 
@@ -773,18 +787,35 @@ class TestMissingData(TestBase):
         ped_parser.load_mapfile()
         ped_parser.load_genotypes(pc)
 
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
+        missing_genotypes = [
+            [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
+            [1, 0, 0, 1],
+            [2, 1, 1, 0, 0, 0, 2, 1, 1, 0, 0],
+            [1, 2, 1, 1, 0, 0, 1, 2, 1, 1, 0],
+            [2, 0, 1, 0, 0, 1, 2, 0, 1, 0, 0],
+            [0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+            [1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0]
+        ]
+        mapdata = get_lines(self.map_filename, split=True)
 
         self.assertEqual([1,0,0,0,0,0,0,0,0,0,0,0], list(ped_parser.individual_mask))
         index = 0
+        missing =0
         for snp in ped_parser:
-            if index == 1:      # This gets dropped due to missingness
-                index += 1
-            self.assertEqual(int(mapdata[index][0]), snp.chr)
-            self.assertEqual(int(mapdata[index][3]), snp.pos)
-            self.assertEqual(mapdata[index][1], snp.rsid)
-            self.assertEqual(self.missing_genotypes[index][1:], list(snp.genotype_data))
+            for y in pc:
+                (pheno, covars, nonmissing) = y.get_variables(snp.missing_genotypes)
+                try:
+                    genodata = snp.get_genotype_data(nonmissing)
+                    self.assertEqual(int(mapdata[index][0]), snp.chr)
+                    self.assertEqual(int(mapdata[index][3]), snp.pos)
+                    self.assertEqual(mapdata[index][1], snp.rsid)
+                    self.assertEqual(missing_genotypes[index], list(genodata.genotypes))
+                except TooMuchMissing as e:
+                    missing+=1
+                except InvalidFrequency as e:
+                    pass
             index += 1
+        self.assertEqual(1, missing)
         self.assertEqual(7, index)
 
     def testMissingSnpThresh(self):
@@ -794,18 +825,26 @@ class TestMissingData(TestBase):
         ped_parser.load_mapfile()
         ped_parser.load_genotypes(pc)
         #self.assertEqual([0,1,0,0,0,0,0,0,0,0,0,0], list(ped_parser.individual_mask))
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
-
+        mapdata = get_lines(self.map_filename, split=True)
 
         index = 0
+        missing =0
         for snp in ped_parser:
-            if index == 1:      # This gets dropped due to missingness
-                index += 1
-            self.assertEqual(int(mapdata[index][0]), snp.chr)
-            self.assertEqual(int(mapdata[index][3]), snp.pos)
-            self.assertEqual(mapdata[index][1], snp.rsid)
-            self.assertEqual(self.missing_genotypes[index], list(snp.genotype_data))
+            for y in pc:
+                (pheno, covars, nonmissing) = y.get_variables(snp.missing_genotypes)
+                try:
+                    genodata = snp.get_genotype_data(nonmissing)
+
+                    self.assertEqual(int(mapdata[index][0]), snp.chr)
+                    self.assertEqual(int(mapdata[index][3]), snp.pos)
+                    self.assertEqual(mapdata[index][1], snp.rsid)
+                    self.assertEqual(self.missing_genotypes[index], list(genodata.genotypes))
+                except TooMuchMissing as e:
+                    missing += 1
+                except InvalidFrequency as e:
+                    pass
             index += 1
+        self.assertEqual(1, missing)
         self.assertEqual(7, index)
 class TestWithFewIndividuals(TestBase):
     def testWithFewIndividuals(self):
@@ -813,8 +852,8 @@ class TestWithFewIndividuals(TestBase):
         ped_parser = PedigreeParser(self.map_filename, self.miniped_filename)
         ped_parser.load_mapfile()
         ped_parser.load_genotypes(pc)
+        mapdata = get_lines(self.map_filename, split=True)
 
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
         genotypes = [
             [0, 1, 0],
             [1, 1, 0],
@@ -952,8 +991,7 @@ class TestMapFileNegPos(TestBase):
         ped_parser = PedigreeParser(self.map_miss_filename, self.ped_filename)
         ped_parser.load_mapfile()
         ped_parser.load_genotypes(pc)
-
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
+        mapdata = get_lines(self.map_filename, split=True)
 
         index = 2
         for snp in ped_parser:
@@ -970,8 +1008,7 @@ class TestMapFileNegPos(TestBase):
         ped_parser = PedigreeParser(self.map_miss_filename, self.ped_filename)
         ped_parser.load_mapfile()
         ped_parser.load_genotypes(pc)
-
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
+        mapdata = get_lines(self.map_filename, split=True)
 
         index = 4
         for snp in ped_parser:
@@ -989,8 +1026,7 @@ class TestMapFileNegPos(TestBase):
         ped_parser = PedigreeParser(self.map_miss_filename, self.ped_filename)
         ped_parser.load_mapfile()
         ped_parser.load_genotypes(pc)
-
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
+        mapdata = get_lines(self.map_filename, split=True)
 
         index = 2
         for snp in ped_parser:
@@ -1009,8 +1045,7 @@ class TestMapFileNegPos(TestBase):
         ped_parser = PedigreeParser(self.map_miss_filename, self.ped_filename)
         ped_parser.load_mapfile()
         ped_parser.load_genotypes(pc)
-
-        mapdata = [x.strip().split() for x in open(self.map_filename).readlines()]
+        mapdata = get_lines(self.map_filename, split=True)
 
         index = 2
         for snp in ped_parser:
