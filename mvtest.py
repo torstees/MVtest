@@ -215,8 +215,7 @@ def ParseIndList(ids):
                 words = line.strip().split()
                 ExitIf("%s:%s Individual file lists must contain " % (line.strip(), len(words)) +
                        "(exactly 2 columns (first two from ped columns)", len(words) != 2 )
-
-                id_list.append(":".join(words[0:2]))
+                id_list.append(PhenoCovar.build_id(words))
     else:
         id_list = ids.split(",")
 
