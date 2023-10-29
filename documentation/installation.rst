@@ -18,23 +18,9 @@ environement which will exist entirely under your own control.
 
 Installation can be done in two ways:
 
-Install with PIP
-++++++++++++++++
-
-To install using python's package manager, pip, simply use the following command:
-
-$ `pip install MVtest`
-
-If you have proper permission to install packages, this will attempt to download
-and install all dependencies along with libGWAS itself.
-
-Manual Installation
+Installation
 +++++++++++++++++++
-For users who do not use pip or wish to run the bundled tests as well as have
-a local copy of the manuals, manual installation is almost as easy.
-
-For users with Git installed, you can simply clone the sources using the
-following command:
+To install MVTest, simply clone the sources using the following command:
 
 $ `git clone https://github.com/edwards-lab/MVtest`
 
