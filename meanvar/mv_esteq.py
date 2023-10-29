@@ -259,7 +259,7 @@ def RunAnalysis(dataset, pheno_covar):
         total_loci += 1
         for y in pheno_covar:
             st = SimpleTimer()
-            #pdb.set_trace()
+
             (pheno, covariates, nonmissing) = y.get_variables(snp.missing_genotypes)
 
             try:
@@ -284,7 +284,6 @@ def RunAnalysis(dataset, pheno_covar):
                     if numpy.isnan(var):
                         raise NanInResult()
 
-                #pdb.set_trace()
                 nonmissing_ct = numpy.sum(nonmissing)
                 result = MVResult(
                                 snp.chr,
