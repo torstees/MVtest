@@ -65,7 +65,7 @@ MVtest comes with a unit test suite which can be run prior to installation.
 To run the tests, simply run the following command from within the root
 directory of the extracted archive's contents:
 
-$ `python setup.py test`
+$ `pytest`
 
 If no errors are reported, then mvtest should run correctly on your system.
 
