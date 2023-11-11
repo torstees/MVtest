@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 
-__author__ = 'torstees'
+__author__ = "torstees"
 __copyright__ = "Copyright (C) 2015 Todd Edwards, Chun Li and Eric Torstenson"
 __license__ = "GPL3.0"
 #     This file is part of MVtest.
@@ -47,12 +47,13 @@ from libgwas import mach_parser
 import libgwas.standardizer
 import meanvar.mvstandardizer
 from libgwas import ExitIf
+from meanvar import version
 
 import pdb
 
-__version__ = meanvar.__version__
+__version__ = version.__version__
 
-ExitIf("mvtest.py requires python 2.7.x  to run", sys.version_info < (2,7))
+ExitIf("mvtest.py requires python 3.x  to run", sys.version_info < (3))
 
 libgwas.standardizer.set_standardizer(meanvar.mvstandardizer.Standardizer)
 
@@ -197,6 +198,7 @@ differences, so please consider the list above carefully.
 verbose_report = False
 analytic = None
 
+
 def SetAnalytic(anltc):
     global analytic
     if analytic is not None:
@@ -206,6 +208,7 @@ def SetAnalytic(anltc):
 
     analytic = anltc
 
+
 def ParseIndList(ids):
     id_list = []
 
@@ -213,13 +216,18 @@ def ParseIndList(ids):
         with open(ids) as file:
             for line in file:
                 words = line.strip().split()
-                ExitIf("%s:%s Individual file lists must contain " % (line.strip(), len(words)) +
-                       "(exactly 2 columns (first two from ped columns)", len(words) != 2 )
+                ExitIf(
+                    "%s:%s Individual file lists must contain "
+                    % (line.strip(), len(words))
+                    + "(exactly 2 columns (first two from ped columns)",
+                    len(words) != 2,
+                )
                 id_list.append(PhenoCovar.build_id(words))
     else:
         id_list = ids.split(",")
 
     return id_list
+
 
 class MVTestApplication(object):
     """Basic application wrapper.
@@ -228,132 +236,392 @@ class MVTestApplication(object):
     the user's preference and then reports the final settings in use.
 
     """
-    
+
     def __init__(self):
         self.timer_log = None
         self.args = None
-        
+
     def __del__(self):
-        self.close_files()        
-    
+        self.close_files()
+
     def close_files(self):
         if self.args is not None:
             libgwas.close_file(self.args.pheno)
             libgwas.close_file(self.args.covar)
             libgwas.close_file(self.args.mach)
-                
-    
+
     def LoadCmdLine(self, args=sys.argv[1:]):
         """Parse user arguments using argparse and set up components"""
 
         global analytic
         analytic = None
         libgwas.timer.report_period("Parsing Arguments")
-        parser = argparse.ArgumentParser(description="MV Test: " + __version__, epilog="""
+        parser = argparse.ArgumentParser(
+            description="MV Test: " + __version__,
+            epilog="""
 mvtest.py is uses many of the same arguments as plink, but there are a few
 differences, so please consider the list above carefully.
-        """)
+        """,
+        )
 
-        parser.add_argument("-v", action='store_true', help="Print version number")
-        parser.add_argument("--vall", action='store_true', help="Print version number along with each dependency")
+        parser.add_argument("-v", action="store_true", help="Print version number")
+        parser.add_argument(
+            "--vall",
+            action="store_true",
+            help="Print version number along with each dependency",
+        )
 
-        parser.add_argument("--chr", type=str, default=-1, metavar="N", help="Select Chromosome")
-        parser.add_argument("--snps", type=str, default="", help="Comma-delimited list of SNP(s): rs1,rs2,rs3-rs6")
-        parser.add_argument("--from-bp", type=int, metavar="START", help="SNP range start")
+        parser.add_argument(
+            "--chr", type=str, default=-1, metavar="N", help="Select Chromosome"
+        )
+        parser.add_argument(
+            "--snps",
+            type=str,
+            default="",
+            help="Comma-delimited list of SNP(s): rs1,rs2,rs3-rs6",
+        )
+        parser.add_argument(
+            "--from-bp", type=int, metavar="START", help="SNP range start"
+        )
         parser.add_argument("--to-bp", type=int, metavar="END", help="SNP range end")
-        parser.add_argument("--from-kb", type=int, metavar="START", help="SNP range start")
+        parser.add_argument(
+            "--from-kb", type=int, metavar="START", help="SNP range start"
+        )
         parser.add_argument("--to-kb", type=int, metavar="END", help="SNP range end")
-        parser.add_argument("--from-mb", type=int, metavar="START", help="SNP range start")
+        parser.add_argument(
+            "--from-mb", type=int, metavar="START", help="SNP range start"
+        )
         parser.add_argument("--to-mb", type=int, metavar="END", help="SNP range end")
-        parser.add_argument("--exclude", type=str, default="", help="Comma-delimited list of rsids to be excluded")
+        parser.add_argument(
+            "--exclude",
+            type=str,
+            default="",
+            help="Comma-delimited list of rsids to be excluded",
+        )
 
         # For now, I'm not implementing keep, since we don't have any real meaningful need for analyzing individuals
         # PLINK does, but we don't do the QC stuff they do.
-        parser.add_argument("--keep", type=str, default="", help="Comma-delimited list of individuals to be analyzed")
-        parser.add_argument("--remove", type=str, default="", help="Comma-delimited list of individuals to be removed from analysis")
+        parser.add_argument(
+            "--keep",
+            type=str,
+            default="",
+            help="Comma-delimited list of individuals to be analyzed",
+        )
+        parser.add_argument(
+            "--remove",
+            type=str,
+            default="",
+            help="Comma-delimited list of individuals to be removed from analysis",
+        )
 
         parser.add_argument("--file", type=str, help="Prefix for .ped and .map files")
-        parser.add_argument("--ped", type=argparse.FileType('r'), help="PLINK compatible .ped file")
-        parser.add_argument("--map", type=argparse.FileType('r'), help="PLINK compatible .map file")
-        parser.add_argument("--map3", action='store_true', help="MAP file has only 3 columns")
-        parser.add_argument("--no-sex", action='store_true', help="Pedigree file doesn't have column 5 (sex)")
-        parser.add_argument("--no-parents", action="store_true", help="Pedigree file doesn't have columns 3 and 4 (parents)")
-        parser.add_argument("--no-fid", action="store_true", help="Pedigree file doesn't have column 1 (family ID)")
-        parser.add_argument("--no-pheno", action="store_true", help="Pedigree file doesn't have column 6 (phenotype")
-        parser.add_argument("--liability", action="store_true", help="Pedigree file has column 7 (liability)")
+        parser.add_argument(
+            "--ped", type=argparse.FileType("r"), help="PLINK compatible .ped file"
+        )
+        parser.add_argument(
+            "--map", type=argparse.FileType("r"), help="PLINK compatible .map file"
+        )
+        parser.add_argument(
+            "--map3", action="store_true", help="MAP file has only 3 columns"
+        )
+        parser.add_argument(
+            "--no-sex",
+            action="store_true",
+            help="Pedigree file doesn't have column 5 (sex)",
+        )
+        parser.add_argument(
+            "--no-parents",
+            action="store_true",
+            help="Pedigree file doesn't have columns 3 and 4 (parents)",
+        )
+        parser.add_argument(
+            "--no-fid",
+            action="store_true",
+            help="Pedigree file doesn't have column 1 (family ID)",
+        )
+        parser.add_argument(
+            "--no-pheno",
+            action="store_true",
+            help="Pedigree file doesn't have column 6 (phenotype",
+        )
+        parser.add_argument(
+            "--liability",
+            action="store_true",
+            help="Pedigree file has column 7 (liability)",
+        )
 
-        parser.add_argument("--bfile", type=str, help="Prefix for .bed, .bim and .fam files")
-        parser.add_argument("--bed", type=argparse.FileType('r'), help="Binary Ped file (.bed)")
-        parser.add_argument("--bim", type=argparse.FileType('r'), help="Binary ped marker file (.bim)")
-        parser.add_argument("--fam", type=argparse.FileType('r'), help="Binary ped family file (.fam)")
+        parser.add_argument(
+            "--bfile", type=str, help="Prefix for .bed, .bim and .fam files"
+        )
+        parser.add_argument(
+            "--bed", type=argparse.FileType("r"), help="Binary Ped file (.bed)"
+        )
+        parser.add_argument(
+            "--bim", type=argparse.FileType("r"), help="Binary ped marker file (.bim)"
+        )
+        parser.add_argument(
+            "--fam", type=argparse.FileType("r"), help="Binary ped family file (.fam)"
+        )
 
-        parser.add_argument("--tfile", type=str, help="Prefix for .tped and .tfam files")
-        parser.add_argument("--tped", type=argparse.FileType('r'), help="Transposed Pedigree file (.tped)")
-        parser.add_argument("--tfam", type=argparse.FileType('r'), help="Transposed pedigre Family file (.tfam)")
-        parser.add_argument("--compressed", action="store_true", help="Ped/TPed compressed with gzip (named .ped.tgz or .tped.tgz)")
+        parser.add_argument(
+            "--tfile", type=str, help="Prefix for .tped and .tfam files"
+        )
+        parser.add_argument(
+            "--tped",
+            type=argparse.FileType("r"),
+            help="Transposed Pedigree file (.tped)",
+        )
+        parser.add_argument(
+            "--tfam",
+            type=argparse.FileType("r"),
+            help="Transposed pedigre Family file (.tfam)",
+        )
+        parser.add_argument(
+            "--compressed",
+            action="store_true",
+            help="Ped/TPed compressed with gzip (named .ped.tgz or .tped.tgz)",
+        )
 
-        parser.add_argument("--impute", type=argparse.FileType('r'), help="File containing list of impute output for analysis")
-        parser.add_argument("--impute-fam", type=argparse.FileType('r'), help="File containing family details for impute data")
-        parser.add_argument("--impute-offset", type=int, default=-1, help="Impute file index (1 based) to begin analysis")
-        parser.add_argument("--impute-count", type=int, default=-1, help="Number of impute files to process (for this node)")
-        parser.add_argument("--impute-uncompressed", action="store_true", help="Indicate that the impute input is not gzipped, but plain text")
-        parser.add_argument("--impute-encoding", type=str, choices=['additive', 'dominant', 'recessive', 'genotype'], default='additive', help='Genetic model to be used')
-        parser.add_argument("--impute-info-ext", type=str, default='info', help="Portion of filename denotes info filename")
-        parser.add_argument("--impute-gen-ext", type=str, default='gen.gz', help="Portion of filename that denotes gen file")
-        parser.add_argument("--impute-info-thresh", type=float, default=0.4, help="Threshold for filtering imputed SNPs with poor 'info' values")
+        parser.add_argument(
+            "--impute",
+            type=argparse.FileType("r"),
+            help="File containing list of impute output for analysis",
+        )
+        parser.add_argument(
+            "--impute-fam",
+            type=argparse.FileType("r"),
+            help="File containing family details for impute data",
+        )
+        parser.add_argument(
+            "--impute-offset",
+            type=int,
+            default=-1,
+            help="Impute file index (1 based) to begin analysis",
+        )
+        parser.add_argument(
+            "--impute-count",
+            type=int,
+            default=-1,
+            help="Number of impute files to process (for this node)",
+        )
+        parser.add_argument(
+            "--impute-uncompressed",
+            action="store_true",
+            help="Indicate that the impute input is not gzipped, but plain text",
+        )
+        parser.add_argument(
+            "--impute-encoding",
+            type=str,
+            choices=["additive", "dominant", "recessive", "genotype"],
+            default="additive",
+            help="Genetic model to be used",
+        )
+        parser.add_argument(
+            "--impute-info-ext",
+            type=str,
+            default="info",
+            help="Portion of filename denotes info filename",
+        )
+        parser.add_argument(
+            "--impute-gen-ext",
+            type=str,
+            default="gen.gz",
+            help="Portion of filename that denotes gen file",
+        )
+        parser.add_argument(
+            "--impute-info-thresh",
+            type=float,
+            default=0.4,
+            help="Threshold for filtering imputed SNPs with poor 'info' values",
+        )
 
-        parser.add_argument("--bgen", type=argparse.FileType('r'), help="Single BGen file")
-        parser.add_argument("--bgen-sample", type=argparse.FileType('r'), default=None, help='Sample file (only necessary if bgen lacks sample IDs')
+        parser.add_argument(
+            "--bgen", type=argparse.FileType("r"), help="Single BGen file"
+        )
+        parser.add_argument(
+            "--bgen-sample",
+            type=argparse.FileType("r"),
+            default=None,
+            help="Sample file (only necessary if bgen lacks sample IDs",
+        )
         # Will look into this at a future date.
-        #parser.add_argument("--bgen-meta", type=argparse.FileType('r'), help='META file')
+        # parser.add_argument("--bgen-meta", type=argparse.FileType('r'), help='META file')
 
-        parser.add_argument("--mach", type=argparse.FileType('r'), help="File containing list of MACH output for analysis")
-        parser.add_argument("--mach-offset", type=int, default=-1, help="Mach file index (1 based) to begin analysis")
-        parser.add_argument("--mach-count", type=int, default=-1, help="Number of mach files to process (for this node)")
-        parser.add_argument("--mach-uncompressed", action="store_true", help="Indicate that the mach input is not gzipped")
-        parser.add_argument("--mach-chunk-size", type=int, default=100000, help="Max number of loci to load at once (higher increases memory requirements with some speed benefits)")
-        parser.add_argument("--mach-info-ext", type=str, default="info.gz", help="Portion of filename denotes info filenames")
-        parser.add_argument("--mach-dose-ext", type=str, default="dose.gz", help="Portion of filename that denotes dose files")
-        parser.add_argument("--mach-min-rsquared", type=float, default=0.3, help="Filter out loci with RSquared < this value")
-        parser.add_argument("--mach-chrpos", action="store_true", help="When true, first col in .info file must be chr:pos (additional pieces allowed)")
+        parser.add_argument(
+            "--mach",
+            type=argparse.FileType("r"),
+            help="File containing list of MACH output for analysis",
+        )
+        parser.add_argument(
+            "--mach-offset",
+            type=int,
+            default=-1,
+            help="Mach file index (1 based) to begin analysis",
+        )
+        parser.add_argument(
+            "--mach-count",
+            type=int,
+            default=-1,
+            help="Number of mach files to process (for this node)",
+        )
+        parser.add_argument(
+            "--mach-uncompressed",
+            action="store_true",
+            help="Indicate that the mach input is not gzipped",
+        )
+        parser.add_argument(
+            "--mach-chunk-size",
+            type=int,
+            default=100000,
+            help="Max number of loci to load at once (higher increases memory requirements with some speed benefits)",
+        )
+        parser.add_argument(
+            "--mach-info-ext",
+            type=str,
+            default="info.gz",
+            help="Portion of filename denotes info filenames",
+        )
+        parser.add_argument(
+            "--mach-dose-ext",
+            type=str,
+            default="dose.gz",
+            help="Portion of filename that denotes dose files",
+        )
+        parser.add_argument(
+            "--mach-min-rsquared",
+            type=float,
+            default=0.3,
+            help="Filter out loci with RSquared < this value",
+        )
+        parser.add_argument(
+            "--mach-chrpos",
+            action="store_true",
+            help="When true, first col in .info file must be chr:pos (additional pieces allowed)",
+        )
 
-        parser.add_argument('--vcf', type=argparse.FileType('r'), help='VCF file containing data for analysis')
-        parser.add_argument('--vcf-field', type=str, default='GT', help='Alternative column for sample value to be found')
+        parser.add_argument(
+            "--vcf",
+            type=argparse.FileType("r"),
+            help="VCF file containing data for analysis",
+        )
+        parser.add_argument(
+            "--vcf-field",
+            type=str,
+            default="GT",
+            help="Alternative column for sample value to be found",
+        )
 
-        parser.add_argument("--pheno", type=argparse.FileType('r'), help="File containing phenotypes")
-        parser.add_argument("--sample-pheno", type=argparse.FileType('r'), help="(Mach) Sample file containing phenotypes")
-        parser.add_argument("--mphenos", type=str, default="", help="Column number(s) for phenotype to be analyzed if number of columns > 1")
-        parser.add_argument("--pheno-names", type=str, default="", help="Name for phenotype(s) to be analyzed (must be in --pheno file)")
-        parser.add_argument("--all-pheno", action="store_true", help="Analyze all columns from the phenotype file")
-        #parser.add_argument("--all-pheno", action='store_true', help="Analyze each phenotype")
+        parser.add_argument(
+            "--pheno", type=argparse.FileType("r"), help="File containing phenotypes"
+        )
+        parser.add_argument(
+            "--sample-pheno",
+            type=argparse.FileType("r"),
+            help="(Mach) Sample file containing phenotypes",
+        )
+        parser.add_argument(
+            "--mphenos",
+            type=str,
+            default="",
+            help="Column number(s) for phenotype to be analyzed if number of columns > 1",
+        )
+        parser.add_argument(
+            "--pheno-names",
+            type=str,
+            default="",
+            help="Name for phenotype(s) to be analyzed (must be in --pheno file)",
+        )
+        parser.add_argument(
+            "--all-pheno",
+            action="store_true",
+            help="Analyze all columns from the phenotype file",
+        )
+        # parser.add_argument("--all-pheno", action='store_true', help="Analyze each phenotype")
 
-        parser.add_argument("--covar", type=argparse.FileType('r'), help="File containing covariates")
-        parser.add_argument("--sample-covar", type=argparse.FileType('r'), help="(Mach) Sample file containing covariates")
-        parser.add_argument("--covar-numbers", type=str, default="", help="Comma-separated list of covariate indices")
-        parser.add_argument("--covar-names", type=str, default="", help="Comma-separated list of covariate names")
-        parser.add_argument("--sex", action='store_true', help="Use sex from the pedigree file as a covariate")
-        parser.add_argument("--missing-phenotype", type=float, default=-9.0, help="Encoding for missing phenotypes")
+        parser.add_argument(
+            "--covar", type=argparse.FileType("r"), help="File containing covariates"
+        )
+        parser.add_argument(
+            "--sample-covar",
+            type=argparse.FileType("r"),
+            help="(Mach) Sample file containing covariates",
+        )
+        parser.add_argument(
+            "--covar-numbers",
+            type=str,
+            default="",
+            help="Comma-separated list of covariate indices",
+        )
+        parser.add_argument(
+            "--covar-names",
+            type=str,
+            default="",
+            help="Comma-separated list of covariate names",
+        )
+        parser.add_argument(
+            "--sex",
+            action="store_true",
+            help="Use sex from the pedigree file as a covariate",
+        )
+        parser.add_argument(
+            "--missing-phenotype",
+            type=float,
+            default=-9.0,
+            help="Encoding for missing phenotypes",
+        )
 
-        parser.add_argument("--maf", type=float, default=0.0, help="Minimum MAF allowed for analysis")
-        parser.add_argument("--max-maf", type=float, default=1.0, help="MAX MAF allowed for analysis")
-        parser.add_argument("--geno", type=float, default=1.0, help="MAX per-SNP missing for analysis")
-        parser.add_argument("--mind", type=float, default=1.0, help="MAX per-person missing")
+        parser.add_argument(
+            "--maf", type=float, default=0.0, help="Minimum MAF allowed for analysis"
+        )
+        parser.add_argument(
+            "--max-maf", type=float, default=1.0, help="MAX MAF allowed for analysis"
+        )
+        parser.add_argument(
+            "--geno", type=float, default=1.0, help="MAX per-SNP missing for analysis"
+        )
+        parser.add_argument(
+            "--mind", type=float, default=1.0, help="MAX per-person missing"
+        )
 
-        parser.add_argument("--verbose", action='store_true', help="Output additional data details")
-        parser.add_argument("--debug", action='store_true', help='Output debugging info to a debug file')
-        parser.add_argument("--log", type=str, default='mvtest', help='Filename for info log (optional debug output)')
-        parser.add_argument("--out", type=str, default=None, help='Filename for result file (stdout if not provided)')
-        
-        parser.add_argument('--mv-max-iter', type=int, default=25000, help='Max number of iterations for a given theta during the mean var calculation')
+        parser.add_argument(
+            "--verbose", action="store_true", help="Output additional data details"
+        )
+        parser.add_argument(
+            "--debug", action="store_true", help="Output debugging info to a debug file"
+        )
+        parser.add_argument(
+            "--log",
+            type=str,
+            default="mvtest",
+            help="Filename for info log (optional debug output)",
+        )
+        parser.add_argument(
+            "--out",
+            type=str,
+            default=None,
+            help="Filename for result file (stdout if not provided)",
+        )
+
+        parser.add_argument(
+            "--mv-max-iter",
+            type=int,
+            default=25000,
+            help="Max number of iterations for a given theta during the mean var calculation",
+        )
         parser.set_defaults(all_pheno=False, sex=False, mach_chrpos=False, debug=False)
         args = parser.parse_args(args)
         self.args = args
 
-        libgwas.timer.open("%s-timing.log" % args.log, "opening log file: %s-timing.log" % args.log)
+        libgwas.timer.open(
+            "%s-timing.log" % args.log, "opening log file: %s-timing.log" % args.log
+        )
         libgwas.timer.report_total("MVtest- arguments parsed")
-        
+
         meanvar.mv_esteq.msolve_max_iteration = args.mv_max_iter
-        log_filename = "%s-%s.log" % (args.log, datetime.datetime.now().strftime("%Y-%m-%d"))
+        log_filename = "%s-%s.log" % (
+            args.log,
+            datetime.datetime.now().strftime("%Y-%m-%d"),
+        )
         # Report version, if requested, and exit
         if args.v:
             print("%s: %s" % (os.path.basename(__file__), __version__), file=sys.stderr)
@@ -362,23 +630,41 @@ differences, so please consider the list above carefully.
 
         args.report = sys.stdout
         if args.out is not None:
-            args.report = open(args.out, 'w')
-        
-            
+            args.report = open(args.out, "w")
+
         if args.vall:
             print("%s: %s" % (os.path.basename(__file__), __version__), file=sys.stderr)
-            print("%s: %s" % (os.path.dirname(libgwas.__file__), libgwas.__version__), file=sys.stderr)
-            print("%s: %s" % (os.path.dirname(scipy.__file__), scipy.__version__), file=sys.stderr)
-            print("%s: %s" % (os.path.dirname(numpy.__file__), numpy.__version__), file=sys.stderr)
+            print(
+                "%s: %s" % (os.path.dirname(libgwas.__file__), libgwas.__version__),
+                file=sys.stderr,
+            )
+            print(
+                "%s: %s" % (os.path.dirname(scipy.__file__), scipy.__version__),
+                file=sys.stderr,
+            )
+            print(
+                "%s: %s" % (os.path.dirname(numpy.__file__), numpy.__version__),
+                file=sys.stderr,
+            )
             sys.exit(0)
 
         log_format = "%(levelname)s\t%(name)s\t%(message)s"
         if args.debug == True:
-            logging.basicConfig(filename=log_filename, filemode='w', level=logging.DEBUG, format=log_format)
+            logging.basicConfig(
+                filename=log_filename,
+                filemode="w",
+                level=logging.DEBUG,
+                format=log_format,
+            )
         else:
-            logging.basicConfig(filename=log_filename, filemode='w', level=logging.INFO, format=log_format)
+            logging.basicConfig(
+                filename=log_filename,
+                filemode="w",
+                level=logging.INFO,
+                format=log_format,
+            )
 
-        log = logging.getLogger('mvtest::LoadCmdLine')
+        log = logging.getLogger("mvtest::LoadCmdLine")
         log.info(" ".join(sys.argv[1:]))
         log.info("%s: %s" % (os.path.basename(__file__), __version__))
         log.info("%s: %s" % (os.path.dirname(libgwas.__file__), libgwas.__version__))
@@ -392,40 +678,61 @@ differences, so please consider the list above carefully.
             BoundaryCheck.set_chrom(args.chr)
         else:
             if args.chr != -1:
-                libgwas.Exit(("Positional based filtering (--chr, --from/--to)" +
-                        " only work with mach_chrpos. See manual for details."))
+                libgwas.Exit(
+                    (
+                        "Positional based filtering (--chr, --from/--to)"
+                        + " only work with mach_chrpos. See manual for details."
+                    )
+                )
             BoundaryCheck.chrom = "NA"
         snps = args.snps.split(",")
         try:
-            b = BoundaryCheck(bp=(args.from_bp, args.to_bp),
-                      kb=(args.from_kb, args.to_kb),
-                      mb=(args.from_mb, args.to_mb))
+            b = BoundaryCheck(
+                bp=(args.from_bp, args.to_bp),
+                kb=(args.from_kb, args.to_kb),
+                mb=(args.from_mb, args.to_mb),
+            )
         except InvalidBoundarySpec as e:
-            print("Invalid boundary spec associated: %s" % (e.malformed_boundary), file=sys.stderr)
+            print(
+                "Invalid boundary spec associated: %s" % (e.malformed_boundary),
+                file=sys.stderr,
+            )
             sys.exit(1)
         try:
             s = SnpBoundaryCheck(snps=snps)
         except InvalidBoundarySpec as e:
-            print("Invalid SNP boundary defined: %s" % (e.malformed_boundary), file=sys.stderr)
-            print("SNPs must be either single or have be a range such as rs123-rs345", file=sys.stderr)
+            print(
+                "Invalid SNP boundary defined: %s" % (e.malformed_boundary),
+                file=sys.stderr,
+            )
+            print(
+                "SNPs must be either single or have be a range such as rs123-rs345",
+                file=sys.stderr,
+            )
             sys.exit(1)
 
         if (b.valid and len(b.bounds) > 0) and s.valid:
-            print("Only one type of boundary conditions is permitted. Either use --from-bp, etc. or rs123-rs345. ", file=sys.stderr)
+            print(
+                "Only one type of boundary conditions is permitted. Either use --from-bp, etc. or rs123-rs345. ",
+                file=sys.stderr,
+            )
             sys.exit(1)
 
         if len(b.bounds) > 0 and not b.valid:
             if BoundaryCheck.chrom == "NA":
-                libgwas.Exit(("Positional based filtering (--chr, --from/--to)" +
-                        " only work with mach_chrpos. See manual for details."))
-
+                libgwas.Exit(
+                    (
+                        "Positional based filtering (--chr, --from/--to)"
+                        + " only work with mach_chrpos. See manual for details."
+                    )
+                )
 
         if s.valid:
             DataParser.boundary = s
         # If b isn't valid, we still want to potentially allow for chr and SNPs, it just won't have
         else:
             b.LoadSNPs(snps)
-                                        # any actual boundary listings
+            # any actual boundary listings
             DataParser.boundary = b
         DataParser.boundary.LoadExclusions(snps=args.exclude.split(","))
 
@@ -450,72 +757,111 @@ differences, so please consider the list above carefully.
         DataParser.has_liability = args.liability
 
         pheno_covar = PhenoCovar()
-        self.verbose=False
+        self.verbose = False
         libgwas.timer.report_period("Loading Dataset")
         if args.verbose:
             self.verbose = True
         analytic = None
         if args.file != None or args.ped or args.map:
-            if args.ped and not args.map or args.map  and not args.ped:
-                print("When analyzing pedigree data, both .map and .ped must be specified", file=sys.stderr)
+            if args.ped and not args.map or args.map and not args.ped:
+                print(
+                    "When analyzing pedigree data, both .map and .ped must be specified",
+                    file=sys.stderr,
+                )
                 sys.exit(1)
             if args.ped:
                 dataset = libgwas.pedigree_parser.Parser(args.map.name, args.ped.name)
                 args.map.close()
                 args.ped.close()
             else:
-                dataset = libgwas.pedigree_parser.Parser("%s.map" % (args.file), "%s.ped" % (args.file))
+                dataset = libgwas.pedigree_parser.Parser(
+                    "%s.map" % (args.file), "%s.ped" % (args.file)
+                )
 
-            SetAnalytic('Pedigree')
+            SetAnalytic("Pedigree")
             dataset.load_mapfile(map3=args.map3)
             dataset.load_genotypes(pheno_covar)
         elif args.tfile != None or args.tped or args.tfam:
             if args.tped and not args.tfam or args.tfam and not args.tped:
-                print("When analyzing transposed pedigree data, both .tfam and .tped must be specified", file=sys.stderr)
+                print(
+                    "When analyzing transposed pedigree data, both .tfam and .tped must be specified",
+                    file=sys.stderr,
+                )
                 sys.exit(1)
             if args.tped:
-                dataset = libgwas.transposed_pedigree_parser.Parser(args.tfam.name, args.tped.name)
+                dataset = libgwas.transposed_pedigree_parser.Parser(
+                    args.tfam.name, args.tped.name
+                )
                 args.tfam.close()
                 args.tped.close()
             else:
-                dataset = libgwas.transposed_pedigree_parser.Parser("%s.tfam" % (args.tfile), "%s.tped" % (args.tfile))
-            SetAnalytic('Transposed Pedigree')
+                dataset = libgwas.transposed_pedigree_parser.Parser(
+                    "%s.tfam" % (args.tfile), "%s.tped" % (args.tfile)
+                )
+            SetAnalytic("Transposed Pedigree")
             dataset.load_tfam(pheno_covar)
             dataset.load_genotypes()
         elif args.bfile != None:
-            dataset = libgwas.bed_parser.Parser("%s.fam" % (args.bfile), "%s.bim" % (args.bfile), "%s.bed" % (args.bfile))
-            SetAnalytic('Binary Pedigree')
+            dataset = libgwas.bed_parser.Parser(
+                "%s.fam" % (args.bfile),
+                "%s.bim" % (args.bfile),
+                "%s.bed" % (args.bfile),
+            )
+            SetAnalytic("Binary Pedigree")
             dataset.load_bim(map3=args.map3)
             dataset.load_fam(pheno_covar)
             dataset.load_genotypes()
         elif args.bed or args.bim or args.fam:
-            if (args.bed and not args.fam or not args.bim) or (args.bim and not args.bed or not args.fam) or (args.fam and not args.bed or not args.bim):
-                print("When analyzing binary pedigree data, .bed, .bim and .fam files must be provided", file=sys.stderr)
+            if (
+                (args.bed and not args.fam or not args.bim)
+                or (args.bim and not args.bed or not args.fam)
+                or (args.fam and not args.bed or not args.bim)
+            ):
+                print(
+                    "When analyzing binary pedigree data, .bed, .bim and .fam files must be provided",
+                    file=sys.stderr,
+                )
                 sys.exit(1)
             dataset = libgwas.bed_parser.Parser(args.fam, args.bim, args.bed)
-            SetAnalytic('Binary Pedigree')
+            SetAnalytic("Binary Pedigree")
             dataset.load_bim(map3=args.map3)
             dataset.load_fam(pheno_covar)
             dataset.load_genotypes()
         elif args.impute:
             DataParser.compressed_pedigree = not args.impute_uncompressed
 
-            if (args.impute_offset > 0 and args.impute_count == -1) or (args.impute_offset == -1 and args.impute_count > 0):
-                print("--impute-count and --impute_offset must both > 0 if one is set other than -1.  ", file=sys.stderr)
+            if (args.impute_offset > 0 and args.impute_count == -1) or (
+                args.impute_offset == -1 and args.impute_count > 0
+            ):
+                print(
+                    "--impute-count and --impute_offset must both > 0 if one is set other than -1.  ",
+                    file=sys.stderr,
+                )
                 sys.exit(1)
             if DataParser.snp_miss_tol != 1.0:
-                print("--geno does not have any impact on imputed data", file=sys.stderr)
+                print(
+                    "--geno does not have any impact on imputed data", file=sys.stderr
+                )
                 sys.exit(1)
             if DataParser.ind_miss_tol != 1.0:
-                print("--mind does not have any impact on imputed data", file=sys.stderr)
+                print(
+                    "--mind does not have any impact on imputed data", file=sys.stderr
+                )
                 sys.exit(1)
             impute_parser.SetEncoding(args.impute_encoding)
             impute_parser.Parser.info_ext = args.impute_info_ext
             impute_parser.Parser.info_threshold = args.impute_info_thresh
-            libgwas.ExitIf("--impute-fam is required for when processing imputed data", args.impute_fam == None)
-            archives, chroms, infos = self.ParseImputeFile(args.impute.name, args.impute_offset, args.impute_count)
-            dataset = impute_parser.Parser(args.impute_fam.name, archives, chroms, infos)
-            SetAnalytic('Imputed Gen File')
+            libgwas.ExitIf(
+                "--impute-fam is required for when processing imputed data",
+                args.impute_fam == None,
+            )
+            archives, chroms, infos = self.ParseImputeFile(
+                args.impute.name, args.impute_offset, args.impute_count
+            )
+            dataset = impute_parser.Parser(
+                args.impute_fam.name, archives, chroms, infos
+            )
+            SetAnalytic("Imputed Gen File")
             dataset.load_family_details(pheno_covar)
             dataset.load_genotypes()
             args.impute.close()
@@ -524,54 +870,72 @@ differences, so please consider the list above carefully.
             # For now, only additive support is supported
             sample_filename = None
             libgwas.bgen_parser.Parser.default_chromosome = args.chr
-            #PhenoCovar.id_encoding = PhenoIdFormat.FID
+            # PhenoCovar.id_encoding = PhenoIdFormat.FID
             if args.bgen_sample:
                 sample_filename = args.bgen_sample.name
             elif os.path.isfile("%s.sample" % (args.bgen.name)):
                 sample_filename = "%s.sample" % (args.bgen.name)
             dataset = libgwas.bgen_parser.Parser(args.bgen.name, sample_filename)
-            SetAnalytic('BGen')
+            SetAnalytic("BGen")
             dataset.load_family_details(pheno_covar)
 
             dataset.load_genotypes()
             args.bgen.close()
         elif args.mach:
             DataParser.compressed_pedigree = not args.mach_uncompressed
-            if (args.mach_offset > 0 and args.mach_count == -1) or (args.mach_offset == -1 and args.impute_count > 0):
-                print("--mach-count and --mach_offset must both be > 0 if one is set other than -1. ", file=sys.stderr)
+            if (args.mach_offset > 0 and args.mach_count == -1) or (
+                args.mach_offset == -1 and args.impute_count > 0
+            ):
+                print(
+                    "--mach-count and --mach_offset must both be > 0 if one is set other than -1. ",
+                    file=sys.stderr,
+                )
                 sys.exit(1)
             if DataParser.snp_miss_tol != 1.0:
-                print("--geno does not have any impact on imputed data", file=sys.stderr)
+                print(
+                    "--geno does not have any impact on imputed data", file=sys.stderr
+                )
                 sys.exit(1)
             if DataParser.ind_miss_tol != 1.0:
-                print("--mind does not have any impact on imputed data", file=sys.stderr)
+                print(
+                    "--mind does not have any impact on imputed data", file=sys.stderr
+                )
                 sys.exit(1)
             if BoundaryCheck.chrom != "NA" and not args.mach_chrpos:
-                libgwas.Exit(("Positional based filtering (--chr, --from/--to)" +
-                        " only work with mach_chrpos. See manual for details."))
+                libgwas.Exit(
+                    (
+                        "Positional based filtering (--chr, --from/--to)"
+                        + " only work with mach_chrpos. See manual for details."
+                    )
+                )
             mach_parser.Parser.chrpos_encoding = args.mach_chrpos
             mach_parser.Parser.info_ext = args.mach_info_ext
             mach_parser.Parser.dosage_ext = args.mach_dose_ext
             mach_parser.Parser.chunk_stride = args.mach_chunk_size
             mach_parser.Parser.min_rsquared = args.mach_min_rsquared
-            archives, infos = self.ParseMachFile(args.mach.name, args.mach_offset, args.mach_count)
+            archives, infos = self.ParseMachFile(
+                args.mach.name, args.mach_offset, args.mach_count
+            )
             dataset = mach_parser.Parser(archives, infos)
-            SetAnalytic('Mach')
+            SetAnalytic("Mach")
             dataset.load_family_details(pheno_covar)
             dataset.load_genotypes()
             args.mach.close()
         elif args.vcf:
             dataset = vcf_parser.Parser(args.vcf.name, args.vcf_field)
-            SetAnalytic('VCF')
+            SetAnalytic("VCF")
             dataset.load_family_details(pheno_covar)
             dataset.load_genotypes()
             args.vcf.close()
         else:
             parser.print_usage(sys.stderr)
-            print("\nNo data has been specified. Users must specify either pedigree or transposed pedigree to continue", file=sys.stderr)
+            print(
+                "\nNo data has been specified. Users must specify either pedigree or transposed pedigree to continue",
+                file=sys.stderr,
+            )
             sys.exit(1)
         libgwas.timer.report_period("Datset Loaded")
-        
+
         if args.pheno or args.sample_pheno:
             mphenos = []
             if args.mphenos != "":
@@ -591,10 +955,12 @@ differences, so please consider the list above carefully.
             pheno_covar.load_phenofile(pheno_filename, mphenos, nphenos, sample_file)
         libgwas.timer.report_period("Phenotypes Loaded")
         if args.covar:
-            pheno_covar.load_covarfile(args.covar, args.covar_numbers.split(","), args.covar_names.split(","))
+            pheno_covar.load_covarfile(
+                args.covar, args.covar_numbers.split(","), args.covar_names.split(",")
+            )
         pheno_covar.do_standardize_variables = True
         libgwas.timer.report_period("Covariates Loaded")
-        
+
         self.args = args
         return dataset, pheno_covar, args
 
@@ -607,8 +973,14 @@ differences, so please consider the list above carefully.
             words = line.split()
 
             if len(words) < 2:
-                print("The impute file has too few columns! It should have the following information at a minimum:", file=sys.stderr)
-                print("chr & imputed_datafile with an optional .info file if the info files aren't named such that", file=sys.stderr)
+                print(
+                    "The impute file has too few columns! It should have the following information at a minimum:",
+                    file=sys.stderr,
+                )
+                print(
+                    "chr & imputed_datafile with an optional .info file if the info files aren't named such that",
+                    file=sys.stderr,
+                )
                 print("they are easy for mvtest to find.", file=sys.stderr)
                 sys.exit(1)
 
@@ -618,12 +990,15 @@ differences, so please consider the list above carefully.
                 infos.append(words[2])
         if offset >= 0 and count > 0:
             offset -= 1
-            archives = archives[offset:offset+count]
-            chroms = chroms[offset:offset+count]
+            archives = archives[offset : offset + count]
+            chroms = chroms[offset : offset + count]
             if len(infos) > 0:
-                infos = infos[offset:offset+count]
+                infos = infos[offset : offset + count]
 
-        libgwas.ExitIf("The impute file listing appears to be misconfigured. All lines must have the same number of columns", len(infos) != 0 and len(infos) != len(archives))
+        libgwas.ExitIf(
+            "The impute file listing appears to be misconfigured. All lines must have the same number of columns",
+            len(infos) != 0 and len(infos) != len(archives),
+        )
         return archives, chroms, infos
 
     def ParseMachFile(self, filename, offset=-1, count=-1):
@@ -635,8 +1010,14 @@ differences, so please consider the list above carefully.
                 words = line.split()
 
                 if len(words) < 1:
-                    print("The Mach file has too few columns! It should have the following information at a minimum:", file=sys.stderr)
-                    print("imputed_datafile with an optional .info file if the info files aren't named such that", file=sys.stderr)
+                    print(
+                        "The Mach file has too few columns! It should have the following information at a minimum:",
+                        file=sys.stderr,
+                    )
+                    print(
+                        "imputed_datafile with an optional .info file if the info files aren't named such that",
+                        file=sys.stderr,
+                    )
                     print("they are easy for mvtest to find.", file=sys.stderr)
                     sys.exit(1)
 
@@ -645,20 +1026,24 @@ differences, so please consider the list above carefully.
                     infos.append(words[1])
         if offset >= 0 and count > 0:
             offset -= 1
-            archives = archives[offset:offset+count]
+            archives = archives[offset : offset + count]
             if len(infos) > 0:
-                infos = infos[offset:offset+count]
+                infos = infos[offset : offset + count]
 
-        libgwas.ExitIf("The mach file listing appears to be misconfigured. All lines must have the same number of columns", len(infos) != 0 and len(infos) != len(archives))
+        libgwas.ExitIf(
+            "The mach file listing appears to be misconfigured. All lines must have the same number of columns",
+            len(infos) != 0 and len(infos) != len(archives),
+        )
         return archives, infos
+
     def BuildReportLineIf(self, key, log, doPrint, value="TRUE"):
         if doPrint:
             log.info(BuildReportLine(key, value))
 
     def ReportConfiguration(self, args=[], dataset=None):
-        """Report on the status of application objects. """
+        """Report on the status of application objects."""
 
-        log = logging.getLogger('mvtest::ReportConfiguration')
+        log = logging.getLogger("mvtest::ReportConfiguration")
         log.info(BuildReportLine("MVTEST", __version__))
         log.info(BuildReportLine("MAX-ITER", meanvar.mv_esteq.msolve_max_iteration))
         if args.out is not None:
@@ -669,7 +1054,9 @@ differences, so please consider the list above carefully.
         log.info(BuildReportLine("MISS IND TOL", DataParser.ind_miss_tol))
         log.info(BuildReportLine("MISS SNP TOL", DataParser.snp_miss_tol))
         log.info(BuildReportLine("PHENO MISS ENC", PhenoCovar.missing_encoding))
-        self.BuildReportLineIf("COMPRESSED PEDIGREE", log, DataParser.compressed_pedigree)
+        self.BuildReportLineIf(
+            "COMPRESSED PEDIGREE", log, DataParser.compressed_pedigree
+        )
         self.BuildReportLineIf("SEX AS COV", log, PhenoCovar.sex_as_covariate)
         self.BuildReportLineIf("NO SEX", log, not DataParser.has_sex)
         self.BuildReportLineIf("NO PARENTS", log, not DataParser.has_parents)
@@ -695,8 +1082,8 @@ differences, so please consider the list above carefully.
 
 
 def main(args=sys.argv[1:], print_cfg=False):
-    """Entry point for actual script. """
-    
+    """Entry point for actual script."""
+
     try:
         app = MVTestApplication()
         dataset, vars, args = app.LoadCmdLine(args)
@@ -709,7 +1096,9 @@ def main(args=sys.argv[1:], print_cfg=False):
 
         anl_fn = meanvar.mv_esteq.RunAnalysis
         for result in anl_fn(dataset, vars):
-            libgwas.timer.report_period("- %s:%d %s analysis completed" % (result.chr, result.pos, result.rsid))
+            libgwas.timer.report_period(
+                "- %s:%d %s analysis completed" % (result.chr, result.pos, result.rsid)
+            )
             if not printed_header:
                 result.print_header(f=args.report, verbose=app.verbose)
                 printed_header = True
@@ -718,7 +1107,8 @@ def main(args=sys.argv[1:], print_cfg=False):
     except ReportableException as e:
         print(e.msg, file=sys.stderr)
 
-
     libgwas.timer.close()
+
+
 if __name__ == "__main__":
     main(print_cfg=True)
