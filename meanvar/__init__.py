@@ -1,6 +1,4 @@
-__author__ = 'Eric Torstenson'
-__version__ = '1.5.0'
-
+__author__ = "Eric Torstenson"
 __copyright__ = "Copyright (C) 2015 Todd Edwards, Chun Li and Eric Torstenson"
 __license__ = "GPL3.0"
 #     This file is part of MVtest.
