@@ -109,11 +109,33 @@ MVtest comes with a unit test suite which can be run prior to
 installation. To run the tests, simply run the following command from
 within the root directory of the extracted archive’s contents:
 
-$ *python setup.py test*
+$ *pytest*
 
 If no errors are reported, then mvtest should run correctly on your
 system.
 
+For Example:
+```
+$ pytest
+================================================================ test session starts =================================================================
+platform linux -- Python 3.9.12, pytest-7.4.0, pluggy-1.2.0
+rootdir: /mnt/d/common/dev/mvtest/ACCRE/mvtest-sim/MVtest
+collected 121 items
+
+meanvar/tests/test_analyze_bed.py ....                                                                                                         [  3%]
+meanvar/tests/test_analyze_mv2_tped.py ....                                                                                                    [  6%]
+meanvar/tests/test_analyze_ped.py .....                                                                                                        [ 10%]
+meanvar/tests/test_analyze_tped.py ....                                                                                                        [ 14%]
+meanvar/tests/test_cmdline.py .........................                                                                                        [ 34%]
+meanvar/tests/test_cmdline_mach.py ....                                                                                                        [ 38%]
+meanvar/tests/test_cmdline_pedcols.py .......                                                                                                  [ 43%]
+meanvar/tests/test_cmdline_phenocovar.py ...                                                                                                   [ 46%]
+meanvar/tests/test_pedigree_parser.py ..................................                                                                       [ 74%]
+meanvar/tests/test_standardization.py .....                                                                                                    [ 78%]
+meanvar/tests/test_transped_parser.py ..........................                                                                               [100%]
+
+================================================================ 121 passed in 24.71s ================================================================
+```
 
 Virtual Env
 ===========
